@@ -22,7 +22,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     super.initState();
     tabController = TabController(length: 3, vsync: this, initialIndex: 0);
     Future.delayed(Duration.zero).then((value) {
-      Provider.of<User>(context, listen: false).getUserData();
+      Provider.of<User>(context, listen: false).getUserData().then((value) {
+        Provider.of<User>(context, listen: false).fetchChats();
+      });
     });
   }
 
@@ -65,16 +67,26 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       child: Scaffold(
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(120),
-          child: AppBar(            
+          child: AppBar(
             title: Text('WhatsApp', style: kWhatsAppStyle),
             bottom: _buildTabs(),
             actions: [
-              IconButton(icon: Icon(Icons.search),  onPressed: () {
-                Provider.of<Auth>(context, listen: false).signOut();
-              },),
-              IconButton(icon: Icon(Icons.message),  onPressed: () {                
-              },),
-              IconButton(icon: Icon(Icons.more_vert),  onPressed: () {},)
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  Provider.of<Auth>(context, listen: false).signOut();
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.message),
+                onPressed: () {
+                  Provider.of<User>(context, listen: false).fetchChats();
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.more_vert),
+                onPressed: () {},
+              )
             ],
           ),
         ),

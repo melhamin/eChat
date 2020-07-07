@@ -11,8 +11,8 @@ import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 
 class ChatItemScreen extends StatefulWidget {
-  final Person person;
-  ChatItemScreen(this.person);
+  final InitChatData chatData;
+  ChatItemScreen(this.chatData);
 
   @override
   _ChatItemScreenState createState() => _ChatItemScreenState();
@@ -41,40 +41,42 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     _textFieldFocusNode = FocusNode();
 
     Future.delayed(Duration.zero).then((value) async {
-      userId = Provider.of<User>(context, listen: false).getUserId;
-      // print('userid ------> $userId');
-      peerId = widget.person.uid;
-      if (userId.hashCode <= peerId.hashCode)
-        groupChatId = '$userId-$peerId';
-      else
-        groupChatId = '$peerId-$userId';
-    });
-  }
-
-  void fetchInitData() async {
-    final snapshot = await Firestore.instance
-        .collection('messages')
-        .document(groupChatId)
-        .collection(groupChatId)
-        .limit(20)
-        .getDocuments();
-
-    setState(() {
-      initSnapshot = snapshot;
-      snapshot.documents.forEach((element) {
-        // dummyTexts.add({
-        //   'text': element['content'],
-        //   'isMe': element['fromId'] == userId,
-        // });
-        _isLoading = false;
+      setState(() {
+        userId = Provider.of<User>(context, listen: false).getUserId;
+        // print('userid ------> $userId');
+        peerId = widget.chatData.person.uid;
+        if (userId.hashCode <= peerId.hashCode)
+          groupChatId = '$userId-$peerId';
+        else
+          groupChatId = '$peerId-$userId';
       });
     });
   }
 
+  // void fetchInitData() async {
+  //   final snapshot = await Firestore.instance
+  //       .collection('messages')
+  //       .document(groupChatId)
+  //       .collection(groupChatId)
+  //       .limit(20)
+  //       .getDocuments();
+
+  //   setState(() {
+  //     initSnapshot = snapshot;
+  //     snapshot.documents.forEach((element) {
+  //       // dummyTexts.add({
+  //       //   'text': element['content'],
+  //       //   'isMe': element['fromId'] == userId,
+  //       // });
+  //       _isLoading = false;
+  //     });
+  //   });
+  // }
+
   @override
   void didChangeDependencies() {
     if (_initLoaded) {
-      fetchInitData();
+      // fetchInitData();
       _initLoaded = false;
     }
 
@@ -134,15 +136,21 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       Person person = Person(
         uid: peerId,
         name: peerRef['username'],
-        imageUrl: peerRef['imageUrl'],        
+        imageUrl: peerRef['imageUrl'],
       );
-      // Message message = Message(content: content, timeStamp: time, fromId: )
-      InitChatData initChatData = InitChatData();
+      Message message = Message(
+          content: content, timeStamp: time, fromId: userId, toId: peerId);
+      InitChatData initChatData = InitChatData(
+        person: person,
+        messages: [message],
+      );
+      Provider.of<User>(context, listen: false).addToInitChats(initChatData);
     }
   }
 
-  Widget _buildMessageItem(DocumentSnapshot snapshot) {
-    final message = Message.fromSnapshot(snapshot);
+  Widget _buildMessageItem(dynamic snapshot) {
+    final message =
+        snapshot is Message ? snapshot : Message.fromSnapshot(snapshot);
     return MessageBubble(
       message: message,
       isMe: message.fromId == userId,
@@ -166,18 +174,20 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
               CircleAvatar(
                 backgroundColor: Colors.white.withOpacity(0.9),
                 radius: 20,
-                backgroundImage: widget.person.imageUrl != null
-                    ? CachedNetworkImageProvider(widget.person.imageUrl)
+                backgroundImage: widget.chatData.person.imageUrl != null
+                    ? CachedNetworkImageProvider(
+                        widget.chatData.person.imageUrl)
                     : null,
-                child:
-                    widget.person.imageUrl == null ? Icon(Icons.person) : null,
+                child: widget.chatData.person.imageUrl == null
+                    ? Icon(Icons.person)
+                    : null,
               ),
               SizedBox(width: 15),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.person.name,
+                    widget.chatData.person.name,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -217,117 +227,129 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         body:
             // _isLoading ? CircularProgressIndicator() :
             StreamBuilder(
-          initialData: initSnapshot,
-          stream: Firestore.instance
-              .collection('messages')
-              .document(groupChatId)
-              .collection(groupChatId)
-              .orderBy('timeStamp', descending: true)
-              // .limit(20)
-              .snapshots(),
-          builder: (ctx, snapshot) {
-            if (!snapshot.hasData)
-              return Center(child: CircularProgressIndicator());
-            else {
-              // messages = snapshot.data.documents;
-              // print('messages: ------> $messages');
-              return LayoutBuilder(
-                builder: (ctx, constraints) {
-                  // print(constraints.maxWidth);
-                  return Column(
-                    children: [
-                      Flexible(
-                        child: ListView.separated(
-                          controller: _scrollController,
-                          reverse: true,
-                          padding: const EdgeInsets.only(
-                              left: 15, right: 15, top: 10, bottom: 10),
-                          itemCount: snapshot.data.documents.length,
-                          itemBuilder: (ctx, i) {
-                            return _buildMessageItem(
-                                snapshot.data.documents[i]);
-                          },
-                          separatorBuilder: (_, __) {
-                            return SizedBox(height: 10);
-                          },
-                        ),
-                      ),
-                      Container(
-                        width: constraints.maxWidth,
-                        margin: const EdgeInsets.only(
-                            left: 10, right: 10, bottom: 10),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(5)),
-                        child: Row(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                              height: 45,
-                              width: constraints.maxWidth - 70,
-                              child: TextField(
-                                focusNode: _textFieldFocusNode,
-                                controller: _textEditingController,
-                                keyboardType: TextInputType.text,
-                                textInputAction: TextInputAction.go,
-                                decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  prefixIcon: Icon(
-                                    Icons.tag_faces,
-                                    color: Colors.black.withOpacity(0.4),
-                                    size: 30,
-                                  ),
-                                  hintText: 'Type a message',
-                                  hintStyle: kChatItemSubtitleStyle,
-                                ),
-                                onSubmitted: (value) {
-                                  setState(() {
-                                    // dummyTexts.add({
-                                    //   'text': value,
-                                    //   'isMe': true,
-                                    // });
-                                    _textEditingController.clear();
-                                    _scrollController.animateTo(
-                                        _scrollController
-                                                .position.minScrollExtent -
-                                            50,
-                                        duration: Duration(milliseconds: 200),
-                                        curve: Curves.easeIn);
-                                  });
-                                  onMessageSend(value);
-                                  FocusScope.of(context)
-                                      .requestFocus(_textFieldFocusNode);
-                                },
-                              ),
+                // initialData: initSnapshot,
+                stream: Firestore.instance
+                    .collection('messages')
+                    .document(groupChatId)
+                    .collection(groupChatId)
+                    .orderBy('timeStamp', descending: true)
+                    .endBefore([widget.chatData.messages.length]).snapshots(),
+                builder: (ctx, snapshot) {
+                  // if (!snapshot.hasData)
+                  //   return Center(child: CircularProgressIndicator());
+                  // else {
+                  //   // messages = snapshot.data.documents;
+                  //   // print('messages: ------> $messages');
+                  return LayoutBuilder(
+                    builder: (ctx, constraints) {
+                      if (snapshot.hasData) {
+                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                        Message newMessage =
+                            Message.fromSnapshot(snapshot.data.documents[0]);
+                        Provider.of<User>(context, listen: false)
+                            .addMessageToInitChats(widget.chatData, newMessage);
+                      });
+                      }
+                      // print(constraints.maxWidth);
+                      return Column(
+                        children: [
+                          Flexible(
+                            child: ListView.separated(
+                              controller: _scrollController,
+                              reverse: true,
+                              padding: const EdgeInsets.only(
+                                  left: 15, right: 15, top: 10, bottom: 10),
+                              itemCount: !snapshot.hasData
+                                  ? widget.chatData.messages.length
+                                  : snapshot.data.documents.length,
+                              itemBuilder: (ctx, i) {
+                                return _buildMessageItem(!snapshot.hasData
+                                    ? widget.chatData.messages[i]
+                                    : snapshot.data.documents[i]);
+                              },
+                              separatorBuilder: (_, __) {
+                                return SizedBox(height: 10);
+                              },
                             ),
-                            SizedBox(width: 5),
-                            GestureDetector(
-                              child: Container(
-                                height: 45,
-                                width: 45,
-                                decoration: BoxDecoration(
-                                    color: Hexcolor('#075E54'),
-                                    borderRadius: BorderRadius.circular(45)),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.mic,
+                          ),
+                          Container(
+                            width: constraints.maxWidth,
+                            margin: const EdgeInsets.only(
+                                left: 10, right: 10, bottom: 10),
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5)),
+                            child: Row(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(5),
                                     color: Colors.white.withOpacity(0.9),
                                   ),
+                                  height: 45,
+                                  width: constraints.maxWidth - 70,
+                                  child: TextField(
+                                    focusNode: _textFieldFocusNode,
+                                    controller: _textEditingController,
+                                    keyboardType: TextInputType.text,
+                                    textInputAction: TextInputAction.go,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      prefixIcon: Icon(
+                                        Icons.tag_faces,
+                                        color: Colors.black.withOpacity(0.4),
+                                        size: 30,
+                                      ),
+                                      hintText: 'Type a message',
+                                      hintStyle: kChatItemSubtitleStyle,
+                                    ),
+                                    onSubmitted: (value) {
+                                      setState(() {
+                                        // dummyTexts.add({
+                                        //   'text': value,
+                                        //   'isMe': true,
+                                        // });
+                                        _textEditingController.clear();
+                                        _scrollController.animateTo(
+                                            _scrollController
+                                                    .position.minScrollExtent -
+                                                50,
+                                            duration:
+                                                Duration(milliseconds: 200),
+                                            curve: Curves.easeIn);
+                                      });
+                                      onMessageSend(value);
+                                      FocusScope.of(context)
+                                          .requestFocus(_textFieldFocusNode);
+                                    },
+                                  ),
                                 ),
-                              ),
+                                SizedBox(width: 5),
+                                GestureDetector(
+                                  child: Container(
+                                    height: 45,
+                                    width: 45,
+                                    decoration: BoxDecoration(
+                                        color: Hexcolor('#075E54'),
+                                        borderRadius:
+                                            BorderRadius.circular(45)),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.mic,
+                                        color: Colors.white.withOpacity(0.9),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
+                        ],
+                      );
+                    },
                   );
-                },
-              );
-            }
-          },
-        ),
+                }
+                // },
+                ),
       ),
     );
   }
@@ -351,7 +373,7 @@ class MessageBubble extends StatelessWidget {
     return tp.didExceedMaxLines;
   }
 
-  String getDate() {
+  String getTime() {
     int hour = message.timeStamp.hour;
     int min = message.timeStamp.minute;
     String hRes = hour <= 9 ? '0$hour' : hour.toString();
@@ -375,18 +397,15 @@ class MessageBubble extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 3),
             child: Text(
-              getDate(),
-              style: TextStyle(
-                color: Colors.black.withOpacity(0.4),
-                fontSize: 14,
-              ),
+              getTime(),
+              style: kChatItemSubtitleStyle,
             ),
           ),
           if (isMe) ...[
             SizedBox(width: 5),
             Icon(
               Icons.done_all,
-              color: Hexcolor('##34B7F1'),
+              color: Hexcolor('#34B7F1'),
               size: 19,
             ),
           ]

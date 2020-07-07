@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/chat_item_screen.dart';
@@ -47,7 +48,7 @@ class ContactsScreen extends StatelessWidget {
         name: item['username'],
         imageUrl: item['imageUrl']);
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ChatItemScreen(person),
+      builder: (context) => ChatItemScreen(new InitChatData(messages: [], person: person)),
     ));
   }
 

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/widgets/chat_item.dart';
@@ -20,9 +21,8 @@ class ChatsScreen extends StatelessWidget {
     return result;
   }
 
-  Widget _buildListItem(DocumentSnapshot snapshot) {
-    Person person = Person.fromSnapshot(snapshot);
-    return ChatItem(person);
+  Widget _buildListItem(InitChatData initChatData) {    
+    return ChatItem(initChatData);
   }
 
   Stream<QuerySnapshot> stream() {
@@ -31,16 +31,11 @@ class ChatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: stream(),
-      builder: (ctx, snapshot) {
-        if (!snapshot.hasData)
-          return Center(
-            child: Text('Loading...'),
-          );
-        else {
-          final items = getItems(context, snapshot.data.documents);
-          return ListView.separated(
+    final items = Provider.of<User>(context).chats;
+    // print('length -------->${items.length}');
+    // if(items.length > 2)
+    //   print('chats ---> ${items[1].messages[0].content}');
+    return ListView.separated(
             itemCount: items.length,
             itemBuilder: (ctx, i) {
               return _buildListItem(items[i]);
@@ -53,8 +48,30 @@ class ChatsScreen extends StatelessWidget {
               );
             },
           );
-        }
-      },
-    );
+    // StreamBuilder(
+    //   stream: stream(),
+    //   builder: (ctx, snapshot) {
+    //     if (!snapshot.hasData)
+    //       return Center(
+    //         child: Text('Loading...'),
+    //       );
+    //     else {
+    //       final items = getItems(context, snapshot.data.documents);
+    //       return ListView.separated(
+    //         itemCount: items.length,
+    //         itemBuilder: (ctx, i) {
+    //           return _buildListItem(items[i]);
+    //         },
+    //         separatorBuilder: (ctx, i) {
+    //           return Divider(
+    //             indent: 85,
+    //             endIndent: 15,
+    //             color: Colors.black.withOpacity(0.12),
+    //           );
+    //         },
+    //       );
+    //     }
+    //   },
+    // );
   }
 }

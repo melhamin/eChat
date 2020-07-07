@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
 import 'package:whatsapp_clone/consts.dart';
+import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/screens/chat_item_screen.dart';
 
 class ChatItem extends StatelessWidget {
-  final Person person;
+  final InitChatData initChatData;
 
-  ChatItem(this.person);
+  ChatItem(this.initChatData);
 
   String getDate() {
     DateTime date = DateTime.now();
@@ -18,19 +19,29 @@ class ChatItem extends StatelessWidget {
 
   Route _buildRoute() {
     return MaterialPageRoute(
-      builder: (context) => ChatItemScreen(person),
+      builder: (context) => ChatItemScreen(initChatData),
     );
+  }
+
+  String getTime(Message message) {
+    int hour = message.timeStamp.hour;
+    int min = message.timeStamp.minute;
+    String hRes = hour <= 9 ? '0$hour' : hour.toString();
+    String mRes = min <= 9 ? '0$min' : min.toString();
+    return '$hRes:$mRes';
   }
 
   @override
   Widget build(BuildContext context) {
+    final person = initChatData.person;
+    final messages = initChatData.messages;
     return InkWell(
       splashColor: Colors.transparent,
       highlightColor: Colors.black.withOpacity(0.2),
       onTap: () {
         Navigator.of(context).push(_buildRoute());
       },
-      child: ListTile(        
+      child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         leading: CircleAvatar(
           backgroundColor: Colors.white.withOpacity(0.9),
@@ -38,16 +49,27 @@ class ChatItem extends StatelessWidget {
           backgroundImage: CachedNetworkImageProvider(person.imageUrl),
         ),
         title: Text(person.name, style: kChatItemTitleStyle),
-        subtitle: Text(
-          person.name,
-          style: kChatItemSubtitleStyle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        subtitle: Row(
+          children: [
+            Text(messages[0].content,
+                style: kChatItemSubtitleStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+            if (messages[0].fromId != person.uid)
+            ...[SizedBox(width: 5),
+              Icon(
+                Icons.done_all,
+                size: 19,
+                color: Hexcolor('#34B7F1'),
+              ),]
+          ],
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('11:22 AM', style: kChatItemSubtitleStyle),
+            Text(
+                getTime(messages[0]),
+                style: kChatItemSubtitleStyle),
             SizedBox(height: 5),
             Container(
               height: 25,
