@@ -2,12 +2,13 @@ import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/providers/auth.dart';
+import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/providers/user.dart';
 
 class ChatItemScreen extends StatefulWidget {
   final Person person;
@@ -22,49 +23,15 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   ScrollController _scrollController;
   FocusNode _textFieldFocusNode;
 
+  bool _initLoaded = true;
+  bool _isLoading = true;
+
   String userId;
   String peerId;
   String groupChatId;
   var messages;
 
-  List<Map<String, dynamic>> dummyTexts = [
-    {
-      'text': 'hey whats upp?',
-      'isMe': false,
-    },
-    {
-      'text': 'I\'m good dude. how are you?',
-      'isMe': true,
-    },
-    {
-      'text': 'Where are you now',
-      'isMe': true,
-    },
-    {
-      'text': 'I am fine thanks',
-      'isMe': false,
-    },
-    {
-      'text': 'In istanbul. Where are you ?',
-      'isMe': false,
-    },
-    {
-      'text': 'Mee too',
-      'isMe': true,
-    },
-    {
-      'text': 'Let\'s meet up',
-      'isMe': true,
-    },
-    {
-      'text': 'I will come to you tomorrow. good?',
-      'isMe': false,
-    },
-    {
-      'text': 'Done',
-      'isMe': true,
-    },
-  ];
+  QuerySnapshot initSnapshot;
 
   @override
   void initState() {
@@ -72,15 +39,47 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     _textEditingController = TextEditingController();
     _scrollController = ScrollController();
     _textFieldFocusNode = FocusNode();
+
     Future.delayed(Duration.zero).then((value) async {
-      userId =
-          await FirebaseAuth.instance.currentUser().then((value) => value.uid);
+      userId = Provider.of<User>(context, listen: false).getUserId;
+      // print('userid ------> $userId');
       peerId = widget.person.uid;
       if (userId.hashCode <= peerId.hashCode)
         groupChatId = '$userId-$peerId';
       else
         groupChatId = '$peerId-$userId';
     });
+  }
+
+  void fetchInitData() async {
+    final snapshot = await Firestore.instance
+        .collection('messages')
+        .document(groupChatId)
+        .collection(groupChatId)
+        .limit(20)
+        .getDocuments();
+
+    setState(() {
+      initSnapshot = snapshot;
+      snapshot.documents.forEach((element) {
+        // dummyTexts.add({
+        //   'text': element['content'],
+        //   'isMe': element['fromId'] == userId,
+        // });
+        _isLoading = false;
+      });
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    if (_initLoaded) {
+      fetchInitData();
+      _initLoaded = false;
+    }
+
+    _initLoaded = false;
+    super.didChangeDependencies();
   }
 
   @override
@@ -91,22 +90,9 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     _textFieldFocusNode.dispose();
   }
 
-  Future<String> getGroupChatId() async {
-    final currentUser = await FirebaseAuth.instance.currentUser();
-    // final currentUser = Auth.getUser;
-    print('currentuser uuid -----> ${currentUser.uid}');
-
-    String groupChatId;
-    if (currentUser.uid.hashCode <= widget.person.uid.hashCode)
-      groupChatId = '${currentUser.uid}-${widget.person.uid}';
-    else
-      groupChatId = '${widget.person.uid}-${currentUser.uid}';
-
-    return groupChatId;
-  }
-
   void onMessageSend(String content) async {
     if (content.trim() != '') _textEditingController.clear();
+    DateTime time = DateTime.now();
     // String groupChatId = await getGroupChatId();
     var documentRef = Firestore.instance
         .collection('messages')
@@ -114,30 +100,58 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         .collection(groupChatId)
         .document(DateTime.now().millisecondsSinceEpoch.toString());
 
-    // final currentUserId = Auth.getUser.uid;
-    // final currentUser = await FirebaseAuth.instance.currentUser();
-    // final peerId = widget.person.uid;
-
     Firestore.instance.runTransaction((transaction) async {
       await transaction.set(documentRef, {
         'fromId': userId,
         'toId': peerId,
-        'timeStamp': DateTime.now().millisecondsSinceEpoch.toString(),
+        'date': DateTime.now().toIso8601String(),
+        'timeStamp': time.millisecondsSinceEpoch.toString(),
         'content': content,
       });
     });
+
+    final userContacts = Provider.of<User>(context, listen: false).getContacts;
+    if (!userContacts.contains(peerId)) {
+      Provider.of<User>(context, listen: false).addToContacts(peerId);
+      var userDocumentRef =
+          Firestore.instance.collection('users').document(userId);
+      userDocumentRef.setData({
+        'contacts': userContacts,
+      }, merge: true);
+
+      var peerDcoumentRef =
+          Firestore.instance.collection('users').document(peerId);
+      final peerRef = await peerDcoumentRef.get();
+
+      var peerContacts = [];
+      peerRef.data['contacts'].forEach((elem) => peerContacts.add(elem));
+      peerContacts.add(userId);
+
+      peerDcoumentRef.setData({
+        'contacts': peerContacts,
+      }, merge: true);
+
+      Person person = Person(
+        uid: peerId,
+        name: peerRef['username'],
+        imageUrl: peerRef['imageUrl'],        
+      );
+      // Message message = Message(content: content, timeStamp: time, fromId: )
+      InitChatData initChatData = InitChatData();
+    }
   }
 
-  Widget _buildMessageItem(DocumentSnapshot item) {
+  Widget _buildMessageItem(DocumentSnapshot snapshot) {
+    final message = Message.fromSnapshot(snapshot);
     return MessageBubble(
-      text: item['content'],
-      isMe: item['fromId'] == userId,
+      message: message,
+      isMe: message.fromId == userId,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    print('uid: -------> ${widget.person.uid}');
+    // print('uid: -------> ${widget.person.uid}');
     return SafeArea(
       bottom: true,
       child: Scaffold(
@@ -200,13 +214,16 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
             )
           ],
         ),
-        body: StreamBuilder(          
+        body:
+            // _isLoading ? CircularProgressIndicator() :
+            StreamBuilder(
+          initialData: initSnapshot,
           stream: Firestore.instance
               .collection('messages')
               .document(groupChatId)
               .collection(groupChatId)
               .orderBy('timeStamp', descending: true)
-              .limit(20)
+              // .limit(20)
               .snapshots(),
           builder: (ctx, snapshot) {
             if (!snapshot.hasData)
@@ -225,9 +242,10 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                           reverse: true,
                           padding: const EdgeInsets.only(
                               left: 15, right: 15, top: 10, bottom: 10),
-                          itemCount: snapshot.data.documents.length,                          
+                          itemCount: snapshot.data.documents.length,
                           itemBuilder: (ctx, i) {
-                            return _buildMessageItem(snapshot.data.documents[i]);
+                            return _buildMessageItem(
+                                snapshot.data.documents[i]);
                           },
                           separatorBuilder: (_, __) {
                             return SizedBox(height: 10);
@@ -266,10 +284,10 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                                 ),
                                 onSubmitted: (value) {
                                   setState(() {
-                                    dummyTexts.add({
-                                      'text': value,
-                                      'isMe': true,
-                                    });
+                                    // dummyTexts.add({
+                                    //   'text': value,
+                                    //   'isMe': true,
+                                    // });
                                     _textEditingController.clear();
                                     _scrollController.animateTo(
                                         _scrollController
@@ -316,15 +334,15 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 }
 
 class MessageBubble extends StatelessWidget {
-  final String text;
+  final Message message;
   final bool isMe;
   MessageBubble({
-    @required this.text,
+    @required this.message,
     @required this.isMe,
   });
 
   bool didExceedMaxLines(double maxWidth) {
-    final span = TextSpan(text: text);
+    final span = TextSpan(text: message.content);
     final tp =
         TextPainter(text: span, maxLines: 1, textDirection: TextDirection.ltr);
     tp.layout(maxWidth: maxWidth);
@@ -333,10 +351,19 @@ class MessageBubble extends StatelessWidget {
     return tp.didExceedMaxLines;
   }
 
+  String getDate() {
+    int hour = message.timeStamp.hour;
+    int min = message.timeStamp.minute;
+    String hRes = hour <= 9 ? '0$hour' : hour.toString();
+    String mRes = min <= 9 ? '0$min' : min.toString();
+
+    return '$hRes:$mRes';
+  }
+
   List<Widget> _buildBubbleContent() {
     return [
       Text(
-        text,
+        message.content,
         style: TextStyle(
           fontSize: 16,
           color: Colors.black.withOpacity(0.95),
@@ -348,7 +375,7 @@ class MessageBubble extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 3),
             child: Text(
-              '${DateTime.now().hour}:${DateTime.now().minute}',
+              getDate(),
               style: TextStyle(
                 color: Colors.black.withOpacity(0.4),
                 fontSize: 14,

@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
+import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/auth_screen.dart';
 import 'package:whatsapp_clone/screens/home.dart';
 
@@ -17,11 +18,13 @@ enum AuthMode {
 }
 
 class MyApp extends StatelessWidget {
-  
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-        providers: [ChangeNotifierProvider.value(value: Auth())],
+        providers: [
+          ChangeNotifierProvider.value(value: Auth()),
+          ChangeNotifierProvider.value(value: User()),
+        ],
         child: Consumer<Auth>(
           builder: (ctx, auth, _) => MaterialApp(
             title: 'Flutter Demo',
@@ -39,17 +42,18 @@ class MyApp extends StatelessWidget {
             home: FutureBuilder(
               future: auth.getCurrentUser(),
               builder: (ctx, snapshot) {
-                return snapshot.connectionState == ConnectionState.waiting ? CircularProgressIndicator() : 
-                snapshot.data == null ? AuthScreen() : Home();
+                return snapshot.connectionState == ConnectionState.waiting
+                    ? CircularProgressIndicator()
+                    : snapshot.data == null ? AuthScreen() : Home();
               },
             ),
-                // FutureBuilder(
-                //     future: auth.tryAutoLogin(),
-                //     builder: (ctx, snapshot) => 
-                //         snapshot.connectionState == ConnectionState.waiting
-                //             ? CircularProgressIndicator()
-                //             : AuthScreen(),
-                //   ),
+            // FutureBuilder(
+            //     future: auth.tryAutoLogin(),
+            //     builder: (ctx, snapshot) =>
+            //         snapshot.connectionState == ConnectionState.waiting
+            //             ? CircularProgressIndicator()
+            //             : AuthScreen(),
+            //   ),
             debugShowCheckedModeBanner: false,
           ),
         ));

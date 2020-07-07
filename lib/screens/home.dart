@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
+import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/calls_screen.dart';
 import 'package:whatsapp_clone/screens/chats_screen.dart';
 import 'package:whatsapp_clone/screens/contacts_screen.dart';
@@ -19,7 +20,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 3, vsync: this, initialIndex: 1);
+    tabController = TabController(length: 3, vsync: this, initialIndex: 0);
+    Future.delayed(Duration.zero).then((value) {
+      Provider.of<User>(context, listen: false).getUserData();
+    });
   }
 
   Widget _buildTabs() {
@@ -68,7 +72,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               IconButton(icon: Icon(Icons.search),  onPressed: () {
                 Provider.of<Auth>(context, listen: false).signOut();
               },),
-              IconButton(icon: Icon(Icons.message),  onPressed: () {},),
+              IconButton(icon: Icon(Icons.message),  onPressed: () {                
+              },),
               IconButton(icon: Icon(Icons.more_vert),  onPressed: () {},)
             ],
           ),

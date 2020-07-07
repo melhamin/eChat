@@ -1,60 +1,59 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/widgets/chat_item.dart';
 
 class ChatsScreen extends StatelessWidget {
-  final List<Person> dummyData = [
-    Person(
-      name: 'Sam',
-      textToShow: 'Hey what up?',
-      imageUrl:
-          'https://www.readersdigest.ca/wp-content/uploads/2017/08/being-a-good-person.jpg',
-    ),
-    Person(
-      name: 'Angela',
-      textToShow: 'Are we meeting today?',
-      imageUrl:
-          'https://basicknowledgecouk.files.wordpress.com/2018/07/pexels-photo-733872.jpeg',
-    ),
-    Person(
-      name: 'Ahmed',
-      textToShow: 'Yo where are you?',
-      imageUrl:
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTCDaHuOyNanVVgEcANjLG5lq3eQbU_Lv3wC73b08qUsQ&usqp=CAU&ec=45673586',
-    ),
-    Person(
-      name: 'Anna',
-      textToShow: 'We are here...',
-      imageUrl:
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTcs66k1d0BuqhtO14B8sNTt514YGDnxOx2H6y22_sqBw&usqp=CAU&ec=45673586',
-    ),
-    Person(
-      name: 'Ali',
-      textToShow: 'I am waiting outside the building',
-      imageUrl:
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRAi5PWUxzo7t3nzimuuAZB3Okllr-2c49A8bA7vL9a5w&usqp=CAU&ec=45673586',
-    ),
-    Person(
-      name: 'Gabby',
-      textToShow: 'Come to the A building',
-      imageUrl:
-          'https://img01.imgsinemalar.com/images/afis_buyuk/k/katheryn-winnick-1499437601.jpg',
-    ),
-  ];
+  List<DocumentSnapshot> getItems(
+      BuildContext context, List<DocumentSnapshot> snapshots) {
+    final userContacts = Provider.of<User>(context).getContacts;
+    print('user contacts =======>> $userContacts');
+    List<DocumentSnapshot> result = [];
+
+    snapshots.forEach((element) {
+      if (userContacts.contains(element.documentID)) result.add(element);
+    });
+
+    return result;
+  }
+
+  Widget _buildListItem(DocumentSnapshot snapshot) {
+    Person person = Person.fromSnapshot(snapshot);
+    return ChatItem(person);
+  }
+
+  Stream<QuerySnapshot> stream() {
+    return Firestore.instance.collection('users').snapshots();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      itemCount: dummyData.length,
-      itemBuilder: (ctx, i) {
-        return ChatItem(dummyData[i]);
-      },
-      separatorBuilder: (ctx, i) {
-        return Divider(
-          indent: 85,
-          endIndent: 15,
-          color: Colors.black.withOpacity(0.12),
-        );
+    return StreamBuilder(
+      stream: stream(),
+      builder: (ctx, snapshot) {
+        if (!snapshot.hasData)
+          return Center(
+            child: Text('Loading...'),
+          );
+        else {
+          final items = getItems(context, snapshot.data.documents);
+          return ListView.separated(
+            itemCount: items.length,
+            itemBuilder: (ctx, i) {
+              return _buildListItem(items[i]);
+            },
+            separatorBuilder: (ctx, i) {
+              return Divider(
+                indent: 85,
+                endIndent: 15,
+                color: Colors.black.withOpacity(0.12),
+              );
+            },
+          );
+        }
       },
     );
   }

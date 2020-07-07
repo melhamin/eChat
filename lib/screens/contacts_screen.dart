@@ -1,10 +1,19 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/chat_item_screen.dart';
 
 class ContactsScreen extends StatelessWidget {
+  List<DocumentSnapshot> getItems(
+      BuildContext context, List<DocumentSnapshot> snapshot) {
+        List<DocumentSnapshot> result = [];
+        final userID = Provider.of<User>(context, listen: false).getUserId;
+        snapshot.removeWhere((element) => element.documentID != userID);
+      }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,17 +32,22 @@ class ContactsScreen extends StatelessWidget {
               final item = snapshot.data.documents[i];
               return _buildContactsItem(context, item);
             },
-            separatorBuilder: (ctx, _) => Divider(color: Colors.black.withOpacity(0.1),),
+            separatorBuilder: (ctx, _) => Divider(
+              color: Colors.black.withOpacity(0.1),
+            ),
           );
         },
       ),
     );
   }
 
-  void onTap(BuildContext context, DocumentSnapshot item) {    
-    Person person = Person(uid: item.documentID, name: item['username'], imageUrl: item['imageUrl']);   
+  void onTap(BuildContext context, DocumentSnapshot item) {
+    Person person = Person(
+        uid: item.documentID,
+        name: item['username'],
+        imageUrl: item['imageUrl']);
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ChatItemScreen(person),      
+      builder: (context) => ChatItemScreen(person),
     ));
   }
 
@@ -42,7 +56,7 @@ class ContactsScreen extends StatelessWidget {
       splashColor: Colors.transparent,
       highlightColor: Colors.black.withOpacity(0.12),
       onTap: () => onTap(context, item),
-          child: ListTile(      
+      child: ListTile(
         leading: CircleAvatar(
           radius: 27,
           backgroundImage: CachedNetworkImageProvider(item['imageUrl']),

@@ -39,7 +39,7 @@ class ChatItem extends StatelessWidget {
         ),
         title: Text(person.name, style: kChatItemTitleStyle),
         subtitle: Text(
-          person.textToShow,
+          person.name,
           style: kChatItemSubtitleStyle,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
