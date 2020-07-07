@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
+import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/screens/calls_screen.dart';
 import 'package:whatsapp_clone/screens/chats_screen.dart';
 import 'package:whatsapp_clone/screens/contacts_screen.dart';
@@ -61,7 +65,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
             title: Text('WhatsApp', style: kWhatsAppStyle),
             bottom: _buildTabs(),
             actions: [
-              IconButton(icon: Icon(Icons.search),  onPressed: () {},),
+              IconButton(icon: Icon(Icons.search),  onPressed: () {
+                Provider.of<Auth>(context, listen: false).signOut();
+              },),
               IconButton(icon: Icon(Icons.message),  onPressed: () {},),
               IconButton(icon: Icon(Icons.more_vert),  onPressed: () {},)
             ],
