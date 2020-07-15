@@ -58,7 +58,7 @@ class User with ChangeNotifier {
         messages.add(Message.fromSnapshot(element));
       });
 
-      InitChatData chatData = InitChatData(person: person, messages: messages);
+      InitChatData chatData = InitChatData(groupId: groupId, person: person, messages: messages);
 
       _chats.add(chatData);
       
@@ -73,7 +73,7 @@ class User with ChangeNotifier {
   }
 
   void addMessageToInitChats(InitChatData chatRoom, Message msg) {
-    _chats.firstWhere((element) => element.person == chatRoom.person).messages.insert(0, msg);
+    _chats.firstWhere((element) => element.person.uid == chatRoom.person.uid).messages.insert(0, msg);
     // print('at cahts -------> ${x.messages[0].content}');
     notifyListeners();
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsapp_clone/providers/all_users.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/auth_screen.dart';
@@ -24,13 +25,15 @@ class MyApp extends StatelessWidget {
         providers: [
           ChangeNotifierProvider.value(value: Auth()),
           ChangeNotifierProvider.value(value: User()),
+          ChangeNotifierProvider.value(value: AllUsers()),
         ],
         child: Consumer<Auth>(
           builder: (ctx, auth, _) => MaterialApp(
             title: 'Flutter Demo',
             theme: ThemeData(
               primaryColor: Colors.white,
-              scaffoldBackgroundColor: Hexcolor('#FFFFFF'),
+              scaffoldBackgroundColor: Hexcolor('#121212'),
+              accentColor: Color(0xFFFFAD32),
               appBarTheme: AppBarTheme(
                 color: Hexcolor('#075E54'),
                 actionsIconTheme: IconThemeData(

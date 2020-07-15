@@ -3,6 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
+	<key>NSPhotoLibraryUsageDescription</key>	
+	<key>NSCameraUsageDescription</key>	
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
