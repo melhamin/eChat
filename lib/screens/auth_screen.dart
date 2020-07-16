@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
+import 'package:whatsapp_clone/widgets/app_bar.dart';
 
 enum AuthMode {
   SignIn,
@@ -14,7 +15,7 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  GlobalKey<FormState> _formKey;  
+  GlobalKey<FormState> _formKey;
   AuthMode authMode = AuthMode.SignIn;
 
   @override
@@ -23,130 +24,146 @@ class _AuthScreenState extends State<AuthScreen> {
     _formKey = GlobalKey<FormState>();
   }
 
+  Widget _buildFormField(String label, String saveTo,
+          [bool obscureText = false]) =>
+      Container(
+        height: 55,
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(),
+          color: Hexcolor('#303030'),
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: TextFormField(
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.white.withOpacity(0.87),
+          ),
+          obscureText: obscureText,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: label,
+            hintStyle:
+                TextStyle(color: Colors.white.withOpacity(0.87), fontSize: 16),
+          ),
+          onSaved: (value) => _authData['$saveTo'] = value.trim(),
+          validator: (value) {
+            if (value.isEmpty) return 'Invalid input.';
+            return null;
+          },
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Hexcolor('#121212'),
-      body: Center(
-        child: Container(
-          color: Colors.white.withOpacity(0.9),
-          height: 500,
-          width: double.infinity,
-          child: Column(
-            children: [
-              Text(
-                authMode == AuthMode.SignIn ? 'Sign In' : 'Sign Up',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    final mq = MediaQuery.of(context);
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Hexcolor('#121212'),
+        body: Column(
+          children: [
+            Container(
+              alignment: Alignment.topLeft,
+              padding: const EdgeInsets.only(
+                  left: 20, right: 20, top: 20, bottom: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    authMode == AuthMode.SignIn ? 'Log In' : 'Sign Up',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white.withOpacity(0.87)),
+                  ),
+                  GestureDetector(
+                    child: Text(
+                      authMode == AuthMode.SignIn ? 'Sign Up' : 'Log In',
+                      style: TextStyle(
+                        color: Theme.of(context).accentColor,
+                        fontSize: 18,
+                      ),
+                    ),
+                    onTap: () => setState(() {
+                      if (authMode == AuthMode.SignIn)
+                        authMode = AuthMode.SignUp;
+                      else
+                        authMode = AuthMode.SignIn;
+                    }),
+                  ),
+                ],
               ),
-              SizedBox(height: 20),
-              Form(
-                key: _formKey,
+            ),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Hexcolor('#202020'),
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(25),
+                    topLeft: Radius.circular(25),
+                  ),
+                ),
                 child: Column(
                   children: [
-                    if(authMode == AuthMode.SignUp)
-                    Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                        color: Colors.black,
-                      )),
-                      margin:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          hintText: 'Username',
-                          hintStyle:
-                              TextStyle(color: Colors.black, fontSize: 16),
-                        ),
-                        onSaved: (value) => _authData['username'] = value.trim(),
-                        validator: (val) {
-                          if(val.isEmpty) return 'Please enter a username';
-                          return null;
-                        },
-                      ),                      
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                        color: Colors.black,
-                      )),
-                      margin:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          hintText: 'Email',
-                          hintStyle:
-                              TextStyle(color: Colors.black, fontSize: 16),
-                        ),
-                        onSaved: (value) => _authData['email'] = value.trim(),
-                        validator: (val) {
-                          if(val.isEmpty) return 'Please enter a valid email';
-                          return null;
-                        },
+                    SizedBox(height: 30),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          if (authMode == AuthMode.SignUp)
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 200),
+                              height: authMode == AuthMode.SignUp ? 75 : 0,
+                              child: _buildFormField(
+                                  authMode == AuthMode.SignUp ? 'Username' : '',
+                                  'username'),
+                            ),
+                          _buildFormField(
+                            'Email',
+                            'email',
+                          ),
+                          _buildFormField(
+                            'Password',
+                            'password',
+                            true,
+                          ),
+                        ],
                       ),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                        color: Colors.black,
-                      )),
-                      margin:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      child: TextFormField(
-                        obscureText: true,
-                        decoration: InputDecoration(                          
-                          hintText: 'Password',
-                          hintStyle:
-                              TextStyle(color: Colors.black, fontSize: 16),
-                        ),
-                        onSaved: (value) => _authData['password'] = value.trim(),
-                        validator: (val) {
-                          if(val.isEmpty) return 'Please enter a valid password';
-                          return null;
-                        },
-                      ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        RaisedButton(
-                          color: Hexcolor('#075E54'),
-                          child: Text(
-                            authMode == AuthMode.SignIn ? 'Login' : 'Sign Up',
-                            style: TextStyle(
-                                fontSize: 21,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
+                    SizedBox(height: 20),
+                    GestureDetector(
+                        child: Container(
+                          width: mq.size.width * 0.5,
+                          height: 50,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).accentColor,
+                            borderRadius: BorderRadius.circular(25),
                           ),
-                          onPressed: () => authMode == AuthMode.SignIn ? _signIn() : _signUp(),
-                        ),
-                        RaisedButton(
                           child: Text(
-                            authMode == AuthMode.SignIn ? 'Create Account': 'Have account? login',
+                            authMode == AuthMode.SignIn ? 'Log In' : 'Sign Up',
                             style: TextStyle(
-                                fontSize: 21,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
-                          onPressed: () {                            
-                            setState(() {
-                              if(authMode == AuthMode.SignIn)                              
-                              authMode = AuthMode.SignUp;
-                              else 
-                              authMode = AuthMode.SignIn;
-                            });
-                          },
                         ),
-                      ],
-                    ),
+                        onTap: () => authMode == AuthMode.SignUp
+                            ? _signUp()
+                            : _signIn()),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
-  }  
+  }
 
   Map<String, String> _authData = {
     'username': '',
@@ -155,15 +172,18 @@ class _AuthScreenState extends State<AuthScreen> {
   };
 
   void _signUp() {
-    if(!_formKey.currentState.validate()) return; 
-    _formKey.currentState.save();   
-    Provider.of<Auth>(context, listen: false).signUp(_authData['email'], _authData['password']);
-    
-  }
-  void _signIn() {
-    if(!_formKey.currentState.validate()) return;
+    if (!_formKey.currentState.validate()) return;
     _formKey.currentState.save();
-    Provider.of<Auth>(context, listen: false).signIn(_authData['email'], _authData['password']);
-    
+    print('singup calle ------------>');
+    Provider.of<Auth>(context, listen: false)
+        .signUp(_authData['email'], _authData['password']);
+  }
+
+  void _signIn() {
+    if (!_formKey.currentState.validate()) return;
+    _formKey.currentState.save();
+    print('sign in calle ------------>');
+    Provider.of<Auth>(context, listen: false)
+        .signIn(_authData['email'], _authData['password']);
   }
 }

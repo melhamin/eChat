@@ -36,6 +36,7 @@ class Auth with ChangeNotifier implements BaseAuth {
 
   @override
   Future<String> signIn(String email, String password) async {
+    print('sign in : email ======> $email pass ========> $password');
     AuthResult result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email, password: password);
     FirebaseUser user = result.user;
@@ -46,6 +47,7 @@ class Auth with ChangeNotifier implements BaseAuth {
 
   @override
   Future<String> signUp(String email, String password) async {
+    print('email ======> $email password ----------> $password');
     AuthResult result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     FirebaseUser user = result.user;

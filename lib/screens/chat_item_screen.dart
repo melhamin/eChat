@@ -275,10 +275,10 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     setState(() {
       _image = File(pickedFile.path);
     });
-  }  
+  }
 
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     return SafeArea(
       bottom: true,
       child: Scaffold(
@@ -300,7 +300,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
               topRight: Radius.circular(25),
               topLeft: Radius.circular(25),
             ),
-                      child: StreamBuilder(
+            child: StreamBuilder(
                 stream: stream(),
                 builder: (ctx, snapshots) {
                   // print('snapshot length ----------> ${snapshots.data.documents.length}');
@@ -485,6 +485,9 @@ class MessageBubble extends StatelessWidget {
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       margin: isMe ? EdgeInsets.only(left: 80) : EdgeInsets.only(right: 80),
       child: Material(
+        color: isMe
+            ? Colors.white.withOpacity(0.87)
+            : Theme.of(context).accentColor,
         borderRadius: isMe
             ? BorderRadius.only(
                 topRight: Radius.circular(15),
