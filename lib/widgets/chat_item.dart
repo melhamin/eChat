@@ -175,45 +175,49 @@ class _ChatItemState extends State<ChatItem> {
         onTap: () {
           Navigator.of(context).push(_buildRoute());
         },
-        child: ListTile(                
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          leading: CircleAvatar(
-            backgroundColor: Colors.white.withOpacity(0.9),
-            radius: 27,
-            backgroundImage: person.imageUrl != null
-                ? CachedNetworkImageProvider(person.imageUrl)
-                : null,
-            child: person.imageUrl == null ? Icon(Icons.person) : null,
-          ),
-          title: Text(person.name, style: kChatItemTitleStyle),
-          subtitle: _buildPreviewText(person.uid),
-          trailing: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if(messages.isNotEmpty)
-              Text(getTime(messages[0]), style: kChatItemSubtitleStyle),
-              if (messages.isNotEmpty && messages[0].fromId == person.uid) ...[
-                SizedBox(height: 5),
-                Container(
-                  height: 25,
-                  width: 25,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(25),
-                    color: Theme.of(context).accentColor,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${unreadMessages.length}',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+        child: Container(
+          height: 80,
+                  child: ListTile(                
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            leading: CircleAvatar(
+              
+              backgroundColor: Hexcolor('#303030'),
+              radius: 27,
+              backgroundImage: person.imageUrl != null
+                  ? CachedNetworkImageProvider(person.imageUrl)
+                  : null,
+              child: person.imageUrl == null ? Icon(Icons.person) : null,
+            ),
+            title: Text(person.name, style: kChatItemTitleStyle),
+            subtitle: _buildPreviewText(person.uid),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if(messages.isNotEmpty)
+                Text(getTime(messages[0]), style: kChatItemSubtitleStyle),
+                if (messages.isNotEmpty && messages[0].fromId == person.uid) ...[
+                  SizedBox(height: 5),
+                  Container(
+                    height: 25,
+                    width: 25,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25),
+                      color: Theme.of(context).accentColor,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${unreadMessages.length}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ]
-            ],
+                ]
+              ],
+            ),
           ),
         ),
       ),

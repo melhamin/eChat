@@ -1,5 +1,3 @@
-
-
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -13,6 +11,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/screens/contact_details.dart';
+import 'package:whatsapp_clone/widgets/app_bar.dart';
 
 class ChatItemScreen extends StatefulWidget {
   final InitChatData chatData;
@@ -275,70 +275,25 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     setState(() {
       _image = File(pickedFile.path);
     });
-  }
+  }  
 
   @override
-  Widget build(BuildContext context) {
-    // print('build: +====================> ()');
+  Widget build(BuildContext context) {    
     return SafeArea(
       bottom: true,
       child: Scaffold(
         backgroundColor: Hexcolor('#141414'),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight + 5),
-                  child: AppBar(
-            backgroundColor: Colors.black,
-            centerTitle: true,
-            elevation: 0,
-            leading: BackButton(
-              color: Theme.of(context).accentColor,
-            ),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  widget.chatData.person.name,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
-                ),
-                Text(
-                  'tap for more info',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                )
-              ],
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 20, top: 5, bottom: 5),
-                child: CircleAvatar(
-                  backgroundColor: Colors.white.withOpacity(0.9),
-                  radius: 23,
-                  backgroundImage: widget.chatData.person.imageUrl != null
-                      ? CachedNetworkImageProvider(
-                          widget.chatData.person.imageUrl)
-                      : null,
-                  child: widget.chatData.person.imageUrl == null
-                      ? Icon(Icons.person)
-                      : null,
-                ),
-              ),
-            ],
-          ),
+          child: MyAppBar(widget.chatData.person),
         ),
         body: Container(
           decoration: BoxDecoration(
-          color: Hexcolor('#202020'),          
+            color: Hexcolor('#202020'),
             borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(25),
-                  topLeft: Radius.circular(25),
-                ),
+              topRight: Radius.circular(25),
+              topLeft: Radius.circular(25),
+            ),
           ),
           child: StreamBuilder(
               stream: stream(),
@@ -385,7 +340,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                           margin: const EdgeInsets.only(
                               left: 10, right: 10, bottom: 10),
                           decoration: BoxDecoration(
-                            color: Hexcolor('#303030'),
+                              color: Hexcolor('#303030'),
                               borderRadius: BorderRadius.circular(25)),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.start,
@@ -443,7 +398,6 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       ),
     );
   }
-
 }
 
 class MessageBubble extends StatelessWidget {
@@ -475,22 +429,22 @@ class MessageBubble extends StatelessWidget {
 
   List<Widget> _buildBubbleContent(BuildContext context) {
     return [
-      message.type == '0' ? 
-      Text(
-          message.content,
-          style: TextStyle(
-            fontSize: 17,
-            color: Colors.black.withOpacity(0.97),
-          ),
-        ) : 
-      Container(
-        height: 100,
-        width: 100,
-        child: CachedNetworkImage(
-          fit: BoxFit.cover,
-          imageUrl: message.content,
-        ),
-      ),
+      message.type == '0'
+          ? Text(
+              message.content,
+              style: TextStyle(
+                fontSize: 17,
+                color: Colors.black.withOpacity(0.97),
+              ),
+            )
+          : Container(
+              height: 100,
+              width: 100,
+              child: CachedNetworkImage(
+                fit: BoxFit.cover,
+                imageUrl: message.content,
+              ),
+            ),
       SizedBox(width: 10),
       Wrap(
         children: [
@@ -552,7 +506,9 @@ class MessageBubble extends StatelessWidget {
                         topRight: Radius.circular(15),
                         bottomLeft: Radius.circular(15),
                       ),
-                color: isMe ? Colors.white.withOpacity(0.87) : Theme.of(context).accentColor,
+                color: isMe
+                    ? Colors.white.withOpacity(0.87)
+                    : Theme.of(context).accentColor,
               ),
               padding: const EdgeInsets.all(12.0),
               child: didExceedMaxLines(constraints.maxWidth - 80)
@@ -571,30 +527,27 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-
 class ImageUploader extends StatefulWidget {
-  final File image;  
+  final File image;
   ImageUploader(this.image);
   @override
   _ImageUploaderState createState() => _ImageUploaderState();
 }
 
 class _ImageUploaderState extends State<ImageUploader> {
-
-  final FirebaseStorage _storage = FirebaseStorage(storageBucket: 'gs://flutter-whatsapp-1ab58.appspot.com');
+  final FirebaseStorage _storage =
+      FirebaseStorage(storageBucket: 'gs://flutter-whatsapp-1ab58.appspot.com');
   StorageUploadTask _uploadTask;
 
   void _upload() {
     String path = 'images/${DateTime.now().millisecondsSinceEpoch}.png';
     setState(() {
-      _storage.ref().child(path).putFile(widget.image);      
+      _storage.ref().child(path).putFile(widget.image);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      
-    );
+    return Container();
   }
 }

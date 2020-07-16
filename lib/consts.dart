@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 
 
+Color kBorderColor1 = Colors.white.withOpacity(0.1);
+Color kBorderColor2 = Colors.white.withOpacity(0.07);
+
 TextStyle kWhatsAppStyle = TextStyle(
   fontSize: 21,
   fontWeight: FontWeight.bold,

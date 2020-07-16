@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/all_users.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
@@ -152,7 +153,7 @@ class ChatsScreen extends StatelessWidget {
                     indent: 85,
                     endIndent: 15,
                     height: 0,
-                    color: Colors.white.withOpacity(0.12),
+                    color: kBorderColor1,
                   );
                 },
               ),
