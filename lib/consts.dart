@@ -5,6 +5,8 @@ import 'package:hexcolor/hexcolor.dart';
 Color kBorderColor1 = Colors.white.withOpacity(0.1);
 Color kBorderColor2 = Colors.white.withOpacity(0.07);
 
+Color kBaseWhiteColor = Colors.white.withOpacity(0.87);
+
 TextStyle kWhatsAppStyle = TextStyle(
   fontSize: 21,
   fontWeight: FontWeight.bold,

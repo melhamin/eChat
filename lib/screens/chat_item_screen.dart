@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
@@ -175,9 +176,9 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     final message = snapshot;
     // snapshot is Message ? snapshot : Message.fromSnapshot(snapshot);
     return MessageBubble(
-      message: message,
-      isMe: message.fromId == userId,
-    );
+        message: message,
+        isMe: message.fromId == userId,
+        peer: widget.chatData.person);
   }
 
   void onSend(String value) {
@@ -282,14 +283,14 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     return SafeArea(
       bottom: true,
       child: Scaffold(
-        backgroundColor: Hexcolor('#121212'),
+        backgroundColor: Hexcolor('#202020'),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight + 5),
           child: MyAppBar(widget.chatData.person),
         ),
         body: Container(
           decoration: BoxDecoration(
-            color: Hexcolor('#202020'),
+            color: Hexcolor('#121212'),
             borderRadius: BorderRadius.only(
               topRight: Radius.circular(25),
               topLeft: Radius.circular(25),
@@ -350,14 +351,14 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                // SizedBox(width: 5),
-                                IconButton(
-                                  icon: Icon(Icons.camera_alt),
-                                  color: Colors.white.withOpacity(0.7),
-                                  iconSize: 27,
+                                SizedBox(width: 5),
+                                CupertinoButton(
+                                  padding: const EdgeInsets.all(0),
+                                  child: Icon(Icons.camera_alt,
+                                      size: 27,
+                                      color: Theme.of(context).accentColor),
                                   onPressed: () => getImage(),
                                 ),
-                                // SizedBox(width: 5),
                                 Flexible(
                                   child: TextField(
                                     style: TextStyle(
@@ -367,6 +368,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                                     controller: _textEditingController,
                                     keyboardType: TextInputType.text,
                                     textInputAction: TextInputAction.go,
+                                    cursorColor: Theme.of(context).accentColor,
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
                                       hintText: 'Type a message',
@@ -379,13 +381,12 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                                   ),
                                 ),
                                 // Spacer(),
-                                InkWell(
+                                CupertinoButton(
+                                  padding: const EdgeInsets.all(0),
                                   child: Icon(Icons.send,
                                       size: 30,
                                       color: Theme.of(context).accentColor),
-                                  splashColor: Colors.transparent,
-                                  highlightColor: Theme.of(context).accentColor,
-                                  onTap: () =>
+                                  onPressed: () =>
                                       onSend(_textEditingController.text),
                                 ),
                                 SizedBox(width: 10),
@@ -409,9 +410,11 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 class MessageBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
+  final Person peer;
   MessageBubble({
     @required this.message,
     @required this.isMe,
+    @required this.peer,
   });
 
   bool didExceedMaxLines(double maxWidth) {
@@ -433,108 +436,130 @@ class MessageBubble extends StatelessWidget {
     return '$hRes:$mRes';
   }
 
-  List<Widget> _buildBubbleContent(BuildContext context) {
+  List<Widget> _buildBubbleContent(BuildContext context, bool multiLine) {
     return [
-      message.type == '0'
-          ? Text(
-              message.content,
-              style: TextStyle(
-                fontSize: 17,
-                color: Colors.black.withOpacity(0.97),
-              ),
-            )
-          : Container(
-              height: 100,
-              width: 100,
-              child: CachedNetworkImage(
-                fit: BoxFit.cover,
-                imageUrl: message.content,
-              ),
-            ),
-      SizedBox(width: 10),
-      Wrap(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 3),
-            child: Text(
-              getTime(),
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black.withOpacity(0.6),
-              ),
-            ),
+      Padding(
+        padding: multiLine
+            ? const EdgeInsets.only(left: 12, right: 12, top: 12)
+            : const EdgeInsets.all(12.0),
+        child: Text(
+          message.content,
+          style: TextStyle(
+            fontSize: 17,
+            color: kBaseWhiteColor,
           ),
-          if (isMe) ...[
-            SizedBox(width: 5),
-            Icon(
-              Icons.done_all,
-              color: message.isSeen
-                  ? Theme.of(context).accentColor
-                  : Colors.black.withOpacity(0.35),
-              size: 19,
-            ),
-          ]
-        ],
+        ),
+      ),
+      SizedBox(width: 10),
+      FittedBox(
+        child: Padding(
+          padding: multiLine
+              ? const EdgeInsets.only(right: 10, bottom: 10)
+              : const EdgeInsets.only(top: 20, right: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                getTime(),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.6),
+                ),
+              ),
+              if (isMe)
+                Row(
+                  children: [
+                    SizedBox(width: 5),
+                    Icon(
+                      Icons.done_all,
+                      color: message.isSeen
+                          ? Theme.of(context).accentColor
+                          : Colors.white.withOpacity(0.35),
+                      size: 19,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
       ),
     ];
+  } 
+
+  Widget _buildWithoutImage(BuildContext context, BoxConstraints constraints) {
+    bool isMultiLine = didExceedMaxLines(constraints.maxWidth - 80);
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        border: isMe ? null : Border.all(color: Hexcolor('#303030')),
+        color: isMe ? Hexcolor('#303030') : Hexcolor('#121212'),
+      ),      
+      child: isMultiLine
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: _buildBubbleContent(context, isMultiLine),
+            )
+          : Wrap(
+              children: _buildBubbleContent(context, isMultiLine),
+            ),
+    );
+  }
+
+  Widget _buildWithImage(BuildContext context, BoxConstraints constraints) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Flexible(
+          flex: 1,
+          child: CircleAvatar(
+            backgroundColor: Hexcolor('#202020'),
+            backgroundImage: peer.imageUrl == null || peer.imageUrl == ''
+                ? null
+                : CachedNetworkImageProvider(peer.imageUrl),
+            child: peer.imageUrl == null || peer.imageUrl == ''
+                ? Icon(Icons.person, color: kBaseWhiteColor)
+                : null,
+            radius: 15,
+          ),
+        ),
+        SizedBox(width: 5),
+        Flexible(
+          flex: 3,
+          child: _buildWithoutImage(context, constraints),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      margin: isMe ? EdgeInsets.only(left: 80) : EdgeInsets.only(right: 80),
-      child: Material(
-        color: isMe
-            ? Colors.white.withOpacity(0.87)
-            : Theme.of(context).accentColor,
-        borderRadius: isMe
-            ? BorderRadius.only(
-                topRight: Radius.circular(15),
-                topLeft: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-              )
-            : BorderRadius.only(
-                bottomRight: Radius.circular(15),
-                topRight: Radius.circular(15),
-                bottomLeft: Radius.circular(15),
-              ),
-        elevation: 2,
-        child: LayoutBuilder(
-          builder: (ctx, constraints) {
-            return Container(
-              decoration: BoxDecoration(
-                borderRadius: isMe
-                    ? BorderRadius.only(
-                        topRight: Radius.circular(15),
-                        topLeft: Radius.circular(15),
-                        bottomLeft: Radius.circular(15),
-                      )
-                    : BorderRadius.only(
-                        bottomRight: Radius.circular(15),
-                        topRight: Radius.circular(15),
-                        bottomLeft: Radius.circular(15),
-                      ),
-                color: isMe
-                    ? Colors.white.withOpacity(0.87)
-                    : Theme.of(context).accentColor,
-              ),
-              padding: const EdgeInsets.all(12.0),
-              child: didExceedMaxLines(constraints.maxWidth - 80)
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: _buildBubbleContent(context),
-                    )
-                  : Wrap(
-                      children: _buildBubbleContent(context),
-                    ),
-            );
-          },
-        ),
+      margin: isMe ? EdgeInsets.only(left: 50) : EdgeInsets.only(right: 50),
+      child: LayoutBuilder(
+        builder: (ctx, constraints) {
+          return !isMe
+              ? _buildWithImage(context, constraints)
+              : _buildWithoutImage(context, constraints);
+        },
       ),
     );
   }
 }
+
+/**
+ * if(!isMe) 
+              Flexible(
+                flex: 1,
+                              child: CircleAvatar(
+                backgroundImage: CachedNetworkImageProvider(
+                  peer.imageUrl
+                ),
+                radius: 15,
+            ),
+              ),
+ */
 
 class ImageUploader extends StatefulWidget {
   final File image;

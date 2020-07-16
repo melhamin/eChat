@@ -149,13 +149,17 @@ class _ChatItemState extends State<ChatItem> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(info.imageUrl),
+            backgroundColor: Hexcolor('#303030'),
+            backgroundImage: (info.imageUrl != null && info.imageUrl != '')
+                  ? CachedNetworkImageProvider(info.imageUrl)
+                  : null,
+              child: (info.imageUrl == null || info.imageUrl == '') ? Icon(Icons.person, color: kBaseWhiteColor,) : null,
             radius: 27,
           ),
           SizedBox(height: 10),
           Text(info.name, style: TextStyle(
             fontSize: 16,
-            color: Colors.white.withOpacity(0.87),
+            color: kBaseWhiteColor,
           ),),
         ],
       ),
@@ -183,10 +187,10 @@ class _ChatItemState extends State<ChatItem> {
               
               backgroundColor: Hexcolor('#303030'),
               radius: 27,
-              backgroundImage: person.imageUrl != null
+              backgroundImage: (person.imageUrl != null && person.imageUrl != '')
                   ? CachedNetworkImageProvider(person.imageUrl)
                   : null,
-              child: person.imageUrl == null ? Icon(Icons.person) : null,
+              child: (person.imageUrl == null || person.imageUrl == '') ? Icon(Icons.person, color: kBaseWhiteColor,) : null,
             ),
             title: Text(person.name, style: kChatItemTitleStyle),
             subtitle: _buildPreviewText(person.uid),

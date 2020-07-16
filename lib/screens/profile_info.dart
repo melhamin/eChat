@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
@@ -39,36 +40,30 @@ class ProfileInfo extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                height: 100,
-                width: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
+                  height: 100,
+                  width: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
                   ),
-                ),
-              ),
-              SizedBox(height: 5),
-              GestureDetector(
-                child: Container(                                    
-                  child: Text(
-                    'Edit',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      color: Theme.of(context).accentColor,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(100),
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
-                onTap: () => print('edititng -------< '),
-              ),
+                SizedBox(height: 5),
+                CupertinoButton(
+                  onPressed: () {},
+                  child: Text(
+                    'Edit',
+                    style: TextStyle(
+                        fontSize: 17, color: Theme.of(context).accentColor),
+                  ),
+                ),
               ],
-            ),           
-            // SizedBox(height: 5),            
+            ),
             SizedBox(height: 15),
             Align(
               alignment: Alignment.centerLeft,
@@ -77,7 +72,7 @@ class ProfileInfo extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w400,
-                  color: Colors.white.withOpacity(0.87),
+                  color: kBaseWhiteColor,
                 ),
               ),
             ),
@@ -117,7 +112,7 @@ class ProfileInfo extends StatelessWidget {
               user.email,
               style: TextStyle(
                 fontSize: 17,
-                color: Colors.white.withOpacity(0.87),
+                color: kBaseWhiteColor,
               ),
             ),
           ),
@@ -147,12 +142,42 @@ class ProfileInfo extends StatelessWidget {
               'Available',
               style: TextStyle(
                 fontSize: 17,
-                color: Colors.white.withOpacity(0.87),
+                color: kBaseWhiteColor,
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  void showConfirmDialog(BuildContext context) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(        
+        title: Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Text('Logout?'),
+        ),
+        content: Text('Are you sure?'),
+        actions: [
+          CupertinoButton(
+            child: Text('Yes'),
+            onPressed: () {
+              Provider.of<Auth>(context, listen: false).signOut();
+            },
+            // color: Theme.of(context).accentColor,
+            padding: const EdgeInsets.all(0),
+          ),
+          CupertinoButton(
+            child: Text('No'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            padding: const EdgeInsets.all(0),
+          ),
+        ],
+      ),
     );
   }
 
@@ -182,9 +207,9 @@ class ProfileInfo extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: Colors.white),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Provider.of<Auth>(context, listen: false).signOut();
+                    CupertinoButton(
+                      onPressed: () {
+                        showConfirmDialog(context);
                       },
                       child: Text(
                         'Log Out',

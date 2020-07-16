@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
@@ -13,18 +14,29 @@ class ContactDetails extends StatefulWidget {
 }
 
 class _ContactDetailsState extends State<ContactDetails> {
-  Widget _buildImage(MediaQueryData mq) => Container(
+  Widget _buildImage(MediaQueryData mq) {
+    if (widget.info.imageUrl == null || widget.info.imageUrl == '') {
+      return Container(
         width: mq.size.width,
+        color: Hexcolor('#202020'),
         height: mq.size.height * 0.3,
-        child: CachedNetworkImage(
-          imageUrl: widget.info.imageUrl,
-          fit: BoxFit.cover,
-        ),
+        child: Icon(Icons.person, size: mq.size.height * 0.25, color: kBaseWhiteColor,),
       );
+    }
+    return Container(
+      width: mq.size.width,
+      height: mq.size.height * 0.3,
+      child: CachedNetworkImage(
+        imageUrl: widget.info.imageUrl,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
 
   Widget _buildIcon(IconData icon, Function onTap) {
-    return InkWell(
-      onTap: onTap,
+    return CupertinoButton(
+      padding: const EdgeInsets.all(0),
+      onPressed: onTap,
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration:
@@ -41,8 +53,7 @@ class _ContactDetailsState extends State<ContactDetails> {
   Widget _buildNameAndIcons() {
     return Container(
       decoration: BoxDecoration(
-          border: Border(
-              bottom: BorderSide(color: kBorderColor2))),
+          border: Border(bottom: BorderSide(color: kBorderColor2))),
       padding: const EdgeInsets.only(right: 20, bottom: 10),
       margin: const EdgeInsets.only(
         left: 20,
@@ -56,7 +67,7 @@ class _ContactDetailsState extends State<ContactDetails> {
               Text(
                 widget.info.name,
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.87),
+                    color: kBaseWhiteColor,
                     fontSize: 18,
                     fontWeight: FontWeight.w600),
               ),
@@ -66,9 +77,9 @@ class _ContactDetailsState extends State<ContactDetails> {
           ),
           Spacer(),
           _buildIcon(Icons.message, () => Navigator.of(context).pop()),
-          SizedBox(width: 10),
+          SizedBox(width: 5),
           _buildIcon(Icons.videocam, () {}),
-          SizedBox(width: 10),
+          SizedBox(width: 5),
           _buildIcon(Icons.call, () {}),
         ],
       ),
@@ -84,7 +95,7 @@ class _ContactDetailsState extends State<ContactDetails> {
           Text(
             'Hey there! I am using eChat.',
             style:
-                TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.87)),
+                TextStyle(fontSize: 16, color: kBaseWhiteColor),
           ),
           SizedBox(height: 5),
           Text(
@@ -116,7 +127,9 @@ class _ContactDetailsState extends State<ContactDetails> {
         ),
       );
 
-  Widget _buildMediaTile(IconData icon, Color iconColor, String title, String end) => Material(
+  Widget _buildMediaTile(
+          IconData icon, Color iconColor, String title, String end) =>
+      Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {},
@@ -129,7 +142,7 @@ class _ContactDetailsState extends State<ContactDetails> {
               children: [
                 Icon(
                   icon,
-                  size: 35,                  
+                  size: 35,
                   color: iconColor,
                 ),
                 SizedBox(width: 10),
@@ -137,7 +150,7 @@ class _ContactDetailsState extends State<ContactDetails> {
                   title,
                   style: TextStyle(
                     fontSize: 17,
-                    color: Colors.white.withOpacity(0.87),
+                    color: kBaseWhiteColor,
                   ),
                 ),
                 Spacer(),
@@ -163,12 +176,18 @@ class _ContactDetailsState extends State<ContactDetails> {
           ),
         ),
         child: Column(
-          children: [            
-            _buildMediaTile(Icons.image, Theme.of(context).accentColor, 'Media, Links, and Docs', '16'),
-            Divider(height: 0, color: kBorderColor1, indent: 65), // 65 (left padding + icon size)           
-            _buildMediaTile(Icons.star, Hexcolor('#800020'), 'Starred Messages', 'None'),            
-            Divider(height: 0, color: kBorderColor1, indent: 65),            
-            _buildMediaTile(Icons.search, Hexcolor('##ff6d00'), 'Chat Search', ''),            
+          children: [
+            _buildMediaTile(Icons.image, Theme.of(context).accentColor,
+                'Media, Links, and Docs', '16'),
+            Divider(
+                height: 0,
+                color: kBorderColor1,
+                indent: 65), // 65 (left padding + icon size)
+            _buildMediaTile(
+                Icons.star, Hexcolor('#800020'), 'Starred Messages', 'None'),
+            Divider(height: 0, color: kBorderColor1, indent: 65),
+            _buildMediaTile(
+                Icons.search, Hexcolor('##ff6d00'), 'Chat Search', ''),
           ],
         ),
       );
@@ -186,7 +205,7 @@ class _ContactDetailsState extends State<ContactDetails> {
               title,
               style: TextStyle(
                 fontSize: 17,
-                color: Colors.white.withOpacity(0.87),
+                color: kBaseWhiteColor,
               ),
             ),
           ),
@@ -200,13 +219,19 @@ class _ContactDetailsState extends State<ContactDetails> {
             top: BorderSide(color: kBorderColor2),
             bottom: BorderSide(color: kBorderColor2),
           ),
-        ),        
+        ),
         child: Column(
           children: [
             _buildActionsTile('Share Contact', mq),
-            Divider(height: 0, color: kBorderColor1, indent: 20), // 20 (left padding + icon size)           
+            Divider(
+                height: 0,
+                color: kBorderColor1,
+                indent: 20), // 20 (left padding + icon size)
             _buildActionsTile('Export Chat', mq),
-            Divider(height: 0, color: kBorderColor1, indent: 20), // 20 (left padding + icon size)           
+            Divider(
+                height: 0,
+                color: kBorderColor1,
+                indent: 20), // 20 (left padding + icon size)
             _buildActionsTile('Clear Chat', mq),
           ],
         ),
@@ -227,16 +252,17 @@ class _ContactDetailsState extends State<ContactDetails> {
             title: Text(
               'Contact Info',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.87),
+                  color: kBaseWhiteColor,
                   fontSize: 18,
                   fontWeight: FontWeight.w600),
             ),
             actions: [
-              GestureDetector(
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.only(right: 20),
-                  child: Text(
+              Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.only(right: 5),
+                child: CupertinoButton(
+                  onPressed: () {},
+                                    child: Text(
                     'Edit',
                     style: TextStyle(
                         fontSize: 16, color: Theme.of(context).accentColor),

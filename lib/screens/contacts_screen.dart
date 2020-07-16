@@ -17,59 +17,8 @@ class ContactsScreen extends StatelessWidget {
     final userID = Provider.of<User>(context, listen: false).getUserId;
     snapshot.removeWhere((element) => element.documentID != userID);
   }
-
-  /**
-   * Container(          
-          height: mq.size.height * 0.25,
-          padding: const EdgeInsets.only(left: 15, top: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(    
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Chats',
-                      style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(right: 15),
-                      padding: const EdgeInsets.all(5),
-                      child: Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 25,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Hexcolor('#202020'),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                // color: Colors.yellowAccent,
-                height: mq.size.height * 0.15,
-                child: ListView.separated(                    
-                  scrollDirection: Axis.horizontal,
-                  itemCount: chats.length,
-                  itemBuilder: (ctx, i) =>
-                      ChatItem(initChatData: chats[i], withDetails: true),
-                      separatorBuilder: (_,__) => SizedBox(width: 30),
-                ),                
-              ),
-            ],
-          ),
-        ),
-   */
-
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     return Column(
       children: [
@@ -186,26 +135,33 @@ class ContactsScreen extends StatelessWidget {
   }
 
   Widget _buildContactsItem(BuildContext context, DocumentSnapshot item) {
+    // print('item ------>${item['username']} - image ---------> ${item['imageUrl']}');
     return Material(
       color: Colors.transparent,
-          child: InkWell(
+      child: InkWell(
         splashColor: Colors.transparent,
         highlightColor: Hexcolor('#121212'),
         onTap: () => onTap(context, item),
         child: Container(
           height: 70,
           child: Center(
-                      child: ListTile(
+            child: ListTile(
               // contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               leading: CircleAvatar(
+                backgroundColor: Hexcolor('#303030'),
                 radius: 27,
-                backgroundImage: CachedNetworkImageProvider(item['imageUrl']),
+                child: (item['imageUrl'] == null || item['imageUrl'] == '') ? Icon(Icons.person, size: 25, color: kBaseWhiteColor,): null,
+                backgroundImage: (item['imageUrl'] != null && item['imageUrl'] != '')
+                    ? CachedNetworkImageProvider(item['imageUrl'])
+                    : null,
               ),
-              title: Text(item['username'], style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white.withOpacity(0.87)
-              ),),
+              title: Text(
+                item['username'],
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: kBaseWhiteColor),
+              ),
             ),
           ),
         ),

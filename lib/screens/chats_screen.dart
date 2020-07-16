@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
@@ -46,7 +47,16 @@ class ChatsScreen extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundImage: CachedNetworkImageProvider(person.imageUrl),
+              child: (person.imageUrl == null || person.imageUrl == '')
+                  ? Icon(
+                      Icons.person,
+                      size: 25,
+                      color: kBaseWhiteColor,
+                    )
+                  : null,
+              backgroundImage: person.imageUrl == null
+                  ? null
+                  : CachedNetworkImageProvider(person.imageUrl),
             ),
             SizedBox(height: 8),
             Text(person.name),
@@ -77,17 +87,17 @@ class ChatsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chats = Provider.of<User>(context).chats;
-    final contacts = Provider.of<AllUsers>(context).allUsers;
     final mq = MediaQuery.of(context);
     return Column(
       children: [
-        Container(          
+        Container(
           height: mq.size.height * 0.25,
-          padding: const EdgeInsets.only(left: 15, top: 20),
+          padding: const EdgeInsets.only(top: 20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(    
+              Container(
+                padding: const EdgeInsets.only(left: 15),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -98,17 +108,21 @@ class ChatsScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: Colors.white),
                     ),
-                    Container(
-                      margin: const EdgeInsets.only(right: 15),
-                      padding: const EdgeInsets.all(5),
-                      child: Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 25,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Hexcolor('#202020'),
-                        borderRadius: BorderRadius.circular(10),
+                    CupertinoButton(
+                      padding: const EdgeInsets.all(0),
+                      onPressed: () {},
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 15),
+                        padding: const EdgeInsets.all(5),
+                        child: Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 25,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Hexcolor('#202020'),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ],
@@ -117,53 +131,59 @@ class ChatsScreen extends StatelessWidget {
               Container(
                 // color: Colors.yellowAccent,
                 height: mq.size.height * 0.15,
-                child: ListView.separated(                    
+                child: ListView.separated(
+                  padding: const EdgeInsets.only(left: 15),
                   scrollDirection: Axis.horizontal,
                   itemCount: chats.length,
                   itemBuilder: (ctx, i) =>
                       ChatItem(initChatData: chats[i], withDetails: true),
-                      separatorBuilder: (_,__) => SizedBox(width: 30),
-                ),                
+                  separatorBuilder: (_, __) => SizedBox(width: 30),
+                ),
               ),
             ],
           ),
         ),
-
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Hexcolor('#202020'),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(30),
-                topLeft: Radius.circular(30),
+        chats.isEmpty
+            ? Center(
+                child: Text(
+                  'You have no messages yet.',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: kBaseWhiteColor),
+                ),
+              )
+            : Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Hexcolor('#202020'),
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(30),
+                      topLeft: Radius.circular(30),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(30),
+                      topLeft: Radius.circular(30),
+                    ),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.only(top: 10),
+                      itemCount: chats.length,
+                      itemBuilder: (ctx, i) =>
+                          ChatItem(initChatData: chats[i], withDetails: false),
+                      separatorBuilder: (ctx, i) {
+                        return Divider(
+                          indent: 85,
+                          endIndent: 15,
+                          height: 0,
+                          color: kBorderColor1,
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(30),
-                topLeft: Radius.circular(30),
-              ),
-              child: ListView.separated(
-                padding: const EdgeInsets.only(top: 10),                  
-                itemCount: chats.length,
-                itemBuilder: (ctx, i) =>
-                    ChatItem(initChatData: chats[i], withDetails: false),
-                separatorBuilder: (ctx, i) {
-                  return Divider(
-                    indent: 85,
-                    endIndent: 15,
-                    height: 0,
-                    color: kBorderColor1,
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-        // Expanded(
-        //   // height: 600,
-        //   child: _buildTabContent(items[0]),
-        // ),
       ],
     );
     // return ListView.separated(

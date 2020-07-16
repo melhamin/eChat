@@ -88,6 +88,7 @@ class User with ChangeNotifier {
     _userId = _user.uid;
     final userData =
         await Firestore.instance.collection('users').document(_userId).get();
+        print('user Data=============> ${userData}');
     userData.data['contacts'].forEach((elem) => _contacts.add(elem));
     notifyListeners();
     print(_contacts);

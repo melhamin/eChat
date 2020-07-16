@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/screens/contact_details.dart';
 
@@ -42,7 +44,7 @@ class _MyAppBarState extends State<MyAppBar>
 
   void goToContactDetails() {
     Navigator.of(context).push(
-      MaterialPageRoute(
+      MaterialPageRoute(             
         builder: (context) => ContactDetails(widget.info),
       ),
     );
@@ -51,14 +53,14 @@ class _MyAppBarState extends State<MyAppBar>
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Hexcolor('#121212'),
+      backgroundColor: Hexcolor('#202020'),
       centerTitle: true,
       elevation: 0,
       leading: BackButton(
         color: Theme.of(context).accentColor,
       ),
-      title: GestureDetector(
-        onTap: goToContactDetails,
+      title: CupertinoButton(
+        onPressed: goToContactDetails,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -67,7 +69,7 @@ class _MyAppBarState extends State<MyAppBar>
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withOpacity(0.87),
+                color: kBaseWhiteColor,
               ),
             ),
             AnimatedContainer(
@@ -91,12 +93,12 @@ class _MyAppBarState extends State<MyAppBar>
           child: GestureDetector(
             onTap: goToContactDetails,
             child: CircleAvatar(
-              backgroundColor: Colors.white.withOpacity(0.9),
+              backgroundColor: Hexcolor('#303030'),
               radius: 23,
-              backgroundImage: widget.info.imageUrl != null
+              backgroundImage: (widget.info.imageUrl != null && widget.info.imageUrl != '')
                   ? CachedNetworkImageProvider(widget.info.imageUrl)
                   : null,
-              child: widget.info.imageUrl == null ? Icon(Icons.person) : null,
+              child: (widget.info.imageUrl == null || widget.info.imageUrl == '') ? Icon(Icons.person, color: kBaseWhiteColor,) : null,
             ),
           ),
         ),

@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/widgets/app_bar.dart';
 
@@ -32,21 +34,21 @@ class _AuthScreenState extends State<AuthScreen> {
         padding: const EdgeInsets.only(left: 10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(25),
-          border: Border.all(),
+          border: Border.all(color: Colors.transparent),
           color: Hexcolor('#303030'),
         ),
         margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: TextFormField(
           style: TextStyle(
             fontSize: 16,
-            color: Colors.white.withOpacity(0.87),
+            color: kBaseWhiteColor,
           ),
           obscureText: obscureText,
           decoration: InputDecoration(
             border: InputBorder.none,
             hintText: label,
             hintStyle:
-                TextStyle(color: Colors.white.withOpacity(0.87), fontSize: 16),
+                TextStyle(color: kBaseWhiteColor.withOpacity(0.6), fontSize: 16),
           ),
           onSaved: (value) => _authData['$saveTo'] = value.trim(),
           validator: (value) {
@@ -76,9 +78,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white.withOpacity(0.87)),
+                        color: kBaseWhiteColor),
                   ),
-                  GestureDetector(
+                  CupertinoButton(
                     child: Text(
                       authMode == AuthMode.SignIn ? 'Sign Up' : 'Log In',
                       style: TextStyle(
@@ -86,7 +88,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         fontSize: 18,
                       ),
                     ),
-                    onTap: () => setState(() {
+                    onPressed: () => setState(() {
                       if (authMode == AuthMode.SignIn)
                         authMode = AuthMode.SignUp;
                       else
@@ -134,7 +136,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    GestureDetector(
+                    CupertinoButton(
                         child: Container(
                           width: mq.size.width * 0.5,
                           height: 50,
@@ -148,11 +150,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color: kBaseWhiteColor,
                             ),
                           ),
                         ),
-                        onTap: () => authMode == AuthMode.SignUp
+                        onPressed: () => authMode == AuthMode.SignUp
                             ? _signUp()
                             : _signIn()),
                   ],
@@ -176,7 +178,7 @@ class _AuthScreenState extends State<AuthScreen> {
     _formKey.currentState.save();
     print('singup calle ------------>');
     Provider.of<Auth>(context, listen: false)
-        .signUp(_authData['email'], _authData['password']);
+        .signUp(_authData['username'], _authData['email'], _authData['password']);
   }
 
   void _signIn() {

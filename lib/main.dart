@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/all_users.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/providers/user.dart';
@@ -34,10 +35,11 @@ class MyApp extends StatelessWidget {
               primaryColor: Colors.white,
               scaffoldBackgroundColor: Hexcolor('#121212'),
               accentColor: Color(0xFFFFAD32),
+              // accentColor: Hexcolor('#0A84FF'),
               appBarTheme: AppBarTheme(
                 color: Hexcolor('#075E54'),
                 actionsIconTheme: IconThemeData(
-                  color: Colors.white.withOpacity(0.87),
+                  color: kBaseWhiteColor,
                 ),
               ),
               visualDensity: VisualDensity.adaptivePlatformDensity,

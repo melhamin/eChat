@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -7,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class BaseAuth {
   Future<String> signIn(String email, String password);
-  Future<String> signUp(String email, String password);
+  Future<String> signUp(String username, String email, String password);
   Future<FirebaseUser> getCurrentUser();
   Future<void> signOut();
 }
@@ -46,13 +47,29 @@ class Auth with ChangeNotifier implements BaseAuth {
   }
 
   @override
-  Future<String> signUp(String email, String password) async {
-    print('email ======> $email password ----------> $password');
+  Future<String> signUp(String username, String email, String password) async {
+    // print('email ======> $email password ----------> $password');
     AuthResult result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     FirebaseUser user = result.user;
     _user = user;
     notifyListeners();
+
+    final firestore = Firestore.instance;
+    var documentRef = firestore.collection('users').document(user.uid);
+    firestore.runTransaction((transaction) async {
+      await transaction.set(documentRef, {
+        'contacts': [],
+        'imageUrl': user.photoUrl,
+        'username': username,
+      });
+    });
+    // firestore.runTransaction((transaction) async {
+    //   snaps
+    // });
+    
+    
+
     return user.uid;
   }
 
