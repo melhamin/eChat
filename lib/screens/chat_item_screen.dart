@@ -282,7 +282,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     return SafeArea(
       bottom: true,
       child: Scaffold(
-        backgroundColor: Hexcolor('#141414'),
+        backgroundColor: Hexcolor('#121212'),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight + 5),
           child: MyAppBar(widget.chatData.person),
@@ -295,105 +295,111 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
               topLeft: Radius.circular(25),
             ),
           ),
-          child: StreamBuilder(
-              stream: stream(),
-              builder: (ctx, snapshots) {
-                // print('snapshot length ----------> ${snapshots.data.documents.length}');
-                addNewMessages(snapshots);
-                return LayoutBuilder(
-                  builder: (ctx, constraints) {
-                    return
-                        // !snapshots.hasData
-                        //     ? Center(
-                        //         child: Text('Loading...'),
-                        //       )
-                        //     :
-                        Column(
-                      children: [
-                        Flexible(
-                          child: ListView.separated(
-                            controller: _scrollController,
-                            reverse: true,
-                            padding: const EdgeInsets.only(
-                                left: 15, right: 15, top: 10, bottom: 10),
-                            itemCount: initData.length,
-                            // snapshots.data.documents.length,
-                            // !snapshot.hasData
-                            // ? widget.chatData.messages.length
-                            // : snapshot.data.documents.length,
-                            itemBuilder: (ctx, i) {
-                              return
-                                  //  _buildMessageItem(
-                                  //     snapshots.data.documents[i]);
-                                  _buildMessageItem(initData[i]);
+          child: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topRight: Radius.circular(25),
+              topLeft: Radius.circular(25),
+            ),
+                      child: StreamBuilder(
+                stream: stream(),
+                builder: (ctx, snapshots) {
+                  // print('snapshot length ----------> ${snapshots.data.documents.length}');
+                  addNewMessages(snapshots);
+                  return LayoutBuilder(
+                    builder: (ctx, constraints) {
+                      return
+                          // !snapshots.hasData
+                          //     ? Center(
+                          //         child: Text('Loading...'),
+                          //       )
+                          //     :
+                          Column(
+                        children: [
+                          Flexible(
+                            child: ListView.separated(
+                              controller: _scrollController,
+                              reverse: true,
+                              padding: const EdgeInsets.only(
+                                  left: 15, right: 15, top: 10, bottom: 10),
+                              itemCount: initData.length,
+                              // snapshots.data.documents.length,
                               // !snapshot.hasData
-                              //   ? widget.chatData.messages[i]
-                              //   : snapshot.data.documents[i]);
-                            },
-                            separatorBuilder: (_, __) {
-                              return SizedBox(height: 10);
-                            },
+                              // ? widget.chatData.messages.length
+                              // : snapshot.data.documents.length,
+                              itemBuilder: (ctx, i) {
+                                return
+                                    //  _buildMessageItem(
+                                    //     snapshots.data.documents[i]);
+                                    _buildMessageItem(initData[i]);
+                                // !snapshot.hasData
+                                //   ? widget.chatData.messages[i]
+                                //   : snapshot.data.documents[i]);
+                              },
+                              separatorBuilder: (_, __) {
+                                return SizedBox(height: 10);
+                              },
+                            ),
                           ),
-                        ),
-                        Container(
-                          width: constraints.maxWidth,
-                          margin: const EdgeInsets.only(
-                              left: 10, right: 10, bottom: 10),
-                          decoration: BoxDecoration(
-                              color: Hexcolor('#303030'),
-                              borderRadius: BorderRadius.circular(25)),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              // SizedBox(width: 5),
-                              IconButton(
-                                icon: Icon(Icons.camera_alt),
-                                color: Colors.white.withOpacity(0.7),
-                                iconSize: 27,
-                                onPressed: () => getImage(),
-                              ),
-                              // SizedBox(width: 5),
-                              Flexible(
-                                child: TextField(
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white.withOpacity(0.95)),
-                                  focusNode: _textFieldFocusNode,
-                                  controller: _textEditingController,
-                                  keyboardType: TextInputType.text,
-                                  textInputAction: TextInputAction.go,
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    hintText: 'Type a message',
-                                    hintStyle: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white.withOpacity(0.7),
-                                    ),
-                                  ),
-                                  onSubmitted: (value) => onSend(value),
+                          Container(
+                            width: constraints.maxWidth,
+                            margin: const EdgeInsets.only(
+                                left: 10, right: 10, bottom: 10),
+                            decoration: BoxDecoration(
+                                color: Hexcolor('#303030'),
+                                borderRadius: BorderRadius.circular(25)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                // SizedBox(width: 5),
+                                IconButton(
+                                  icon: Icon(Icons.camera_alt),
+                                  color: Colors.white.withOpacity(0.7),
+                                  iconSize: 27,
+                                  onPressed: () => getImage(),
                                 ),
-                              ),
-                              // Spacer(),
-                              InkWell(
-                                child: Icon(Icons.send,
-                                    size: 30,
-                                    color: Theme.of(context).accentColor),
-                                splashColor: Colors.transparent,
-                                highlightColor: Theme.of(context).accentColor,
-                                onTap: () =>
-                                    onSend(_textEditingController.text),
-                              ),
-                              SizedBox(width: 10),
-                            ],
+                                // SizedBox(width: 5),
+                                Flexible(
+                                  child: TextField(
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white.withOpacity(0.95)),
+                                    focusNode: _textFieldFocusNode,
+                                    controller: _textEditingController,
+                                    keyboardType: TextInputType.text,
+                                    textInputAction: TextInputAction.go,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: 'Type a message',
+                                      hintStyle: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white.withOpacity(0.7),
+                                      ),
+                                    ),
+                                    onSubmitted: (value) => onSend(value),
+                                  ),
+                                ),
+                                // Spacer(),
+                                InkWell(
+                                  child: Icon(Icons.send,
+                                      size: 30,
+                                      color: Theme.of(context).accentColor),
+                                  splashColor: Colors.transparent,
+                                  highlightColor: Theme.of(context).accentColor,
+                                  onTap: () =>
+                                      onSend(_textEditingController.text),
+                                ),
+                                SizedBox(width: 10),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              }
-              // },
-              ),
+                        ],
+                      );
+                    },
+                  );
+                }
+                // },
+                ),
+          ),
         ),
       ),
     );

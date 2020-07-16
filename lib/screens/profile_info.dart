@@ -6,6 +6,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/all_users.dart';
+import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
@@ -21,7 +22,7 @@ class ProfileInfo extends StatelessWidget {
 
   Widget _buildImageAndName(BuildContext context, String imageUrl) => Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-        decoration: BoxDecoration(          
+        decoration: BoxDecoration(
           color: Hexcolor('#202020'),
           borderRadius: BorderRadius.only(
             topRight: Radius.circular(25),
@@ -33,9 +34,11 @@ class ProfileInfo extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.center,
-              child: Container(
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
                 height: 100,
                 width: 100,
                 decoration: BoxDecoration(
@@ -49,22 +52,23 @@ class ProfileInfo extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-            // SizedBox(height: 5),
-            Align(
-              alignment: Alignment.center,
-              child: IconButton(
-                icon: Text(
-                  'Edit',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                    color: Theme.of(context).accentColor,
+              SizedBox(height: 5),
+              GestureDetector(
+                child: Container(                                    
+                  child: Text(
+                    'Edit',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context).accentColor,
+                    ),
                   ),
                 ),
-                onPressed: () => print('edititng -------< '),
+                onTap: () => print('edititng -------< '),
               ),
-            ),
+              ],
+            ),           
+            // SizedBox(height: 5),            
             SizedBox(height: 15),
             Align(
               alignment: Alignment.centerLeft,
@@ -167,12 +171,28 @@ class ProfileInfo extends StatelessWidget {
             children: [
               Container(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Edit Profile',
-                  style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+                padding: const EdgeInsets.only(right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Provider.of<Auth>(context, listen: false).signOut();
+                      },
+                      child: Text(
+                        'Log Out',
+                        style: TextStyle(
+                            fontSize: 17, color: Theme.of(context).accentColor),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

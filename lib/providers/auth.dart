@@ -50,15 +50,14 @@ class Auth with ChangeNotifier implements BaseAuth {
         email: email, password: password);
     FirebaseUser user = result.user;
     _user = user;
-
-
-
     notifyListeners();
     return user.uid;
   }
 
   @override
   Future<void> signOut() {
-    return _firebaseAuth.signOut();
+    var res = _firebaseAuth.signOut();
+    notifyListeners();
+    return res;
   }
 }
