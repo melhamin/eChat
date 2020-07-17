@@ -26,7 +26,7 @@ class _AuthScreenState extends State<AuthScreen> {
     _formKey = GlobalKey<FormState>();
   }
 
-  Widget _buildFormField(String label, String saveTo,
+  Widget _buildFormField(String label, String saveTo, Function validator,
           [bool obscureText = false]) =>
       Container(
         height: 55,
@@ -51,10 +51,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 TextStyle(color: kBaseWhiteColor.withOpacity(0.6), fontSize: 16),
           ),
           onSaved: (value) => _authData['$saveTo'] = value.trim(),
-          validator: (value) {
-            if (value.isEmpty) return 'Invalid input.';
-            return null;
-          },
+          validator: validator, 
         ),
       );
 
@@ -81,6 +78,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         color: kBaseWhiteColor),
                   ),
                   CupertinoButton(
+                    padding: const EdgeInsets.all(0),
                     child: Text(
                       authMode == AuthMode.SignIn ? 'Sign Up' : 'Log In',
                       style: TextStyle(
@@ -115,21 +113,31 @@ class _AuthScreenState extends State<AuthScreen> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          if (authMode == AuthMode.SignUp)
+                          // if (authMode == AuthMode.SignUp)
                             AnimatedContainer(
                               duration: Duration(milliseconds: 200),
                               height: authMode == AuthMode.SignUp ? 75 : 0,
                               child: _buildFormField(
                                   authMode == AuthMode.SignUp ? 'Username' : '',
-                                  'username'),
+                                  'username', (value) {}),
                             ),
                           _buildFormField(
                             'Email',
                             'email',
+                            (value){
+                              if(value.isEmpty) 
+                              return 'Invalid email.';
+                              return null;
+                            }
                           ),
                           _buildFormField(
                             'Password',
                             'password',
+                            (value){
+                              if(value.isEmpty) 
+                              return 'Invalid password.';
+                              return null;
+                            },
                             true,
                           ),
                         ],

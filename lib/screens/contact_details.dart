@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/person.dart';
-import 'package:whatsapp_clone/widgets/app_bar.dart';
+import 'package:intl/intl.dart';
 
 class ContactDetails extends StatefulWidget {
   final Person info;
@@ -72,7 +72,7 @@ class _ContactDetailsState extends State<ContactDetails> {
                     fontWeight: FontWeight.w600),
               ),
               SizedBox(height: 5),
-              Text('Email here', style: kChatItemSubtitleStyle),
+              Text(widget.info.email?? 'No Available', style: kChatItemSubtitleStyle),
             ],
           ),
           Spacer(),
@@ -86,6 +86,11 @@ class _ContactDetailsState extends State<ContactDetails> {
     );
   }
 
+  String getAboutChangeDate(DateTime changeDate) {
+    if(changeDate == null) return 'Not Available';    
+    return DateFormat('MMMM dd yyyy').format(changeDate);
+  }
+
   Widget _buildAbout() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -93,13 +98,14 @@ class _ContactDetailsState extends State<ContactDetails> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hey there! I am using eChat.',
+            widget.info.about?? 'Not Available.',
+            
             style:
                 TextStyle(fontSize: 16, color: kBaseWhiteColor),
           ),
           SizedBox(height: 5),
           Text(
-            '16 Jun 2020',
+            getAboutChangeDate(widget.info.aboutChangeDate) ,
             style: kChatItemSubtitleStyle,
           ),
         ],

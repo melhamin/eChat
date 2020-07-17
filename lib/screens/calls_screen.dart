@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:whatsapp_clone/consts.dart';
 class CallsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -41,7 +42,17 @@ class CallsScreen extends StatelessWidget {
               ),
             ],
           ),
-        ),        
+        ),   
+        SizedBox(height: 100),
+        Center(
+                child: Text(
+                  'You have no calls yet.',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: kBaseWhiteColor),
+                ),
+              )     
       ],
     );
   }

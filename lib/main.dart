@@ -36,8 +36,9 @@ class MyApp extends StatelessWidget {
               scaffoldBackgroundColor: Hexcolor('#121212'),
               accentColor: Color(0xFFFFAD32),
               // accentColor: Hexcolor('#0A84FF'),
+              brightness: Brightness.dark,
               appBarTheme: AppBarTheme(
-                color: Hexcolor('#075E54'),
+                color: Hexcolor('#202020'),                
                 actionsIconTheme: IconThemeData(
                   color: kBaseWhiteColor,
                 ),

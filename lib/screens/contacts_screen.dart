@@ -116,10 +116,8 @@ class ContactsScreen extends StatelessWidget {
   }
 
   void onTap(BuildContext context, DocumentSnapshot item) {
-    Person person = Person(
-        uid: item.documentID,
-        name: item['username'],
-        imageUrl: item['imageUrl']);
+    Person person = Person.fromSnapshot(item);        
+        
     final initData = Provider.of<User>(context, listen: false).chats.firstWhere(
         (element) {
       return element.person.uid == person.uid;
@@ -157,11 +155,7 @@ class ContactsScreen extends StatelessWidget {
               ),
               title: Text(
                 item['username'],
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: kBaseWhiteColor),
-              ),
+                style: kChatItemTitleStyle)
             ),
           ),
         ),

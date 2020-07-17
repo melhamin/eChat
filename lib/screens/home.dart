@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -19,16 +21,35 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
-  TabController tabController;
+  TabController tabController;  
 
   @override
   void initState() {
-    super.initState();
+    super.initState();    
+
     tabController = TabController(length: 4, vsync: this, initialIndex: 0);
     Future.delayed(Duration.zero).then((value) {
       Provider.of<AllUsers>(context, listen: false).fetchAllUsers();
       Provider.of<User>(context, listen: false).getUserData().then((value) {
         Provider.of<User>(context, listen: false).fetchChats();
+        _updateOnlineStatus();
+      });
+    });    
+  }
+
+  @override
+  void dispose() {
+    print('**************** dispose called *************')    ;
+    super.dispose();
+  }
+
+  void _updateOnlineStatus() {
+    print('************** update called ******************');
+    final uid = Provider.of<User>(context, listen: false).getUserId;
+    final docRef = Firestore.instance.collection('users').document(uid);
+    Firestore.instance.runTransaction((transaction) async {
+      transaction.update(docRef, {
+        'isOnline': true,
       });
     });
   }

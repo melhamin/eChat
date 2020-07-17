@@ -25,14 +25,19 @@ class Auth with ChangeNotifier implements BaseAuth {
     return _user != null;
   }
 
-  static FirebaseUser get getUser {
+  FirebaseUser get getUser {
     return _user;
+  }
+
+  void reloadUser() {
+    _user.reload();
+    notifyListeners();
   }
 
   @override
   Future<FirebaseUser> getCurrentUser() async {
-    FirebaseUser user = await _firebaseAuth.currentUser();
-    return user;
+    _user = await _firebaseAuth.currentUser();
+    return _user;
   }
 
   @override
@@ -53,6 +58,7 @@ class Auth with ChangeNotifier implements BaseAuth {
         email: email, password: password);
     FirebaseUser user = result.user;
     _user = user;
+
     notifyListeners();
 
     final firestore = Firestore.instance;
@@ -62,6 +68,7 @@ class Auth with ChangeNotifier implements BaseAuth {
         'contacts': [],
         'imageUrl': user.photoUrl,
         'username': username,
+        'email': email,
       });
     });
     // firestore.runTransaction((transaction) async {

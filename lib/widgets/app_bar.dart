@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -17,17 +18,23 @@ class MyAppBar extends StatefulWidget {
 
 class _MyAppBarState extends State<MyAppBar>
     with SingleTickerProviderStateMixin {
-  AnimationController _controller;
+  AnimationController _animationController;
+
+  Animation _animation;
+
   Timer _timer;
   bool collapsed = false;
 
   @override
   void initState() {
     super.initState();
-    // _controller = AnimationController(
-    //   vsync: this,
-    //   duration: Duration(seconds: 3),
-    // );
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 300),
+    );
+
+    _animation = Tween(begin: 1.0, end: 0.0).animate(_animationController);
+
     _timer = Timer(Duration(seconds: 3), () {
       collapse();
     });
@@ -39,15 +46,25 @@ class _MyAppBarState extends State<MyAppBar>
   }
 
   void collapse() {
-    if (mounted) setState(() => collapsed = true);
+    _animationController.forward();
+    Future.delayed(Duration(milliseconds: 300)).then((value) {
+      if (mounted) setState(() => collapsed = true);
+    });
   }
 
   void goToContactDetails() {
     Navigator.of(context).push(
-      MaterialPageRoute(             
+      MaterialPageRoute(
         builder: (context) => ContactDetails(widget.info),
       ),
     );
+  }
+
+  stream() {
+    return Firestore.instance
+        .collection('users')
+        .document(widget.info.uid)
+        .snapshots();
   }
 
   @override
@@ -72,15 +89,40 @@ class _MyAppBarState extends State<MyAppBar>
                 color: kBaseWhiteColor,
               ),
             ),
+            if (collapsed)
+              StreamBuilder(
+                  stream: stream(),
+                  builder: (ctx, snapshot) {
+                    if (!snapshot.hasData)
+                      return Container(width: 0, height: 0);
+                    else {
+                      return AnimatedContainer(
+                        duration: Duration(milliseconds: 300),
+                        height: snapshot.data['isOnline'] ? 15 : 0,
+                        child: Text(
+                          'Online',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                      );
+                    }
+                  }),
             AnimatedContainer(
               duration: Duration(milliseconds: 200),
+              curve: Curves.easeIn,
               height: collapsed ? 0 : 18,
-              child: Text(
-                'tap for more info',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white.withOpacity(0.7),
+              child: FadeTransition(
+                opacity: _animation,
+                child: Text(
+                  'tap for more info',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
                 ),
               ),
             )
@@ -95,10 +137,17 @@ class _MyAppBarState extends State<MyAppBar>
             child: CircleAvatar(
               backgroundColor: Hexcolor('#303030'),
               radius: 23,
-              backgroundImage: (widget.info.imageUrl != null && widget.info.imageUrl != '')
-                  ? CachedNetworkImageProvider(widget.info.imageUrl)
-                  : null,
-              child: (widget.info.imageUrl == null || widget.info.imageUrl == '') ? Icon(Icons.person, color: kBaseWhiteColor,) : null,
+              backgroundImage:
+                  (widget.info.imageUrl != null && widget.info.imageUrl != '')
+                      ? CachedNetworkImageProvider(widget.info.imageUrl)
+                      : null,
+              child:
+                  (widget.info.imageUrl == null || widget.info.imageUrl == '')
+                      ? Icon(
+                          Icons.person,
+                          color: kBaseWhiteColor,
+                        )
+                      : null,
             ),
           ),
         ),

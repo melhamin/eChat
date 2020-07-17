@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
+import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -43,12 +44,27 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   File _image;
   final picker = ImagePicker();
 
+  Alignment bodyAlignment = Alignment.center;
+
+  KeyboardVisibilityNotification _keyboard;
+  bool isVisible = false;
+
   @override
   void initState() {
     super.initState();
     _textEditingController = TextEditingController();
     _scrollController = ScrollController();
     _textFieldFocusNode = FocusNode();
+
+    _keyboard = KeyboardVisibilityNotification();
+
+    _keyboard.addNewListener(onChange: (visible) {
+      print('keyboard ============> ');
+      setState(() {
+        isVisible = visible;
+        // bodyAlignment = visible ? Alignment.topCenter : Alignment.center;
+      });
+    });
 
     initData = widget.chatData.messages;
 
@@ -117,14 +133,14 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     );
     initData.insert(0, newMessage);
     // String groupChatId = await getGroupChatId();
-    var documentRef = Firestore.instance
+    var chatsDocumentRef = Firestore.instance
         .collection('messages')
         .document(groupChatId)
         .collection(groupChatId)
         .document(time.millisecondsSinceEpoch.toString());
 
     Firestore.instance.runTransaction((transaction) async {
-      await transaction.set(documentRef, {
+      await transaction.set(chatsDocumentRef, {
         'fromId': userId,
         'toId': peerId,
         'date': time.toIso8601String(),
@@ -136,6 +152,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     });
 
     final userContacts = Provider.of<User>(context, listen: false).getContacts;
+    // add user to contacts if not already in contacts
     if (!userContacts.contains(peerId)) {
       Provider.of<User>(context, listen: false).addToContacts(peerId);
       var userDocumentRef =
@@ -144,6 +161,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         'contacts': userContacts,
       }, merge: true);
 
+      // add to peer contacts too
       var peerDcoumentRef =
           Firestore.instance.collection('users').document(peerId);
       final peerRef = await peerDcoumentRef.get();
@@ -152,15 +170,12 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       peerRef.data['contacts'].forEach((elem) => peerContacts.add(elem));
       peerContacts.add(userId);
 
+      // update peer contacts
       peerDcoumentRef.setData({
         'contacts': peerContacts,
       }, merge: true);
 
-      Person person = Person(
-        uid: peerId,
-        name: peerRef['username'],
-        imageUrl: peerRef['imageUrl'],
-      );
+      Person person = Person.fromSnapshot(peerRef);
       Message message = Message(
           content: content, timeStamp: time, fromId: userId, toId: peerId);
       InitChatData initChatData = InitChatData(
@@ -169,6 +184,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         messages: [message],
       );
       Provider.of<User>(context, listen: false).addToInitChats(initChatData);
+    } else {
+      Provider.of<User>(context, listen: false).bringChatToTop(groupChatId);
     }
   }
 
@@ -283,123 +300,121 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     return SafeArea(
       bottom: true,
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Hexcolor('#202020'),
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight + 5),
           child: MyAppBar(widget.chatData.person),
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            color: Hexcolor('#121212'),
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(25),
-              topLeft: Radius.circular(25),
-            ),
-          ),
+        body: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(FocusNode());
+          },
           child: ClipRRect(
             borderRadius: BorderRadius.only(
               topRight: Radius.circular(25),
               topLeft: Radius.circular(25),
             ),
-            child: StreamBuilder(
-                stream: stream(),
-                builder: (ctx, snapshots) {
-                  // print('snapshot length ----------> ${snapshots.data.documents.length}');
-                  addNewMessages(snapshots);
-                  return LayoutBuilder(
-                    builder: (ctx, constraints) {
-                      return
-                          // !snapshots.hasData
-                          //     ? Center(
-                          //         child: Text('Loading...'),
-                          //       )
-                          //     :
-                          Column(
-                        children: [
-                          Flexible(
-                            child: ListView.separated(
-                              controller: _scrollController,
-                              reverse: true,
-                              padding: const EdgeInsets.only(
-                                  left: 15, right: 15, top: 10, bottom: 10),
-                              itemCount: initData.length,
-                              // snapshots.data.documents.length,
-                              // !snapshot.hasData
-                              // ? widget.chatData.messages.length
-                              // : snapshot.data.documents.length,
-                              itemBuilder: (ctx, i) {
-                                return
-                                    //  _buildMessageItem(
-                                    //     snapshots.data.documents[i]);
-                                    _buildMessageItem(initData[i]);
-                                // !snapshot.hasData
-                                //   ? widget.chatData.messages[i]
-                                //   : snapshot.data.documents[i]);
-                              },
-                              separatorBuilder: (_, __) {
-                                return SizedBox(height: 10);
-                              },
+            child: Container(
+              color: Hexcolor('#121212'),
+              child: StreamBuilder(
+                  stream: stream(),
+                  builder: (ctx, snapshots) {
+                    // print('snapshot length ----------> ${snapshots.data.documents.length}');
+                    addNewMessages(snapshots);
+                    return LayoutBuilder(
+                      builder: (ctx, constraints) {
+                        return Column(
+                          children: [
+                            Flexible(
+                              child: ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                controller: _scrollController,
+                                reverse: true,
+                                padding: const EdgeInsets.only(
+                                    left: 15, right: 15, top: 10, bottom: 10),
+                                itemCount: initData.length,
+                                itemBuilder: (ctx, i) {
+                                  return _buildMessageItem(initData[i]);
+                                },
+                                separatorBuilder: (_, __) {
+                                  return SizedBox(height: 10);
+                                },
+                              ),
                             ),
-                          ),
-                          Container(
-                            width: constraints.maxWidth,
-                            margin: const EdgeInsets.only(
-                                left: 10, right: 10, bottom: 10),
-                            decoration: BoxDecoration(
-                                color: Hexcolor('#303030'),
-                                borderRadius: BorderRadius.circular(25)),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                SizedBox(width: 5),
-                                CupertinoButton(
-                                  padding: const EdgeInsets.all(0),
-                                  child: Icon(Icons.camera_alt,
-                                      size: 27,
-                                      color: Theme.of(context).accentColor),
-                                  onPressed: () => getImage(),
-                                ),
-                                Flexible(
-                                  child: TextField(
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.white.withOpacity(0.95)),
-                                    focusNode: _textFieldFocusNode,
-                                    controller: _textEditingController,
-                                    keyboardType: TextInputType.text,
-                                    textInputAction: TextInputAction.go,
-                                    cursorColor: Theme.of(context).accentColor,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: 'Type a message',
-                                      hintStyle: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.white.withOpacity(0.7),
-                                      ),
-                                    ),
-                                    onSubmitted: (value) => onSend(value),
+                            Container(
+                              width: constraints.maxWidth,
+                              margin: const EdgeInsets.only(
+                                  left: 10, right: 10, bottom: 10),
+                              decoration: BoxDecoration(
+                                  color: Hexcolor('#303030'),
+                                  borderRadius: BorderRadius.circular(25)),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  SizedBox(width: 5),
+                                  CupertinoButton(
+                                    padding: const EdgeInsets.all(0),
+                                    child: Icon(Icons.camera_alt,
+                                        size: 27,
+                                        color: Theme.of(context).accentColor),
+                                    onPressed: () => getImage(),
                                   ),
-                                ),
-                                // Spacer(),
-                                CupertinoButton(
-                                  padding: const EdgeInsets.all(0),
-                                  child: Icon(Icons.send,
-                                      size: 30,
-                                      color: Theme.of(context).accentColor),
-                                  onPressed: () =>
-                                      onSend(_textEditingController.text),
-                                ),
-                                SizedBox(width: 10),
-                              ],
+                                  Flexible(
+                                    child: TextField(
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.white.withOpacity(0.95)),
+                                      focusNode: _textFieldFocusNode,
+                                      controller: _textEditingController,
+                                      keyboardType: TextInputType.text,
+                                      textInputAction: TextInputAction.go,
+                                      cursorColor: Theme.of(context).accentColor,
+                                      keyboardAppearance: Brightness.dark,
+                                      decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: 'Type a message',
+                                        hintStyle: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.white.withOpacity(0.7),
+                                        ),
+                                      ),
+                                      onSubmitted: (value) => onSend(value),
+                                    ),
+                                  ),
+                                  // Spacer(),
+                                  CupertinoButton(
+                                    padding: const EdgeInsets.all(0),
+                                    child: Icon(Icons.send,
+                                        size: 30,
+                                        color: Theme.of(context).accentColor),
+                                    onPressed: () =>
+                                        onSend(_textEditingController.text),
+                                  ),
+                                  SizedBox(width: 10),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                }
-                // },
-                ),
+                            AnimatedContainer(
+                              duration: Duration(milliseconds: 100),
+                              height: isVisible ? MediaQuery.of(context)
+                                          .viewInsets
+                                          .bottom : 0,
+                              // margin: isVisible
+                              //     ? EdgeInsets.only(
+                              //         bottom: MediaQuery.of(context)
+                              //             .viewInsets
+                              //             .bottom)
+                              //     : EdgeInsets.only(bottom: 0),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+                  // },
+                  ),
+            ),
           ),
         ),
       ),
@@ -454,7 +469,7 @@ class MessageBubble extends StatelessWidget {
       FittedBox(
         child: Padding(
           padding: multiLine
-              ? const EdgeInsets.only(right: 10, bottom: 10)
+              ? const EdgeInsets.only(right: 10, bottom: 10, top: 5)
               : const EdgeInsets.only(top: 20, right: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -485,16 +500,16 @@ class MessageBubble extends StatelessWidget {
         ),
       ),
     ];
-  } 
+  }
 
   Widget _buildWithoutImage(BuildContext context, BoxConstraints constraints) {
-    bool isMultiLine = didExceedMaxLines(constraints.maxWidth - 80);
+    bool isMultiLine = didExceedMaxLines(constraints.maxWidth * 0.75 - 90);
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         border: isMe ? null : Border.all(color: Hexcolor('#303030')),
         color: isMe ? Hexcolor('#303030') : Hexcolor('#121212'),
-      ),      
+      ),
       child: isMultiLine
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.end,

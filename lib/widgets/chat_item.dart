@@ -41,40 +41,7 @@ class _ChatItemState extends State<ChatItem> {
     String hRes = hour <= 9 ? '0$hour' : hour.toString();
     String mRes = min <= 9 ? '0$min' : min.toString();
     return '$hRes:$mRes';
-  }
-
-  // String groupChatId() {
-  //   String userId = widget.initChatData.messages[0].fromId;
-  //   String peerId = widget.initChatData.messages[0].toId;
-  //   if (userId.hashCode <= peerId.hashCode)
-  //     return '$userId-$peerId';
-  //   else
-  //     return '$peerId-$userId';
-  // }
-
-  /**
-   * 
-
-          if (!snapshots.hasData)
-          return Text('nodata ');
-        else {
-          Message newMsg = Message.fromSnapshot(snapshots.data.documents[0]);
-          unreadMessages.insert(0, newMsg);
-          return Row(
-            children: [
-              
-                  if (newMsg.fromId != person.uid) ...[
-          SizedBox(width: 5),
-          Icon(
-            Icons.done_all,
-            size: 19,
-            color: newMsg.isSeen
-                ? Theme.of(context).accentColor
-                : Colors.black.withOpacity(0.35),
-          ),
-          
-          }
-   */
+  } 
 
   Widget _buildPreviewText(String peerId) {
     return StreamBuilder(
@@ -89,58 +56,63 @@ class _ChatItemState extends State<ChatItem> {
         if (!snapshots.hasData)
           return Text('loading...');
         else {
-          if(snapshots.data.documents.length != 0) {
-          final snapshot = snapshots.data.documents[0];
-          Message newMsg = Message.fromSnapshot(snapshot);
-          final exist = unreadMessages.firstWhere(
-              (element) => element.fromId == newMsg.fromId,
-              orElse: () => null);
+          if (snapshots.data.documents.length != 0) {
+            final snapshot = snapshots.data.documents[0];
+            Message newMsg = Message.fromSnapshot(snapshot);
+            final exist = unreadMessages.firstWhere(
+                (element) => element.fromId == newMsg.fromId,
+                orElse: () => null);
 
-          if (exist != null) unreadMessages.insert(0, newMsg);
+            if (exist != null) unreadMessages.insert(0, newMsg);
 
-          if (newMsg.timeStamp
-              .isAfter(widget.initChatData.messages[0].timeStamp))
+            if (newMsg.timeStamp
+                .isAfter(widget.initChatData.messages[0].timeStamp))
               // if(wid)
-            widget.initChatData.addMessage(newMsg);
+              widget.initChatData.addMessage(newMsg);
 
-          return Row(
-            children: [
-              newMsg.type == '1' ? 
-              Container(
-                child: Row(
-                  children: [
-                    Icon(Icons.photo_camera, size: 15, color: Colors.black.withOpacity(0.45),),
-                    SizedBox(width: 8),
-                    Text('Photo', style: kChatItemSubtitleStyle)
-                  ],
-                ),
-              ) :
-              Flexible(
-                child: Text(newMsg.content,
-                    style: kChatItemSubtitleStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-              ),
-              if (newMsg.fromId != peerId) ...[
-                SizedBox(width: 5),
-                Icon(
-                  Icons.done_all,
-                  size: 19,
-                  color: newMsg.isSeen
-                      ? Theme.of(context).accentColor
-                      : Colors.white.withOpacity(0.7),
-                ),
+            return Row(
+              children: [
+                newMsg.type == '1'
+                    ? Container(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.photo_camera,
+                              size: 15,
+                              color: Colors.black.withOpacity(0.45),
+                            ),
+                            SizedBox(width: 8),
+                            Text('Photo', style: kChatItemSubtitleStyle)
+                          ],
+                        ),
+                      )
+                    : Flexible(
+                        child: Text(newMsg.content,
+                            style: kChatItemSubtitleStyle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis),
+                      ),
+                if (newMsg.fromId != peerId) ...[
+                  SizedBox(width: 5),
+                  Icon(
+                    Icons.done_all,
+                    size: 19,
+                    color: newMsg.isSeen
+                        ? Theme.of(context).accentColor
+                        : Colors.white.withOpacity(0.7),
+                  ),
+                ],
               ],
-            ],
-          );}
-          else return Container();
+            );
+          } else
+            return Container();
         }
       },
     );
   }
 
   Widget _buildWithoutDetails(Person info) {
-    return GestureDetector(      
+    return GestureDetector(
       onTap: () {
         Navigator.of(context).push(_buildRoute());
       },
@@ -151,16 +123,28 @@ class _ChatItemState extends State<ChatItem> {
           CircleAvatar(
             backgroundColor: Hexcolor('#303030'),
             backgroundImage: (info.imageUrl != null && info.imageUrl != '')
-                  ? CachedNetworkImageProvider(info.imageUrl)
-                  : null,
-              child: (info.imageUrl == null || info.imageUrl == '') ? Icon(Icons.person, color: kBaseWhiteColor,) : null,
+                ? CachedNetworkImageProvider(info.imageUrl)
+                : null,
+            child: (info.imageUrl == null || info.imageUrl == '')
+                ? Icon(
+                    Icons.person,
+                    color: kBaseWhiteColor,
+                  )
+                : null,
             radius: 27,
           ),
           SizedBox(height: 10),
-          Text(info.name, style: TextStyle(
-            fontSize: 16,
-            color: kBaseWhiteColor,
-          ),),
+          SizedBox(
+            width: 54,
+            child: Text(
+              info.name,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                color: kBaseWhiteColor,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -170,61 +154,69 @@ class _ChatItemState extends State<ChatItem> {
   Widget build(BuildContext context) {
     final person = widget.initChatData.person;
     final messages = widget.initChatData.messages;
-    return widget.withDetails ? _buildWithoutDetails(person) :
-    Material(      
-      color: Colors.transparent,
-          child: InkWell(            
-        splashColor: Colors.transparent,
-        highlightColor: Hexcolor('#121212'),
-        onTap: () {
-          Navigator.of(context).push(_buildRoute());
-        },
-        child: Container(
-          height: 80,
-                  child: ListTile(                
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-            leading: CircleAvatar(
-              
-              backgroundColor: Hexcolor('#303030'),
-              radius: 27,
-              backgroundImage: (person.imageUrl != null && person.imageUrl != '')
-                  ? CachedNetworkImageProvider(person.imageUrl)
-                  : null,
-              child: (person.imageUrl == null || person.imageUrl == '') ? Icon(Icons.person, color: kBaseWhiteColor,) : null,
-            ),
-            title: Text(person.name, style: kChatItemTitleStyle),
-            subtitle: _buildPreviewText(person.uid),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if(messages.isNotEmpty)
-                Text(getTime(messages[0]), style: kChatItemSubtitleStyle),
-                if (messages.isNotEmpty && messages[0].fromId == person.uid) ...[
-                  SizedBox(height: 5),
-                  Container(
-                    height: 25,
-                    width: 25,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25),
-                      color: Theme.of(context).accentColor,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${unreadMessages.length}',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+    return widget.withDetails
+        ? _buildWithoutDetails(person)
+        : Material(
+            color: Colors.transparent,
+            child: InkWell(
+              splashColor: Colors.transparent,
+              highlightColor: Hexcolor('#121212'),
+              onTap: () {
+                Navigator.of(context).push(_buildRoute());
+              },
+              child: Container(
+                height: 80,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  leading: CircleAvatar(
+                    backgroundColor: Hexcolor('#303030'),
+                    radius: 27,
+                    backgroundImage:
+                        (person.imageUrl != null && person.imageUrl != '')
+                            ? CachedNetworkImageProvider(person.imageUrl)
+                            : null,
+                    child: (person.imageUrl == null || person.imageUrl == '')
+                        ? Icon(
+                            Icons.person,
+                            color: kBaseWhiteColor,
+                          )
+                        : null,
                   ),
-                ]
-              ],
+                  title: Text(person.name, style: kChatItemTitleStyle),
+                  subtitle: _buildPreviewText(person.uid),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (messages.isNotEmpty)
+                        Text(getTime(messages[0]),
+                            style: kChatItemSubtitleStyle),
+                      if (messages.isNotEmpty &&
+                          messages[0].fromId == person.uid) ...[
+                        SizedBox(height: 5),
+                        Container(
+                          height: 25,
+                          width: 25,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(25),
+                            color: Theme.of(context).accentColor,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${unreadMessages.length}',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ]
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
-    );
+          );
   }
 }

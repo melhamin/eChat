@@ -5,13 +5,19 @@ import 'package:flutter/material.dart';
 
 class Person {
   final String uid;
-  final String name;  
+  final String name; 
+  String email; 
   String imageUrl;
+  String about;
+  DateTime aboutChangeDate;
 
   Person({
     @required this.uid,
-    @required this.name,    
+    @required this.name, 
+    this.email,   
     this.imageUrl,
+    this.about,
+    this.aboutChangeDate,
   });
 
   static Person fromSnapshot(DocumentSnapshot snapshot) {
@@ -19,16 +25,21 @@ class Person {
     return Person(
       uid: snapshot.documentID,
       name: snapshot['username'],
+      email: snapshot['email'],
       imageUrl: snapshot['imageUrl'],      
+      about: snapshot['about'],  
+      aboutChangeDate: snapshot['aboutChangeDate'] != null ? DateTime.tryParse(snapshot['aboutChangeDate'])?? DateTime.now() : DateTime.now(),
     );
   }
 
-  static toJson(Person person) {
-    final map = {
+  static toJson(Person person) {    
+    return json.encode({
       'uid': person.uid,
       'name': person.name,
-      'imageUrl': person.imageUrl,      
-    };
-    return json.encode(map);
+      'email': person.email,
+      'imageUrl': person.imageUrl,         
+      'about': person.about,
+      'aboutChangeDate': person.aboutChangeDate.toIso8601String(),
+    });
   }
 }

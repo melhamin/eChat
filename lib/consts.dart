@@ -27,7 +27,7 @@ TextStyle kUnselectedTabStyle = TextStyle(
 
 TextStyle kChatItemTitleStyle = TextStyle(
   fontSize: 16,  
-  fontWeight: FontWeight.w600,
+  fontWeight: FontWeight.w400,
   color: Colors.white,
 );
 
