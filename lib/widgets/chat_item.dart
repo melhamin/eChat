@@ -136,12 +136,14 @@ class _ChatItemState extends State<ChatItem> {
           SizedBox(height: 10),
           SizedBox(
             width: 54,
-            child: Text(
-              info.name,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14,
-                color: kBaseWhiteColor,
+            child: Center(
+              child: Text(
+                info.name,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: kBaseWhiteColor,
+                ),
               ),
             ),
           ),

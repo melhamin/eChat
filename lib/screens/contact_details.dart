@@ -243,9 +243,15 @@ class _ContactDetailsState extends State<ContactDetails> {
         ),
       );
 
+  Widget _buildIOSBackButton() => CupertinoButton(
+    child: Icon(CupertinoIcons.back, color: Theme.of(context).accentColor),
+    onPressed: () => Navigator.of(context).pop(),
+  );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) {    
     final mq = MediaQuery.of(context);
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return SafeArea(
       child: Scaffold(
         appBar: PreferredSize(
@@ -254,7 +260,7 @@ class _ContactDetailsState extends State<ContactDetails> {
             centerTitle: true,
             backgroundColor: Hexcolor('#121212'),
             elevation: 0,
-            leading: BackButton(color: Theme.of(context).accentColor),
+            leading: isIos ? _buildIOSBackButton() : BackButton(color: Theme.of(context).accentColor),
             title: Text(
               'Contact Info',
               style: TextStyle(

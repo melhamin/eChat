@@ -126,10 +126,19 @@ class User with ChangeNotifier {
     final userData =
         await Firestore.instance.collection('users').document(_userId).get();
     // print('user Data=============> ${userData}');
+    if(userData.data != null)
     userData.data['contacts'].forEach((elem) => _contacts.insert(0, elem));
     _imageUrl = _user.photoUrl;
     notifyListeners();
     // print(_contacts);
+  }
+
+  void clearChatsAndContacts() {
+    // return Future.delayed(Duration.zero).then((value) {
+      _chats.clear();
+    _contacts.clear();    
+    // });
+    // notifyListeners();
   }
 
   void savePrefs() {}

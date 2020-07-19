@@ -21,35 +21,37 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
-  TabController tabController;  
+  TabController tabController;
 
   @override
   void initState() {
-    super.initState();    
-
+    super.initState();
     tabController = TabController(length: 4, vsync: this, initialIndex: 0);
+
+    // Fetch user data(chats and contacts), and update online status
     Future.delayed(Duration.zero).then((value) {
       Provider.of<AllUsers>(context, listen: false).fetchAllUsers();
       Provider.of<User>(context, listen: false).getUserData().then((value) {
         Provider.of<User>(context, listen: false).fetchChats();
-        _updateOnlineStatus();
+        _updateOnlineStatus(true);
       });
-    });    
+    });
   }
 
   @override
   void dispose() {
-    print('**************** dispose called *************')    ;
     super.dispose();
+    // _updateOnlineStatus(false).then((value) => super.dispose());
+    // super.dispose();
   }
 
-  void _updateOnlineStatus() {
-    print('************** update called ******************');
+  /// Update user status on Firebase
+  Future<dynamic> _updateOnlineStatus(bool status) {
     final uid = Provider.of<User>(context, listen: false).getUserId;
     final docRef = Firestore.instance.collection('users').document(uid);
-    Firestore.instance.runTransaction((transaction) async {
-      transaction.update(docRef, {
-        'isOnline': true,
+    return Firestore.instance.runTransaction((transaction) async {
+      await transaction.update(docRef, {
+        'isOnline': status,
       });
     });
   }
@@ -57,9 +59,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   Widget _buildTabs() {
     return Container(
       color: Hexcolor('#121212'),
-      padding: const EdgeInsets.only(bottom:8.0),
+      padding: const EdgeInsets.only(bottom: 8.0),
       child: Tabs(tabController),
-    );   
+    );
   }
 
   Widget _buildTabContent() {
@@ -77,7 +79,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(     
+      child: Scaffold(
         body: _buildTabContent(),
         bottomNavigationBar: _buildTabs(),
       ),
@@ -92,7 +94,7 @@ class Tabs extends StatefulWidget {
   _TabsState createState() => _TabsState();
 }
 
-class _TabsState extends State<Tabs> {  
+class _TabsState extends State<Tabs> {
   int currentIndex = 0;
 
   void onTap(int index) {
@@ -108,31 +110,26 @@ class _TabsState extends State<Tabs> {
       fontSize: 14,
       fontWeight: FontWeight.w600,
     );
-    return CupertinoTabBar(   
 
+    BottomNavigationBarItem _buildTabBarItem(String label, IconData icon) {
+      return BottomNavigationBarItem(
+        icon: Icon(icon),
+        title: Text(label, style: labelStyle),
+      );
+    }
+
+    return CupertinoTabBar(
       items: [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.call),
-          title: Text('Calls', style: labelStyle,),
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.message),
-          title: Text('Chats', style: labelStyle,),
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.contact_phone),
-          title: Text('Contacts', style: labelStyle,),
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.contact_phone),
-          title: Text('Profile Info', style: labelStyle,),
-        ),
+        _buildTabBarItem('Calls', Icons.call),
+        _buildTabBarItem('Chats', Icons.message),
+        _buildTabBarItem('Contacts', Icons.contact_phone),
+        _buildTabBarItem('Me', Icons.person),
       ],
       onTap: onTap,
       currentIndex: currentIndex,
       activeColor: Theme.of(context).accentColor,
       inactiveColor: Colors.white.withOpacity(0.7),
-      backgroundColor: Hexcolor('#121212'),      
-    );    
+      backgroundColor: Hexcolor('#121212'),
+    );
   }
 }

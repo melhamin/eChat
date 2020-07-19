@@ -67,13 +67,20 @@ class _MyAppBarState extends State<MyAppBar>
         .snapshots();
   }
 
+  Widget _buildIOSBackButton() => CupertinoButton(
+    child: Icon(CupertinoIcons.back),
+    onPressed: () => Navigator.of(context).pop(),
+  );
+
   @override
   Widget build(BuildContext context) {
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return AppBar(
       backgroundColor: Hexcolor('#202020'),
       centerTitle: true,
       elevation: 0,
-      leading: BackButton(
+      leading: isIos ? _buildIOSBackButton() :
+       BackButton(
         color: Theme.of(context).accentColor,
       ),
       title: CupertinoButton(

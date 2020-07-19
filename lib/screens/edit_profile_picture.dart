@@ -9,10 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
+import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/database/storage.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/profile_info.dart';
+import 'package:whatsapp_clone/utils/utils.dart';
 
 class EditProfilePicture extends StatefulWidget {
   final FirebaseUser info;
@@ -23,11 +26,10 @@ class EditProfilePicture extends StatefulWidget {
 }
 
 class _EditProfilePictureState extends State<EditProfilePicture> {
+  DB db;
   void initState() {
     super.initState();
-
-    // print('username ======> ${widget.info.displayName}');
-    // print('photoUrl ======> ${widget.info.photoUrl}');
+    db = DB();
   }
 
   Widget _getImage(MediaQueryData mq) {
@@ -40,14 +42,6 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
       fit: BoxFit.cover,
     );
   }
-
-  // void updateProfilePicture() {
-  //   UserUpdateInfo info = UserUpdateInfo();
-  //   info.photoUrl =
-  //       'https://www.aconsciousrethink.com/wp-content/uploads/2019/05/reserved-person-702x336.jpg';
-  //   info.displayName = 'Angela';
-  //   widget.info.updateProfile(info);
-  // }
 
   Widget _buildSelectedImage(MediaQueryData mq) {
     return Container(
@@ -133,37 +127,60 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
   bool imageSelected = false;
   final picker = ImagePicker();
 
+  Future<bool> showImageSourceModal() async {
+    return await showCupertinoModalPopup(
+      context: context,
+      builder: (ctx) => CupertinoActionSheet(
+        actions: [
+          CupertinoButton(
+            child: Text('Choose Photo', style: TextStyle(color: kBaseWhiteColor)),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+          CupertinoButton(
+            child: Text('Take Photo', style: TextStyle(color: kBaseWhiteColor)),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+        ],
+        cancelButton: CupertinoButton(
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: Theme.of(context).errorColor),
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
+  }
+
   void pickImage() async {
-    _image = null;
-    var pickedFile = await picker.getImage(source: ImageSource.gallery);
-    setState(() {
-      _image = File(pickedFile.path);
-      imageSelected = true;
+    showImageSourceModal().then((value) async {
+      if (value != null) {
+        _image = null;
+        var pickedFile = await Utils.pickImage(
+            value ? ImageSource.gallery : ImageSource.camera);
+        if (pickedFile != null) {
+          setState(() {
+            _image = File(pickedFile.path);
+            imageSelected = true;
+          });
+          // Navigator.of(context).pop();
+        }
+      }
     });
-    // Navigator.of(context).pop();
-  }  
+  }
 
   void updateProfilePicture(String url) {
     final user = Provider.of<User>(context, listen: false).getUser;
     final info = UserUpdateInfo();
     info.photoUrl = url;
-    user.updateProfile(info);    
+    user.updateProfile(info);
 
-    Firestore.instance
-        .collection('users')
-        .document(widget.info.uid)
-        .get()
-        .then((value) async {
-      await Firestore.instance.runTransaction((transaction) async {
-        await transaction.update(value.reference, {
-          'imageUrl': url,
-        });
-      });
-    });
+    db.updateUserInfo(widget.info.uid, {
+      'imageUrl': url,
+    });   
 
     Provider.of<User>(context, listen: false).setImageUrl(url);
-    Navigator.of(context).pop();        
-
+    Navigator.of(context).pop();
   }
 }
 
@@ -181,37 +198,35 @@ class PhotoUploader extends StatefulWidget {
 }
 
 class _PhotoUploaderState extends State<PhotoUploader> {
-  final FirebaseStorage _storage =
-      FirebaseStorage(storageBucket: 'gs://flutter-whatsapp-1ab58.appspot.com');
+  Storage _storage;
+
+  @override
+  void initState() {
+    super.initState();
+    _storage = Storage();
+  }
+
   StorageUploadTask _uploadTask;
 
   bool uploadCompleted = false;
   bool uploadStarted = false;
 
   void _startUpload() {
-    var filePath = 'profilePictures/${widget.uid}.png';
     setState(() {
-      _uploadTask = _storage.ref().child(filePath).putFile(widget.file);
+      _uploadTask = _storage.getUploadTask(
+          widget.file, 'profilePictures/${widget.uid}.png');
       uploadStarted = true;
     });
   }
 
   void getImageUrl() async {
-    var ref = FirebaseStorage.instance
-        .ref()
-        .child('profilePictures/${widget.uid}.png');
-    ref.getDownloadURL().then((value) => widget.getUrl(value));    
-  }
-
-  void onUploadCompleted() {
-    setState(() {
-      uploadCompleted = true;
-    });
+    String url = await _storage.getUrl('profilePictures', widget.uid);
+    widget.getUrl(url);
   }
 
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);    
+    final mq = MediaQuery.of(context);
     if (widget.file != null) {
       return Column(
         children: [
@@ -233,7 +248,7 @@ class _PhotoUploaderState extends State<PhotoUploader> {
                     LinearProgressIndicator(
                       value: progress,
                     ),
-                    Text('Uploaded : ${(progress * 100).toStringAsFixed(2)} %'),                   
+                    Text('Uploaded : ${(progress * 100).toStringAsFixed(2)} %'),
                   ],
                 );
               },
@@ -247,7 +262,7 @@ class _PhotoUploaderState extends State<PhotoUploader> {
               style:
                   TextStyle(fontSize: 22, color: Theme.of(context).accentColor),
             )),
-          ),        
+          ),
         ],
       );
     }

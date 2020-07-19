@@ -4,7 +4,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
-import 'package:whatsapp_clone/widgets/app_bar.dart';
+import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 enum AuthMode {
   SignIn,
@@ -19,6 +19,8 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   GlobalKey<FormState> _formKey;
   AuthMode authMode = AuthMode.SignIn;
+
+  String username = '';
 
   @override
   void initState() {
@@ -47,13 +49,22 @@ class _AuthScreenState extends State<AuthScreen> {
           decoration: InputDecoration(
             border: InputBorder.none,
             hintText: label,
-            hintStyle:
-                TextStyle(color: kBaseWhiteColor.withOpacity(0.6), fontSize: 16),
+            hintStyle: TextStyle(
+                color: kBaseWhiteColor.withOpacity(0.6), fontSize: 16),
           ),
           onSaved: (value) => _authData['$saveTo'] = value.trim(),
-          validator: validator, 
+          validator: validator,
         ),
       );
+
+  void _toggleAuthState() {
+    setState(() {
+      if (authMode == AuthMode.SignIn)
+        authMode = AuthMode.SignUp;
+      else
+        authMode = AuthMode.SignIn;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,115 +72,99 @@ class _AuthScreenState extends State<AuthScreen> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Hexcolor('#121212'),
-        body: Column(
-          children: [
-            Container(
-              alignment: Alignment.topLeft,
-              padding: const EdgeInsets.only(
-                  left: 20, right: 20, top: 20, bottom: 30),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    authMode == AuthMode.SignIn ? 'Log In' : 'Sign Up',
+        body: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(FocusNode());
+          },
+          child: Column(
+            children: [
+              TabScreenTitle(
+                title: authMode == AuthMode.SignIn ? 'Log In' : 'Sign Up',
+                actionWidget: CupertinoButton(
+                  padding: const EdgeInsets.all(0),
+                  child: Text(
+                    authMode == AuthMode.SignIn ? 'Sign Up' : 'Log In',
                     style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: kBaseWhiteColor),
-                  ),
-                  CupertinoButton(
-                    padding: const EdgeInsets.all(0),
-                    child: Text(
-                      authMode == AuthMode.SignIn ? 'Sign Up' : 'Log In',
-                      style: TextStyle(
-                        color: Theme.of(context).accentColor,
-                        fontSize: 18,
-                      ),
+                      color: Theme.of(context).accentColor,
+                      fontSize: 18,
                     ),
-                    onPressed: () => setState(() {
-                      if (authMode == AuthMode.SignIn)
-                        authMode = AuthMode.SignUp;
-                      else
-                        authMode = AuthMode.SignIn;
-                    }),
                   ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Hexcolor('#202020'),
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(25),
-                    topLeft: Radius.circular(25),
-                  ),
+                  onPressed: _toggleAuthState,
                 ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 30),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          // if (authMode == AuthMode.SignUp)
+              ),
+              SizedBox(height: 20),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Hexcolor('#202020'),
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(25),
+                      topLeft: Radius.circular(25),
+                    ),
+                  ),
+                  child: ListView(
+                    children: [
+                      SizedBox(height: 30),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            // if (authMode == AuthMode.SignUp)
                             AnimatedContainer(
                               duration: Duration(milliseconds: 200),
                               height: authMode == AuthMode.SignUp ? 75 : 0,
                               child: _buildFormField(
                                   authMode == AuthMode.SignUp ? 'Username' : '',
-                                  'username', (value) {}),
+                                  'username',
+                                  (value) {}),
                             ),
-                          _buildFormField(
-                            'Email',
-                            'email',
-                            (value){
-                              if(value.isEmpty) 
-                              return 'Invalid email.';
+                            _buildFormField('Email', 'email', (value) {
+                              if (value.isEmpty) return 'Invalid email.';
                               return null;
-                            }
-                          ),
-                          _buildFormField(
-                            'Password',
-                            'password',
-                            (value){
-                              if(value.isEmpty) 
-                              return 'Invalid password.';
-                              return null;
-                            },
-                            true,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    CupertinoButton(
-                        child: Container(
-                          width: mq.size.width * 0.5,
-                          height: 50,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).accentColor,
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: Text(
-                            authMode == AuthMode.SignIn ? 'Log In' : 'Sign Up',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: kBaseWhiteColor,
+                            }),
+                            _buildFormField(
+                              'Password',
+                              'password',
+                              (value) {
+                                if (value.isEmpty) return 'Invalid password.';
+                                return null;
+                              },
+                              true,
                             ),
-                          ),
+                          ],
                         ),
-                        onPressed: () => authMode == AuthMode.SignUp
-                            ? _signUp()
-                            : _signIn()),
-                  ],
+                      ),
+                      SizedBox(height: 20),
+                      CupertinoButton(
+                          child: Container(
+                            width: mq.size.width * 0.5,
+                            height: 50,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).accentColor,
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Text(
+                              authMode == AuthMode.SignIn
+                                  ? 'Log In'
+                                  : 'Sign Up',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: kBaseWhiteColor,
+                              ),
+                            ),
+                          ),
+                          onPressed: () => authMode == AuthMode.SignUp
+                              ? _signUp()
+                              : _signIn()),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -185,8 +180,8 @@ class _AuthScreenState extends State<AuthScreen> {
     if (!_formKey.currentState.validate()) return;
     _formKey.currentState.save();
     print('singup calle ------------>');
-    Provider.of<Auth>(context, listen: false)
-        .signUp(_authData['username'], _authData['email'], _authData['password']);
+    Provider.of<Auth>(context, listen: false).signUp(
+        _authData['username'], _authData['email'], _authData['password']);
   }
 
   void _signIn() {

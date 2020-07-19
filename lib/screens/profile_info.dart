@@ -11,6 +11,8 @@ import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/edit_profile_picture.dart';
+import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 enum EditedField {
   Username,
@@ -24,6 +26,7 @@ class ProfileInfo extends StatefulWidget {
 
 class _ProfileInfoState extends State<ProfileInfo>
     with AutomaticKeepAliveClientMixin {
+  DB db;
   TextEditingController _nameController;
   TextEditingController _statusController;
   ScrollController _textFieldScrollController;
@@ -36,23 +39,20 @@ class _ProfileInfoState extends State<ProfileInfo>
   @override
   void initState() {
     super.initState();
+    db = DB();
     _textFieldScrollController = ScrollController();
     Future.delayed(Duration.zero).then((value) {
       FirebaseAuth.instance.currentUser().then((value) {
         setState(() {
           user = value;
-          _nameController =
-              TextEditingController(text: user.displayName ?? 'No name.');
         });
-        Firestore.instance
-            .collection('users')
-            .document(user.uid)
-            .get()
-            .then((value) {
+        db.getUserDocRef(user.uid).then((value) {
           setState(() {
             details = Person.fromSnapshot(value);
             _statusController =
-                TextEditingController(text: details.about ?? 'No name.');
+                TextEditingController(text: details.about ?? 'Not Available.');
+            _nameController =
+                TextEditingController(text: details.name ?? 'No name.');
             _isLoading = false;
           });
         });
@@ -68,7 +68,8 @@ class _ProfileInfoState extends State<ProfileInfo>
     super.dispose();
   }
 
-  void navToEditImage(BuildContext context, FirebaseUser user, String imageUrl) {
+  void navToEditImage(
+      BuildContext context, FirebaseUser user, String imageUrl) {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => EditProfilePicture(user, imageUrl),
     ));
@@ -89,17 +90,7 @@ class _ProfileInfoState extends State<ProfileInfo>
       info.displayName = newValue;
       user.updateProfile(info);
 
-      Firestore.instance
-          .collection('users')
-          .document(user.uid)
-          .get()
-          .then((value) async {
-        await Firestore.instance.runTransaction((transaction) async {
-          await transaction.update(value.reference, {
-            'username': newValue,
-          });
-        });
-      });
+      db.updateUserInfo(user.uid, {'username': newValue});
     }
   }
 
@@ -107,123 +98,84 @@ class _ProfileInfoState extends State<ProfileInfo>
     goToStart();
     if (details.about != newValue) {
       _statusController.text = '$newValue';
-      Firestore.instance
-          .collection('users')
-          .document(user.uid)
-          .get()
-          .then((value) async {
-        await Firestore.instance.runTransaction((transaction) async {
-          await transaction.update(value.reference, {
-            'about': newValue,
-            'aboutChangeDate': DateTime.now().toIso8601String(),
-          });
-        });
+      db.updateUserInfo(user.uid, {
+        'about': newValue,
+        'aboutChangeDate': DateTime.now().toIso8601String(),
       });
     }
   }
 
-  Widget _buildProfilePic() {
-    return StatefulBuilder(
-      builder: (ctx, thisState) {
-        var imageUrl = Provider.of<User>(context).imageUrl;
-        return Container(
-          height: 100,
-          width: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: imageUrl == null
-                ? Icon(
-                    Icons.person,
-                    size: 80,
-                    color: kBaseWhiteColor,
-                  )
-                : CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                  ),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildImageAndName(BuildContext context, FirebaseUser user) {
     var imageUrl = Provider.of<User>(context).imageUrl;
-      return Container(
-        decoration: BoxDecoration(
-          color: Hexcolor('#202020'),
-          borderRadius: BorderRadius.only(
-            topRight: Radius.circular(25),
-            topLeft: Radius.circular(25),
-          ),
-          // border: Border.all(
-          //   color: kBorderColor2,
-          // ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Hexcolor('#202020'),
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(25),
+          topLeft: Radius.circular(25),
         ),
-        child: Column(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 20),
-                Container(
-          height: 100,
-          width: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: imageUrl == null
-                ? Icon(
-                    Icons.person,
-                    size: 80,
-                    color: kBaseWhiteColor,
-                  )
-                : CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                  ),
-          ),
-        ),
-                SizedBox(height: 5),
-                CupertinoButton(
-                  onPressed: () => navToEditImage(context, user, imageUrl),
-                  child: Text(
-                    'Edit',
-                    style: TextStyle(
-                        fontSize: 17, color: Theme.of(context).accentColor),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 15),
-            Container(
-              alignment: Alignment.centerLeft,
-              height: 50,
-              child: CupertinoTextField(
-                scrollController: _textFieldScrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                cursorColor: Theme.of(context).accentColor,
-                keyboardAppearance: Brightness.dark,
-                style: TextStyle(
-                  fontSize: 17,
-                  color: kBaseWhiteColor,
-                ),
+      ),
+      child: Column(
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(height: 20),
+              Container(
+                height: 100,
+                width: 100,
                 decoration: BoxDecoration(
-                  color: Hexcolor('#202020'),
+                  shape: BoxShape.circle,
                 ),
-                controller: _nameController,
-                onSubmitted: (value) => updateUsername(value),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: imageUrl == null
+                      ? Icon(
+                          Icons.person,
+                          size: 80,
+                          color: kBaseWhiteColor,
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                        ),
+                ),
               ),
+              SizedBox(height: 5),
+              CupertinoButton(
+                onPressed: () => navToEditImage(context, user, imageUrl),
+                child: Text(
+                  'Edit',
+                  style: TextStyle(
+                      fontSize: 17, color: Theme.of(context).accentColor),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 15),
+          Container(
+            alignment: Alignment.centerLeft,
+            height: 50,
+            child: CupertinoTextField(
+              scrollController: _textFieldScrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              cursorColor: Theme.of(context).accentColor,
+              keyboardAppearance: Brightness.dark,
+              style: TextStyle(
+                fontSize: 17,
+                color: kBaseWhiteColor,
+              ),
+              decoration: BoxDecoration(
+                color: Hexcolor('#202020'),
+              ),
+              controller: _nameController,
+              onSubmitted: (value) => updateUsername(value),
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSectionTitle(String title) => Padding(
@@ -299,43 +251,46 @@ class _ProfileInfoState extends State<ProfileInfo>
               controller: _statusController,
               onSubmitted: (value) => updateAbout(value),
             ),
-            // Text(
-            //   details.about,
-            //   style: TextStyle(
-            //     fontSize: 17,
-            //     color: kBaseWhiteColor,
-            //   ),
-            // ),
           ),
         ),
       ],
     );
   }
 
+  void _handleLogout() {
+    Provider.of<User>(context, listen: false).clearChatsAndContacts();
+    Provider.of<Auth>(context, listen: false).signOut();
+    Navigator.of(context).pop();
+  }
+
   void showConfirmDialog(BuildContext context) {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Text('Logout?'),
+        // title: Padding(
+        //   padding: const EdgeInsets.only(bottom: 20),
+        //   child: Text('Logout?'),
+        // ),
+        content: Text(
+          'Log out of ${details.name}?',
+          style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: kBaseWhiteColor),
         ),
-        content: Text('Are you sure?'),
         actions: [
           CupertinoButton(
-            child: Text('Yes'),
+            child: Text('cancel', style: TextStyle(color: kBaseWhiteColor)),
             onPressed: () {
               Navigator.of(context).pop();
-              Provider.of<Auth>(context, listen: false).signOut();
             },
-            // color: Theme.of(context).accentColor,
             padding: const EdgeInsets.all(0),
           ),
           CupertinoButton(
-            child: Text('No'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+            child: Text('Log Out',
+                style: TextStyle(color: Theme.of(context).errorColor)),
+            onPressed: _handleLogout,
+            // color: Theme.of(context).accentColor,
             padding: const EdgeInsets.all(0),
           ),
         ],
@@ -355,37 +310,23 @@ class _ProfileInfoState extends State<ProfileInfo>
       child: Column(
         children: [
           Container(
-            height: mq.size.height * 0.12,
-            padding: const EdgeInsets.only(left: 15, top: 20),
+            height: mq.size.height * 0.12,            
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  alignment: Alignment.centerLeft,
-                  // padding: const EdgeInsets.only(right: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Edit Profile',
-                        style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                      ),
-                      CupertinoButton(
-                        onPressed: () {
-                          showConfirmDialog(context);
-                        },
-                        child: Text(
-                          'Log Out',
-                          style: TextStyle(
-                              fontSize: 17,
-                              color: Theme.of(context).errorColor),
-                        ),
-                      ),
-                    ],
-                  ),
+                TabScreenTitle(
+                  title: 'Edit Profile',
+                  actionWidget: CupertinoButton(
+                    padding: const EdgeInsets.all(0),
+                    onPressed: () {
+                      showConfirmDialog(context);
+                    },
+                    child: Text(
+                      'Log Out',
+                      style: TextStyle(
+                          fontSize: 17, color: Theme.of(context).errorColor),
+                    ),
+                  ),                  
                 ),
               ],
             ),

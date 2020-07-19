@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:whatsapp_clone/database/db.dart';
 
 abstract class BaseAuth {
   Future<String> signIn(String email, String password);
@@ -54,6 +55,7 @@ class Auth with ChangeNotifier implements BaseAuth {
   @override
   Future<String> signUp(String username, String email, String password) async {
     // print('email ======> $email password ----------> $password');
+    final db = DB();
     AuthResult result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     FirebaseUser user = result.user;
@@ -61,16 +63,17 @@ class Auth with ChangeNotifier implements BaseAuth {
 
     notifyListeners();
 
-    final firestore = Firestore.instance;
-    var documentRef = firestore.collection('users').document(user.uid);
-    firestore.runTransaction((transaction) async {
-      await transaction.set(documentRef, {
-        'contacts': [],
-        'imageUrl': user.photoUrl,
-        'username': username,
-        'email': email,
-      });
-    });
+    db.addNewUser(_user.uid, _user.photoUrl, username, email);
+    // final firestore = Firestore.instance;
+    // var documentRef = firestore.collection('users').document(user.uid);
+    // firestore.runTransaction((transaction) async {
+    //   await transaction.set(documentRef, {
+    //     'contacts': [],
+    //     'imageUrl': user.photoUrl,
+    //     'username': username,
+    //     'email': email,
+    //   });
+    // });
     // firestore.runTransaction((transaction) async {
     //   snaps
     // });
@@ -83,6 +86,7 @@ class Auth with ChangeNotifier implements BaseAuth {
   @override
   Future<void> signOut() {
     var res = _firebaseAuth.signOut();
+    
     notifyListeners();
     return res;
   }

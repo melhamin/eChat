@@ -13,7 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/contact_details.dart';
+import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/widgets/app_bar.dart';
 
 class ChatItemScreen extends StatefulWidget {
@@ -25,14 +25,15 @@ class ChatItemScreen extends StatefulWidget {
 }
 
 class _ChatItemScreenState extends State<ChatItemScreen> {
+  DB db;
   List<Message> initData = [];
+
+  DocumentSnapshot lastSnapshot;
+  var lastSeen;
 
   TextEditingController _textEditingController;
   ScrollController _scrollController;
   FocusNode _textFieldFocusNode;
-
-  bool _initLoaded = true;
-  bool _isLoading = true;
 
   String userId;
   String peerId;
@@ -40,11 +41,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   var messages;
 
   QuerySnapshot initSnapshot;
-
   File _image;
   final picker = ImagePicker();
-
-  Alignment bodyAlignment = Alignment.center;
 
   KeyboardVisibilityNotification _keyboard;
   bool isVisible = false;
@@ -52,17 +50,17 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   @override
   void initState() {
     super.initState();
+    db = DB();
     _textEditingController = TextEditingController();
     _scrollController = ScrollController();
     _textFieldFocusNode = FocusNode();
 
     _keyboard = KeyboardVisibilityNotification();
 
+    // used for animating body when keyboard appeares
     _keyboard.addNewListener(onChange: (visible) {
-      print('keyboard ============> ');
       setState(() {
         isVisible = visible;
-        // bodyAlignment = visible ? Alignment.topCenter : Alignment.center;
       });
     });
 
@@ -71,7 +69,10 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     Future.delayed(Duration.zero).then((value) async {
       setState(() {
         userId = Provider.of<User>(context, listen: false).getUserId;
-        // print('userid ------> $userId');
+        // print('userid ------> $userId');\
+        if(widget.chatData.messages.isNotEmpty)
+        lastSeen =
+            widget.chatData.messages[widget.chatData.messages.length - 1];
         peerId = widget.chatData.person.uid;
         if (userId.hashCode <= peerId.hashCode)
           groupChatId = '$userId-$peerId';
@@ -81,34 +82,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     });
   }
 
-  // void fetchInitData() async {
-  //   final snapshot = await Firestore.instance
-  //       .collection('messages')
-  //       .document(groupChatId)
-  //       .collection(groupChatId)
-  //       .limit(20)
-  //       .getDocuments();
-
-  //   setState(() {
-  //     initSnapshot = snapshot;
-  //     snapshot.documents.forEach((element) {
-  //       // dummyTexts.add({
-  //       //   'text': element['content'],
-  //       //   'isMe': element['fromId'] == userId,
-  //       // });
-  //       _isLoading = false;
-  //     });
-  //   });
-  // }
-
   @override
   void didChangeDependencies() {
-    if (_initLoaded) {
-      // fetchInitData();
-      _initLoaded = false;
-    }
-
-    _initLoaded = false;
     super.didChangeDependencies();
   }
 
@@ -132,50 +107,32 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       type: type,
     );
     initData.insert(0, newMessage);
-    // String groupChatId = await getGroupChatId();
-    var chatsDocumentRef = Firestore.instance
-        .collection('messages')
-        .document(groupChatId)
-        .collection(groupChatId)
-        .document(time.millisecondsSinceEpoch.toString());
+    // Create a document for new message on firestore
+    var docRef = db.createMessageDocument(
+        groupChatId, time.millisecondsSinceEpoch.toString());
 
-    Firestore.instance.runTransaction((transaction) async {
-      await transaction.set(chatsDocumentRef, {
-        'fromId': userId,
-        'toId': peerId,
-        'date': time.toIso8601String(),
-        'timeStamp': time.millisecondsSinceEpoch.toString(),
-        'content': content,
-        'isSeen': false,
-        'type': type,
-      });
+    db.addNewMessage(docRef, {
+      'fromId': userId,
+      'toId': peerId,
+      'date': time.toIso8601String(),
+      'timeStamp': time.millisecondsSinceEpoch.toString(),
+      'content': content,
+      'isSeen': false,
+      'type': type,
     });
+
+    print('gourp id============> $groupChatId');
 
     final userContacts = Provider.of<User>(context, listen: false).getContacts;
     // add user to contacts if not already in contacts
-    if (!userContacts.contains(peerId)) {
-      Provider.of<User>(context, listen: false).addToContacts(peerId);
-      var userDocumentRef =
-          Firestore.instance.collection('users').document(userId);
-      userDocumentRef.setData({
-        'contacts': userContacts,
-      }, merge: true);
+    if (!userContacts.contains(peerId)) {      
+      Provider.of<User>(context, listen: false).addToContacts(peerId);      
+      db.updateContacts(userId, userContacts);
 
       // add to peer contacts too
-      var peerDcoumentRef =
-          Firestore.instance.collection('users').document(peerId);
-      final peerRef = await peerDcoumentRef.get();
+      var userRef = await db.addToPeerContacts(peerId, userId);
 
-      var peerContacts = [];
-      peerRef.data['contacts'].forEach((elem) => peerContacts.add(elem));
-      peerContacts.add(userId);
-
-      // update peer contacts
-      peerDcoumentRef.setData({
-        'contacts': peerContacts,
-      }, merge: true);
-
-      Person person = Person.fromSnapshot(peerRef);
+      Person person = Person.fromSnapshot(userRef);
       Message message = Message(
           content: content, timeStamp: time, fromId: userId, toId: peerId);
       InitChatData initChatData = InitChatData(
@@ -184,76 +141,55 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         messages: [message],
       );
       Provider.of<User>(context, listen: false).addToInitChats(initChatData);
-    } else {
+    } else {      
       Provider.of<User>(context, listen: false).bringChatToTop(groupChatId);
     }
   }
 
-  Widget _buildMessageItem(dynamic snapshot) {
-    final message = snapshot;
-    // snapshot is Message ? snapshot : Message.fromSnapshot(snapshot);
+  Widget _buildMessageItem(Message message, bool withoutImage) {
     return MessageBubble(
-        message: message,
-        isMe: message.fromId == userId,
-        peer: widget.chatData.person);
+      message: message,
+      isMe: message.fromId == userId,
+      peer: widget.chatData.person,
+      withoutImage: withoutImage,
+    );
   }
 
-  void onSend(String value) {
-    if (value.isEmpty) return;
+  void onSend(String msgContent) {
+    if (msgContent.isEmpty) return;
     setState(() {
       _textEditingController.clear();
       _scrollController.animateTo(_scrollController.position.minScrollExtent,
           duration: Duration(milliseconds: 200), curve: Curves.easeIn);
     });
-    onMessageSend('0', value);
+    onMessageSend('0', msgContent);
     FocusScope.of(context).requestFocus(_textFieldFocusNode);
   }
 
-  DocumentSnapshot last;
-
   stream() {
-    var snapshot;
-    if (last != null) {
-      print('in if ---------------->');
-      // print('dat ----------> ${times[times.length - 1]['content']}');
-      snapshot = Firestore.instance
-          .collection('messages')
-          .document(groupChatId)
-          .collection(groupChatId)
-          // .limit(10)
-          .startAtDocument(last)
-          // .where('timeStamp', isGreaterThan: time)
-          .orderBy('timeStamp')
-          .snapshots();
-      // print('if -------> snapshot length${snapshot.data.documents.length}');
+    var snapshots;
+    if (lastSnapshot != null) {
+      // lastSnapshot is set as the last message recieved or sent
+      // if it is set(users interacted) fetch only messages added after this message
+      snapshots = db.getSnapshotsAfter(groupChatId, lastSnapshot);
     } else {
-      print('in else ---------------->');
-      snapshot = Firestore.instance
-          .collection('messages')
-          .document(groupChatId)
-          .collection(groupChatId)
-          .limit(10)
-          // .startAfterDocument(times[0]);
-          // // .where('timeStamp', isGreaterThan: time)
-          .orderBy('timeStamp', descending: true)
-          .snapshots();
-
-      // print('else -------> snapshot length${snapshot.data.documents.length}');
+      // otherwise fetch a limited number of messages(10)
+      snapshots = db.getSnapshotsWithLimit(groupChatId, 10);
     }
-
-    return snapshot;
+    return snapshots;
   }
-
-  var lastSeen;
 
   addNewMessages(AsyncSnapshot<dynamic> snapshots) {
     if (snapshots.hasData) {
       int length = snapshots.data.documents.length;
       if (length != 0) {
-        last = snapshots.data.documents[length - 1];
-        print('lengt---------->> $length');
+        // set lastSnapshot to last message fetched to later use
+        // for fetching new messages only after this snapshot
+        lastSnapshot = snapshots.data.documents[length - 1];
+        // print('lengt---------->> $length');
       }
 
+      //TODO find a better way of seen status
       // initData.clear();
       for (int i = 0; i < length; i++) {
         final snapshot = snapshots.data.documents[i];
@@ -267,15 +203,11 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
         // Update isSeen of the message only if message is from peer
         if (snapshot['fromId'] == peerId) {
-          Firestore.instance.runTransaction((transaction) async {
-            DocumentSnapshot freshDoc =
-                await transaction.get(snapshot.reference);
-            await transaction.update(freshDoc.reference, {'isSeen': true});
-          });
+          db.updateMessageField(snapshot, 'isSeen', true);
         }
       }
 
-      if (lastSeen != null) {
+      if (lastSeen != null) {        
         int index = initData.indexWhere((element) =>
             (lastSeen.fromId == userId &&
                 lastSeen.timeStamp == element.timeStamp));
@@ -289,7 +221,6 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
   Future getImage() async {
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
-
     setState(() {
       _image = File(pickedFile.path);
     });
@@ -319,8 +250,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
               color: Hexcolor('#121212'),
               child: StreamBuilder(
                   stream: stream(),
-                  builder: (ctx, snapshots) {
-                    // print('snapshot length ----------> ${snapshots.data.documents.length}');
+                  builder: (ctx, snapshots) {                    
                     addNewMessages(snapshots);
                     return LayoutBuilder(
                       builder: (ctx, constraints) {
@@ -335,7 +265,12 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                                     left: 15, right: 15, top: 10, bottom: 10),
                                 itemCount: initData.length,
                                 itemBuilder: (ctx, i) {
-                                  return _buildMessageItem(initData[i]);
+                                  return _buildMessageItem(
+                                    initData[i],
+                                    (i != 0 &&
+                                        initData[i - 1].fromId ==
+                                            peerId), // show peer image only one in a series
+                                  );
                                 },
                                 separatorBuilder: (_, __) {
                                   return SizedBox(height: 10);
@@ -364,12 +299,14 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                                     child: TextField(
                                       style: TextStyle(
                                           fontSize: 16,
-                                          color: Colors.white.withOpacity(0.95)),
+                                          color:
+                                              Colors.white.withOpacity(0.95)),
                                       focusNode: _textFieldFocusNode,
                                       controller: _textEditingController,
                                       keyboardType: TextInputType.text,
                                       textInputAction: TextInputAction.go,
-                                      cursorColor: Theme.of(context).accentColor,
+                                      cursorColor:
+                                          Theme.of(context).accentColor,
                                       keyboardAppearance: Brightness.dark,
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
@@ -396,10 +333,10 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                               ),
                             ),
                             AnimatedContainer(
-                              duration: Duration(milliseconds: 100),
-                              height: isVisible ? MediaQuery.of(context)
-                                          .viewInsets
-                                          .bottom : 0,
+                              duration: Duration(milliseconds: 200),
+                              height: isVisible
+                                  ? MediaQuery.of(context).viewInsets.bottom
+                                  : 0,
                               // margin: isVisible
                               //     ? EdgeInsets.only(
                               //         bottom: MediaQuery.of(context)
@@ -426,10 +363,12 @@ class MessageBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
   final Person peer;
+  final bool withoutImage;
   MessageBubble({
     @required this.message,
     @required this.isMe,
     @required this.peer,
+    @required this.withoutImage,
   });
 
   bool didExceedMaxLines(double maxWidth) {
@@ -457,7 +396,7 @@ class MessageBubble extends StatelessWidget {
         padding: multiLine
             ? const EdgeInsets.only(left: 12, right: 12, top: 12)
             : const EdgeInsets.all(12.0),
-        child: Text(
+        child: SelectableText(
           message.content,
           style: TextStyle(
             fontSize: 17,
@@ -488,7 +427,7 @@ class MessageBubble extends StatelessWidget {
                     SizedBox(width: 5),
                     Icon(
                       Icons.done_all,
-                      color: message.isSeen
+                      color: (message.isSeen != null && message.isSeen)
                           ? Theme.of(context).accentColor
                           : Colors.white.withOpacity(0.35),
                       size: 19,
@@ -525,19 +464,21 @@ class MessageBubble extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Flexible(
-          flex: 1,
-          child: CircleAvatar(
-            backgroundColor: Hexcolor('#202020'),
-            backgroundImage: peer.imageUrl == null || peer.imageUrl == ''
-                ? null
-                : CachedNetworkImageProvider(peer.imageUrl),
-            child: peer.imageUrl == null || peer.imageUrl == ''
-                ? Icon(Icons.person, color: kBaseWhiteColor)
-                : null,
-            radius: 15,
-          ),
-        ),
+        withoutImage
+            ? SizedBox(width: 30)
+            : Flexible(
+                flex: 1,
+                child: CircleAvatar(
+                  backgroundColor: Hexcolor('#202020'),
+                  backgroundImage: peer.imageUrl == null || peer.imageUrl == ''
+                      ? null
+                      : CachedNetworkImageProvider(peer.imageUrl),
+                  child: peer.imageUrl == null || peer.imageUrl == ''
+                      ? Icon(Icons.person, color: kBaseWhiteColor)
+                      : null,
+                  radius: 15,
+                ),
+              ),
         SizedBox(width: 5),
         Flexible(
           flex: 3,
@@ -563,18 +504,6 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
-/**
- * if(!isMe) 
-              Flexible(
-                flex: 1,
-                              child: CircleAvatar(
-                backgroundImage: CachedNetworkImageProvider(
-                  peer.imageUrl
-                ),
-                radius: 15,
-            ),
-              ),
- */
 
 class ImageUploader extends StatefulWidget {
   final File image;
