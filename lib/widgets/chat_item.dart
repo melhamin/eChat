@@ -1,28 +1,37 @@
-import 'dart:developer';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
 import 'package:whatsapp_clone/consts.dart';
+import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
-import 'package:whatsapp_clone/screens/chat_item_screen.dart';
+import 'package:whatsapp_clone/screens/chat_screen.dart';
 
 class ChatItem extends StatefulWidget {
   final InitChatData initChatData;
-  bool withDetails = false;
+  final bool withDetails;
 
-  ChatItem({this.initChatData, this.withDetails});
+  ChatItem({
+    @required this.initChatData,
+    this.withDetails = false,
+  });
 
   @override
   _ChatItemState createState() => _ChatItemState();
 }
 
 class _ChatItemState extends State<ChatItem> {
+  DB db;
   List<Message> unreadMessages = [];
   int unreadCount = 0;
+
+  @override
+  void initState() {
+    db = DB();
+    super.initState();
+  }
 
   String getDate() {
     DateTime date = DateTime.now();
@@ -41,17 +50,11 @@ class _ChatItemState extends State<ChatItem> {
     String hRes = hour <= 9 ? '0$hour' : hour.toString();
     String mRes = min <= 9 ? '0$min' : min.toString();
     return '$hRes:$mRes';
-  } 
+  }
 
   Widget _buildPreviewText(String peerId) {
     return StreamBuilder(
-      stream: Firestore.instance
-          .collection('messages')
-          .document(widget.initChatData.groupId)
-          .collection(widget.initChatData.groupId)
-          .limit(1)
-          .orderBy('timeStamp', descending: true)
-          .snapshots(),
+      stream: db.getSnapshotsWithLimit(widget.initChatData.groupId, 1),
       builder: (ctx, snapshots) {
         if (!snapshots.hasData)
           return Text('loading...');
@@ -79,7 +82,7 @@ class _ChatItemState extends State<ChatItem> {
                             Icon(
                               Icons.photo_camera,
                               size: 15,
-                              color: Colors.black.withOpacity(0.45),
+                              color: Colors.white.withOpacity(0.45),
                             ),
                             SizedBox(width: 8),
                             Text('Photo', style: kChatItemSubtitleStyle)
@@ -152,6 +155,49 @@ class _ChatItemState extends State<ChatItem> {
     );
   }
 
+  Widget _buildAvatar(Person person) => CircleAvatar(
+        backgroundColor: Hexcolor('#303030'),
+        radius: 27,
+        backgroundImage: (person.imageUrl != null && person.imageUrl != '')
+            ? CachedNetworkImageProvider(person.imageUrl)
+            : null,
+        child: (person.imageUrl == null || person.imageUrl == '')
+            ? Icon(
+                Icons.person,
+                color: kBaseWhiteColor,
+              )
+            : null,
+      );
+
+  Widget _buildLastMessage(List<Message> messages, Person person) => Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (messages.isNotEmpty)
+            Text(getTime(messages[0]), style: kChatItemSubtitleStyle),
+          if (messages.isNotEmpty && messages[0].fromId == person.uid) ...[
+            SizedBox(height: 5),
+            Container(
+              height: 25,
+              width: 25,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                color: Theme.of(context).accentColor,
+              ),
+              child: Center(
+                child: Text(
+                  '${unreadMessages.length}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ]
+        ],
+      );
+
   @override
   Widget build(BuildContext context) {
     final person = widget.initChatData.person;
@@ -170,52 +216,10 @@ class _ChatItemState extends State<ChatItem> {
                 height: 80,
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  leading: CircleAvatar(
-                    backgroundColor: Hexcolor('#303030'),
-                    radius: 27,
-                    backgroundImage:
-                        (person.imageUrl != null && person.imageUrl != '')
-                            ? CachedNetworkImageProvider(person.imageUrl)
-                            : null,
-                    child: (person.imageUrl == null || person.imageUrl == '')
-                        ? Icon(
-                            Icons.person,
-                            color: kBaseWhiteColor,
-                          )
-                        : null,
-                  ),
+                  leading: _buildAvatar(person),
                   title: Text(person.name, style: kChatItemTitleStyle),
                   subtitle: _buildPreviewText(person.uid),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (messages.isNotEmpty)
-                        Text(getTime(messages[0]),
-                            style: kChatItemSubtitleStyle),
-                      if (messages.isNotEmpty &&
-                          messages[0].fromId == person.uid) ...[
-                        SizedBox(height: 5),
-                        Container(
-                          height: 25,
-                          width: 25,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Theme.of(context).accentColor,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '${unreadMessages.length}',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ]
-                    ],
-                  ),
+                  trailing: _buildLastMessage(messages, person),
                 ),
               ),
             ),

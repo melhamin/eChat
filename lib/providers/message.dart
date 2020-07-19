@@ -56,6 +56,8 @@ class Message {
   DateTime timeStamp;
   bool isSeen;
   String type;
+  String mediaUrl;
+  bool uploadFinished;
 
   Message({
     this.content,
@@ -63,7 +65,9 @@ class Message {
     this.toId,
     this.timeStamp,
     this.isSeen,
-    this.type
+    this.type,
+    this.mediaUrl,
+    this.uploadFinished,
   });
 
   static Message fromSnapshot(DocumentSnapshot snapshot) {
@@ -74,6 +78,8 @@ class Message {
       timeStamp: DateTime.parse(snapshot['date']),
       isSeen: snapshot['isSeen'],
       type: snapshot['type'],
+      mediaUrl: snapshot['mediaUrl'],
+      uploadFinished: snapshot['uploadFinished'],
     );
   }
 
@@ -85,6 +91,8 @@ class Message {
       'timeStamp': message.timeStamp.toIso8601String(),
       'isSeen': message.isSeen,
       'type': message.type,
+      'mediaUrl': message.mediaUrl,
+      'uploadFinished': message.uploadFinished,
     });    
   }
 }

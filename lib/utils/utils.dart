@@ -6,4 +6,5 @@ class Utils {
     return await imagePicker.getImage(source: source, maxHeight: 500, maxWidth: 500, imageQuality: 85);  
 
   }  
+  
 }

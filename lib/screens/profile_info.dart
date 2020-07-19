@@ -12,6 +12,7 @@ import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/edit_profile_picture.dart';
 import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/widgets/image_view.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 enum EditedField {
@@ -122,24 +123,34 @@ class _ProfileInfoState extends State<ProfileInfo>
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 20),
-              Container(
-                height: 100,
-                width: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: imageUrl == null
-                      ? Icon(
-                          Icons.person,
-                          size: 80,
-                          color: kBaseWhiteColor,
-                        )
-                      : CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                        ),
+              Hero(
+                tag: details.imageUrl,
+                              child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => ImageView(details.imageUrl),
+                    ));
+                  },
+                  child: Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: imageUrl == null
+                          ? Icon(
+                              Icons.person,
+                              size: 80,
+                              color: kBaseWhiteColor,
+                            )
+                          : CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                  ),
                 ),
               ),
               SizedBox(height: 5),
@@ -310,7 +321,7 @@ class _ProfileInfoState extends State<ProfileInfo>
       child: Column(
         children: [
           Container(
-            height: mq.size.height * 0.12,            
+            height: mq.size.height * 0.12,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -326,7 +337,7 @@ class _ProfileInfoState extends State<ProfileInfo>
                       style: TextStyle(
                           fontSize: 17, color: Theme.of(context).errorColor),
                     ),
-                  ),                  
+                  ),
                 ),
               ],
             ),

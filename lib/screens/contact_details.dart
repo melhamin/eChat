@@ -5,6 +5,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:intl/intl.dart';
+import 'package:whatsapp_clone/widgets/image_view.dart';
 
 class ContactDetails extends StatefulWidget {
   final Person info;
@@ -20,15 +21,29 @@ class _ContactDetailsState extends State<ContactDetails> {
         width: mq.size.width,
         color: Hexcolor('#202020'),
         height: mq.size.height * 0.3,
-        child: Icon(Icons.person, size: mq.size.height * 0.25, color: kBaseWhiteColor,),
+        child: Icon(
+          Icons.person,
+          size: mq.size.height * 0.25,
+          color: kBaseWhiteColor,
+        ),
       );
     }
-    return Container(
-      width: mq.size.width,
-      height: mq.size.height * 0.3,
-      child: CachedNetworkImage(
-        imageUrl: widget.info.imageUrl,
-        fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => ImageView(widget.info.imageUrl),
+        ));
+      },
+          child: Container(
+        width: mq.size.width,
+        height: mq.size.height * 0.3,
+        child: Hero(
+          tag: widget.info.imageUrl,
+          child: CachedNetworkImage(
+            imageUrl: widget.info.imageUrl,
+            fit: BoxFit.cover,
+          ),
+        ),
       ),
     );
   }
@@ -72,7 +87,8 @@ class _ContactDetailsState extends State<ContactDetails> {
                     fontWeight: FontWeight.w600),
               ),
               SizedBox(height: 5),
-              Text(widget.info.email?? 'No Available', style: kChatItemSubtitleStyle),
+              Text(widget.info.email ?? 'No Available',
+                  style: kChatItemSubtitleStyle),
             ],
           ),
           Spacer(),
@@ -87,7 +103,7 @@ class _ContactDetailsState extends State<ContactDetails> {
   }
 
   String getAboutChangeDate(DateTime changeDate) {
-    if(changeDate == null) return 'Not Available';    
+    if (changeDate == null) return 'Not Available';
     return DateFormat('MMMM dd yyyy').format(changeDate);
   }
 
@@ -98,14 +114,12 @@ class _ContactDetailsState extends State<ContactDetails> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.info.about?? 'Not Available.',
-            
-            style:
-                TextStyle(fontSize: 16, color: kBaseWhiteColor),
+            widget.info.about ?? 'Not Available.',
+            style: TextStyle(fontSize: 16, color: kBaseWhiteColor),
           ),
           SizedBox(height: 5),
           Text(
-            getAboutChangeDate(widget.info.aboutChangeDate) ,
+            getAboutChangeDate(widget.info.aboutChangeDate),
             style: kChatItemSubtitleStyle,
           ),
         ],
@@ -244,12 +258,12 @@ class _ContactDetailsState extends State<ContactDetails> {
       );
 
   Widget _buildIOSBackButton() => CupertinoButton(
-    child: Icon(CupertinoIcons.back, color: Theme.of(context).accentColor),
-    onPressed: () => Navigator.of(context).pop(),
-  );
+        child: Icon(CupertinoIcons.back, color: Theme.of(context).accentColor),
+        onPressed: () => Navigator.of(context).pop(),
+      );
 
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return SafeArea(
@@ -260,7 +274,9 @@ class _ContactDetailsState extends State<ContactDetails> {
             centerTitle: true,
             backgroundColor: Hexcolor('#121212'),
             elevation: 0,
-            leading: isIos ? _buildIOSBackButton() : BackButton(color: Theme.of(context).accentColor),
+            leading: isIos
+                ? _buildIOSBackButton()
+                : BackButton(color: Theme.of(context).accentColor),
             title: Text(
               'Contact Info',
               style: TextStyle(
@@ -274,7 +290,7 @@ class _ContactDetailsState extends State<ContactDetails> {
                 padding: const EdgeInsets.only(right: 5),
                 child: CupertinoButton(
                   onPressed: () {},
-                                    child: Text(
+                  child: Text(
                     'Edit',
                     style: TextStyle(
                         fontSize: 16, color: Theme.of(context).accentColor),

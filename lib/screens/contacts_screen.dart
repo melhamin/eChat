@@ -8,7 +8,7 @@ import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/chat_item_screen.dart';
+import 'package:whatsapp_clone/screens/chat_screen.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
