@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
@@ -11,11 +12,9 @@ import 'package:whatsapp_clone/screens/chat_screen.dart';
 
 class ChatItem extends StatefulWidget {
   final InitChatData initChatData;
-  final bool withDetails;
 
   ChatItem({
     @required this.initChatData,
-    this.withDetails = false,
   });
 
   @override
@@ -52,27 +51,29 @@ class _ChatItemState extends State<ChatItem> {
     return '$hRes:$mRes';
   }
 
+  void _handleAditionToList(Message newMsg) {
+    final exist = unreadMessages.firstWhere(
+        (element) => element.fromId == newMsg.fromId,
+        orElse: () => null);
+
+    if (exist != null) unreadMessages.insert(0, newMsg);
+
+    if (newMsg.timeStamp.isAfter(widget.initChatData.messages[0].timeStamp))
+      // if(wid)
+      widget.initChatData.addMessage(newMsg);
+  }
+
   Widget _buildPreviewText(String peerId) {
     return StreamBuilder(
       stream: db.getSnapshotsWithLimit(widget.initChatData.groupId, 1),
       builder: (ctx, snapshots) {
-        if (!snapshots.hasData)
-          return Text('loading...');
+        if (snapshots.connectionState == ConnectionState.waiting)
+          return CupertinoActivityIndicator();
         else {
           if (snapshots.data.documents.length != 0) {
-            final snapshot = snapshots.data.documents[0];
+            final snapshot = snapshots.data.documents[0];            
             Message newMsg = Message.fromSnapshot(snapshot);
-            final exist = unreadMessages.firstWhere(
-                (element) => element.fromId == newMsg.fromId,
-                orElse: () => null);
-
-            if (exist != null) unreadMessages.insert(0, newMsg);
-
-            if (newMsg.timeStamp
-                .isAfter(widget.initChatData.messages[0].timeStamp))
-              // if(wid)
-              widget.initChatData.addMessage(newMsg);
-
+            _handleAditionToList(newMsg);
             return Row(
               children: [
                 newMsg.type == '1'
@@ -108,52 +109,12 @@ class _ChatItemState extends State<ChatItem> {
               ],
             );
           } else
-            return Container();
+            return Container(height: 0, width: 0);
         }
       },
     );
   }
 
-  Widget _buildWithoutDetails(Person info) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(_buildRoute());
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          CircleAvatar(
-            backgroundColor: Hexcolor('#303030'),
-            backgroundImage: (info.imageUrl != null && info.imageUrl != '')
-                ? CachedNetworkImageProvider(info.imageUrl)
-                : null,
-            child: (info.imageUrl == null || info.imageUrl == '')
-                ? Icon(
-                    Icons.person,
-                    color: kBaseWhiteColor,
-                  )
-                : null,
-            radius: 27,
-          ),
-          SizedBox(height: 10),
-          SizedBox(
-            width: 54,
-            child: Center(
-              child: Text(
-                info.name,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: kBaseWhiteColor,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildAvatar(Person person) => CircleAvatar(
         backgroundColor: Hexcolor('#303030'),
@@ -202,9 +163,7 @@ class _ChatItemState extends State<ChatItem> {
   Widget build(BuildContext context) {
     final person = widget.initChatData.person;
     final messages = widget.initChatData.messages;
-    return widget.withDetails
-        ? _buildWithoutDetails(person)
-        : Material(
+    return Material(
             color: Colors.transparent,
             child: InkWell(
               splashColor: Colors.transparent,

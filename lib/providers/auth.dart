@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
@@ -42,8 +40,7 @@ class Auth with ChangeNotifier implements BaseAuth {
   }
 
   @override
-  Future<String> signIn(String email, String password) async {
-    print('sign in : email ======> $email pass ========> $password');
+  Future<String> signIn(String email, String password) async {    
     AuthResult result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email, password: password);
     FirebaseUser user = result.user;
@@ -63,30 +60,17 @@ class Auth with ChangeNotifier implements BaseAuth {
 
     notifyListeners();
 
-    db.addNewUser(_user.uid, _user.photoUrl, username, email);
-    // final firestore = Firestore.instance;
-    // var documentRef = firestore.collection('users').document(user.uid);
-    // firestore.runTransaction((transaction) async {
-    //   await transaction.set(documentRef, {
-    //     'contacts': [],
-    //     'imageUrl': user.photoUrl,
-    //     'username': username,
-    //     'email': email,
-    //   });
-    // });
-    // firestore.runTransaction((transaction) async {
-    //   snaps
-    // });
-    
-    
-
+    db.addNewUser(_user.uid, _user.photoUrl, username, email); 
+    // ProfileInfo info = ProfileInfo();
+    UserUpdateInfo info = UserUpdateInfo();
+    info.displayName = username;    
+    _user.updateProfile(info);
     return user.uid;
   }
 
   @override
   Future<void> signOut() {
-    var res = _firebaseAuth.signOut();
-    
+    var res = _firebaseAuth.signOut();    
     notifyListeners();
     return res;
   }

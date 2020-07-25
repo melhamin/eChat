@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:whatsapp_clone/database/db.dart';
 import 'dart:convert';
 
 import 'package:whatsapp_clone/providers/person.dart';
@@ -12,18 +13,28 @@ enum MessageType {
 class InitChatData {
   final String groupId;
   final Person person;
-  final List<Message> messages;
+  final List<dynamic> messages;
+  DocumentSnapshot lastDoc;
+  int seenIndex;
   InitChatData({
     @required this.groupId,
     @required this.person,
     @required this.messages,
+    this.lastDoc,
   });
 
+  DB db = DB();
+
+  void setLastDoc(DocumentSnapshot doc) {
+    lastDoc = doc;
+  }
+
   void addMessage(Message newMsg) {
-    if(messages.length > 5) {
+    if (messages.length > 5) {
       print('removed ----------->${messages.last.content}');
-      messages.removeLast();}
-    
+      messages.removeLast();
+    }
+
     messages.insert(0, newMsg);
     print('added ---------> ${newMsg.content}');
   }
@@ -46,6 +57,17 @@ class InitChatData {
       'messages': chatData.getMessagesJson(),
     };
     return json.encode(map);
+  }
+
+  Future<void> fetchNewChats() async {
+    final newData = await db.getNewChats(groupId, lastDoc);
+    newData.documents.forEach((element) {
+      print('added -------------> ${element['content']}');
+      messages.add(Message.fromSnapshot(element));
+    });
+    if (newData.documents.isNotEmpty) {
+      lastDoc = newData.documents[newData.documents.length - 1];      
+    }
   }
 }
 
@@ -93,6 +115,6 @@ class Message {
       'type': message.type,
       'mediaUrl': message.mediaUrl,
       'uploadFinished': message.uploadFinished,
-    });    
+    });
   }
 }

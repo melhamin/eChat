@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/providers/all_users.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/auth_screen.dart';
@@ -25,8 +24,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: Auth()),
-          ChangeNotifierProvider.value(value: User()),
-          ChangeNotifierProvider.value(value: AllUsers()),
+          ChangeNotifierProvider.value(value: User()),          
         ],
         child: Consumer<Auth>(
           builder: (ctx, auth, _) => MaterialApp(

@@ -51,7 +51,7 @@ class _ProfileInfoState extends State<ProfileInfo>
           setState(() {
             details = Person.fromSnapshot(value);
             _statusController =
-                TextEditingController(text: details.about ?? 'Not Available.');
+                TextEditingController(text: details.about ?? 'Hi there! I am using eChat.');
             _nameController =
                 TextEditingController(text: details.name ?? 'No name.');
             _isLoading = false;
@@ -71,9 +71,23 @@ class _ProfileInfoState extends State<ProfileInfo>
 
   void navToEditImage(
       BuildContext context, FirebaseUser user, String imageUrl) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => EditProfilePicture(user, imageUrl),
+    Navigator.of(context).push(PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          EditProfilePicture(user, imageUrl),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return imageUrl == null || imageUrl == ''
+            ? CupertinoPageTransition(
+                child: child,
+                primaryRouteAnimation: animation,
+                secondaryRouteAnimation: secondaryAnimation,
+                linearTransition: false,
+              )
+            : FadeTransition(opacity: animation, child: child);
+      },
     ));
+    // Navigator.of(context).push(MaterialPageRoute(
+    //   builder: (context) => EditProfilePicture(user, imageUrl),
+    // ));
   }
 
   void goToStart() {
@@ -108,84 +122,75 @@ class _ProfileInfoState extends State<ProfileInfo>
 
   Widget _buildImageAndName(BuildContext context, FirebaseUser user) {
     var imageUrl = Provider.of<User>(context).imageUrl;
-    return Container(
-      decoration: BoxDecoration(
-        color: Hexcolor('#202020'),
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(25),
-          topLeft: Radius.circular(25),
-        ),
-      ),
-      child: Column(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: 20),
-              Hero(
-                tag: details.imageUrl,
-                              child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => ImageView(details.imageUrl),
-                    ));
-                  },
-                  child: Container(
-                    height: 100,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: imageUrl == null
-                          ? Icon(
-                              Icons.person,
-                              size: 80,
-                              color: kBaseWhiteColor,
-                            )
-                          : CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 5),
-              CupertinoButton(
-                onPressed: () => navToEditImage(context, user, imageUrl),
-                child: Text(
-                  'Edit',
-                  style: TextStyle(
-                      fontSize: 17, color: Theme.of(context).accentColor),
-                ),
-              ),
-            ],
+    return Column(
+      children: [        
+        Container(
+          height: 100,
+          width: 100,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
           ),
-          SizedBox(height: 15),
-          Container(
-            alignment: Alignment.centerLeft,
-            height: 50,
-            child: CupertinoTextField(
-              scrollController: _textFieldScrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              cursorColor: Theme.of(context).accentColor,
-              keyboardAppearance: Brightness.dark,
-              style: TextStyle(
-                fontSize: 17,
-                color: kBaseWhiteColor,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(100),
+            child: Hero(
+              tag: (details != null && details.imageUrl != null)
+                  ? details.imageUrl
+                  : 'EMPTY',
+              child: GestureDetector(
+                onTap: () => navToEditImage(context, user, imageUrl),
+                child: imageUrl == null
+                    ? Container(
+                        decoration: BoxDecoration(
+                            border: Border.all(color: kBorderColor1),
+                            borderRadius: BorderRadius.circular(80)),
+                        child: Icon(
+                          Icons.person,
+                          size: 80,
+                          color: kBaseWhiteColor,
+                        ),
+                      )
+                    : Image.network(
+                        imageUrl,
+                        loadingBuilder: (ctx, wid, loading) {
+                          return loading == null
+                              ? wid
+                              : CupertinoActivityIndicator();
+                        },
+                        fit: BoxFit.cover,
+                      ),
               ),
-              decoration: BoxDecoration(
-                color: Hexcolor('#202020'),
-              ),
-              controller: _nameController,
-              onSubmitted: (value) => updateUsername(value),
             ),
           ),
-        ],
-      ),
+        ),
+        SizedBox(height: 15),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('USERNAME'),            
+            user == null
+                ? CupertinoActivityIndicator()
+                : Container(
+                    alignment: Alignment.centerLeft,
+                    height: 50,
+                    child: CupertinoTextField(
+                      scrollController: _textFieldScrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      cursorColor: Theme.of(context).accentColor,
+                      keyboardAppearance: Brightness.dark,
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: kBaseWhiteColor,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Hexcolor('#202020'),
+                      ),
+                      controller: _nameController,
+                      onSubmitted: (value) => updateUsername(value),
+                    ),
+                  ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -342,25 +347,27 @@ class _ProfileInfoState extends State<ProfileInfo>
               ],
             ),
           ),
-          _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(25),
-                      topLeft: Radius.circular(25),
-                    ),
-                    child: ListView(
-                      children: [
-                        _buildImageAndName(context, user),
-                        SizedBox(height: 30),
-                        _buildEmail(user),
-                        SizedBox(height: 30),
-                        _buildAbout(user),
-                      ],
-                    ),
-                  ),
-                ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(25),
+                topLeft: Radius.circular(25),
+              ),
+              child: ListView(
+                children: [
+                  _buildImageAndName(context, user),
+                  SizedBox(height: 30),
+                  user == null
+                      ? CupertinoActivityIndicator()
+                      : _buildEmail(user),
+                  SizedBox(height: 30),
+                  user == null
+                      ? CupertinoActivityIndicator()
+                      : _buildAbout(user),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

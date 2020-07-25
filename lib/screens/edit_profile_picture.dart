@@ -16,6 +16,7 @@ import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/profile_info.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
+import 'package:whatsapp_clone/widgets/ios_back.dart';
 
 class EditProfilePicture extends StatefulWidget {
   final FirebaseUser info;
@@ -51,16 +52,25 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
   }
 
   Widget _buildProfileImage(MediaQueryData mq) {
-    return Container(
-      height: mq.size.height * 0.7 - kToolbarHeight,
-      width: mq.size.width,
-      child: _getImage(mq),
+    return widget.imageUrl == null ? Container(
+        height: mq.size.height * 0.7 - kToolbarHeight,
+        width: mq.size.width,
+        child: _getImage(mq),
+      ):
+     Hero(
+      tag: widget.imageUrl,
+      child: Container(
+        height: mq.size.height * 0.7 - kToolbarHeight,
+        width: mq.size.width,
+        child: _getImage(mq),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -72,7 +82,9 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
                 fontWeight: FontWeight.bold,
                 color: kBaseWhiteColor),
           ),
-          leading: BackButton(color: Theme.of(context).accentColor),
+          leading: isIos
+              ? IOSBack()
+              : BackButton(color: Theme.of(context).accentColor),
           actions: [
             CupertinoButton(
               onPressed: () => imageSelected
@@ -133,7 +145,8 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
       builder: (ctx) => CupertinoActionSheet(
         actions: [
           CupertinoButton(
-            child: Text('Choose Photo', style: TextStyle(color: kBaseWhiteColor)),
+            child:
+                Text('Choose Photo', style: TextStyle(color: kBaseWhiteColor)),
             onPressed: () => Navigator.of(context).pop(true),
           ),
           CupertinoButton(
@@ -177,7 +190,7 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
 
     db.updateUserInfo(widget.info.uid, {
       'imageUrl': url,
-    });   
+    });
 
     Provider.of<User>(context, listen: false).setImageUrl(url);
     Navigator.of(context).pop();
@@ -231,7 +244,7 @@ class _PhotoUploaderState extends State<PhotoUploader> {
       return Column(
         children: [
           Container(
-            height: mq.size.height * 0.6 - kToolbarHeight,
+            height: mq.size.height * 0.7 - kToolbarHeight,
             child: Image.file(widget.file, fit: BoxFit.cover),
           ),
           if (_uploadTask != null)
@@ -244,25 +257,29 @@ class _PhotoUploaderState extends State<PhotoUploader> {
                     : event.bytesTransferred / event.totalByteCount;
                 return Column(
                   children: [
-                    // SizedBox(height: 20),
-                    LinearProgressIndicator(
-                      value: progress,
-                    ),
-                    Text('Uploaded : ${(progress * 100).toStringAsFixed(2)} %'),
+                    SizedBox(height: 10),
+                    if (_uploadTask.isInProgress) CupertinoActivityIndicator(),
+                    // SizedBox(height: 5),
+                    // // LinearProgressIndicator(
+                    // //   value: progress,
+                    // // ),
+                    // if (_uploadTask.isInProgress)
+                    //   Text(
+                    //       'Uploaded : ${(progress * 100).toStringAsFixed(2)} %'),
                   ],
                 );
               },
+            ),          
+            CupertinoButton(
+              padding: const EdgeInsets.all(0),
+              onPressed: uploadStarted ? getImageUrl : _startUpload,
+              child: Center(
+                  child: Text(
+                uploadStarted ? 'Save Changes' : 'Upload',
+                style: TextStyle(
+                    fontSize: 22, color: Theme.of(context).accentColor),
+              )),
             ),
-          CupertinoButton(
-            padding: const EdgeInsets.all(0),
-            onPressed: uploadStarted ? getImageUrl : _startUpload,
-            child: Center(
-                child: Text(
-              uploadStarted ? 'Save Changes' : 'Upload',
-              style:
-                  TextStyle(fontSize: 22, color: Theme.of(context).accentColor),
-            )),
-          ),
         ],
       );
     }

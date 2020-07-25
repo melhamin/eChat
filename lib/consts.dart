@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 
-
 Color kBorderColor1 = Colors.white.withOpacity(0.1);
 Color kBorderColor2 = Colors.white.withOpacity(0.07);
 
@@ -14,28 +13,35 @@ TextStyle kWhatsAppStyle = TextStyle(
 );
 
 TextStyle kSelectedTabStyle = TextStyle(
-  fontSize: 16,  
+  fontSize: 16,
   fontWeight: FontWeight.w500,
-  color: Colors.black.withOpacity(0.95),  
+  color: Colors.black.withOpacity(0.95),
 );
 
 TextStyle kUnselectedTabStyle = TextStyle(
-  fontSize: 16,  
+  fontSize: 16,
   fontWeight: FontWeight.w500,
   color: Colors.black.withOpacity(0.4),
 );
 
 TextStyle kChatItemTitleStyle = TextStyle(
-  fontSize: 16,  
+  fontSize: 16,
   fontWeight: FontWeight.w400,
   color: Colors.white,
 );
 
 TextStyle kChatItemSubtitleStyle = TextStyle(
-  fontSize: 14,      
+  fontSize: 14,
   color: Colors.white.withOpacity(0.7),
 );
 
+TextStyle kAppBarTitleStyle = TextStyle(
+  fontSize: 18,
+  fontWeight: FontWeight.w600,
+  color: kBaseWhiteColor,
+);
 
-
-
+TextStyle kChatBubbleTextStyle = TextStyle(
+  fontSize: 17,
+  color: kBaseWhiteColor,
+);

@@ -6,26 +6,20 @@ import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
+import 'package:whatsapp_clone/widgets/chat/stories.dart';
+import 'package:whatsapp_clone/widgets/chat/story_item.dart';
 import 'package:whatsapp_clone/widgets/chat_item.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 class ChatsScreen extends StatelessWidget {
-  /// Builds chat items located at top of the screen
-  Widget _buildWithoutDetails(List<InitChatData> chats) => ListView.separated(
-        padding: const EdgeInsets.only(left: 15),
-        scrollDirection: Axis.horizontal,
-        itemCount: chats.length,
-        itemBuilder: (ctx, i) =>
-            ChatItem(initChatData: chats[i], withDetails: true),
-        separatorBuilder: (_, __) => SizedBox(width: 30),
-      );
+  /// Builds chat items located at top of the screen  
 
   Widget _buildWithDetails(List<InitChatData> chats) => BodyList(
         child: ListView.separated(
           padding: const EdgeInsets.only(top: 10),
           itemCount: chats.length,
           itemBuilder: (ctx, i) =>
-              ChatItem(initChatData: chats[i], withDetails: false),
+              ChatItem(initChatData: chats[i]),
           separatorBuilder: (ctx, i) {
             return Divider(
               indent: 85,
@@ -50,6 +44,7 @@ class ChatsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chats = Provider.of<User>(context).chats;
+    final isLoading = Provider.of<User>(context).isLoading;
     final mq = MediaQuery.of(context);
     return Column(
       children: [
@@ -76,11 +71,13 @@ class ChatsScreen extends StatelessWidget {
               Container(
                 // color: Colors.yellowAccent,
                 height: mq.size.height * 0.15,
-                child: _buildWithoutDetails(chats),
+                child: Stories(),
               ),
             ],
           ),
         ),
+        if(isLoading) Center(child: CupertinoActivityIndicator()),
+        if(!isLoading)
         chats.isEmpty ? _buildEmptyIndicator() : _buildWithDetails(chats),
       ],
     );

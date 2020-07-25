@@ -43,4 +43,12 @@ class Storage {
       throw error;
     }
   }
+
+  void d() async {
+    var bucket = await _storageBucket.ref().child('ChatsMedia/G2YjFBabWqOJhT38wf4netc3nHS2-03QTkOAQEkgRbFmg7rxvuDXeAKG3');
+    
+    print(bucket);
+  }
+
+
 }

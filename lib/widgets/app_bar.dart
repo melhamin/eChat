@@ -6,12 +6,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
+import 'package:whatsapp_clone/database/storage.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/screens/contact_details.dart';
+import 'package:whatsapp_clone/widgets/ios_back.dart';
 
 class MyAppBar extends StatefulWidget {
   final Person info;
-  MyAppBar(this.info);
+  final String groupId;
+  MyAppBar(this.info, this.groupId);
   @override
   _MyAppBarState createState() => _MyAppBarState();
 }
@@ -55,7 +58,7 @@ class _MyAppBarState extends State<MyAppBar>
   void goToContactDetails() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ContactDetails(widget.info),
+        builder: (context) => ContactDetails(widget.info, widget.groupId),
       ),
     );
   }
@@ -67,11 +70,6 @@ class _MyAppBarState extends State<MyAppBar>
         .snapshots();
   }
 
-  Widget _buildIOSBackButton() => CupertinoButton(
-    child: Icon(CupertinoIcons.back),
-    onPressed: () => Navigator.of(context).pop(),
-  );
-
   @override
   Widget build(BuildContext context) {
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
@@ -79,10 +77,8 @@ class _MyAppBarState extends State<MyAppBar>
       backgroundColor: Hexcolor('#202020'),
       centerTitle: true,
       elevation: 0,
-      leading: isIos ? _buildIOSBackButton() :
-       BackButton(
-        color: Theme.of(context).accentColor,
-      ),
+      leading:
+          isIos ? IOSBack() : BackButton(color: Theme.of(context).accentColor),
       title: CupertinoButton(
         onPressed: goToContactDetails,
         child: Column(
@@ -90,11 +86,7 @@ class _MyAppBarState extends State<MyAppBar>
           children: [
             Text(
               widget.info.name,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: kBaseWhiteColor,
-              ),
+              style: kAppBarTitleStyle,
             ),
             if (collapsed)
               StreamBuilder(
@@ -103,7 +95,7 @@ class _MyAppBarState extends State<MyAppBar>
                     if (!snapshot.hasData)
                       return Container(width: 0, height: 0);
                     else {
-                      return AnimatedContainer(
+                      return AnimatedContainer(                        
                         duration: Duration(milliseconds: 300),
                         height: snapshot.data['isOnline'] ? 15 : 0,
                         child: Text(
@@ -139,8 +131,9 @@ class _MyAppBarState extends State<MyAppBar>
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 20, top: 5, bottom: 5),
-          child: GestureDetector(
-            onTap: goToContactDetails,
+          child: CupertinoButton(
+            onPressed: goToContactDetails,
+            padding: const EdgeInsets.all(0),
             child: CircleAvatar(
               backgroundColor: Hexcolor('#303030'),
               radius: 23,

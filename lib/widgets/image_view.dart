@@ -6,19 +6,24 @@ class ImageView extends StatelessWidget {
   ImageView(this.url);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Hero(
-          tag: url,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).pop();
-            },
-            child: Container(
-              height: 300,
-              width: double.infinity,
-              child: CachedNetworkImage(
-                imageUrl: url,
+    final mq = MediaQuery.of(context);
+    return SafeArea(
+      child: Scaffold(
+        body: Center(
+          child: Hero(
+            tag: url,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+              child: Container(
+                color: Colors.red,
+                constraints: BoxConstraints(
+                  maxHeight: mq.size.height * 0.7,
+                ),
+                height: double.infinity,
+                width: double.infinity,
+                child: CachedNetworkImage(imageUrl: url, fit: BoxFit.cover),
               ),
             ),
           ),

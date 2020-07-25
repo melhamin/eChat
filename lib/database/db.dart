@@ -1,8 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:whatsapp_clone/models/media_model.dart';
+import 'package:whatsapp_clone/providers/message.dart';
 
 class DB {
   Stream<QuerySnapshot> getContactsStream() {
     return Firestore.instance.collection('users').snapshots();
+  }  
+
+  Stream<DocumentSnapshot> getUserContactsStream(String uid) {
+    return Firestore.instance.collection('users').document(uid).snapshots();
+  }  
+
+  Future<DocumentSnapshot> getUser(String id) {
+    return Firestore.instance.collection('users').document(id).get();
   }
 
   DocumentReference createMessageDocument(
@@ -16,6 +26,66 @@ class DB {
     } catch (error) {
       print(
           '****************** DB createMessageDocument error **********************');
+      print(error);
+      throw error;
+    }
+  }
+
+  Future<QuerySnapshot> getChatItemData(String groupId, [int limit = 20]) {
+    try {
+    return Firestore.instance
+        .collection('messages')
+        .document(groupId)
+        .collection(groupId)
+        .orderBy('timeStamp', descending: true)
+        .limit(limit)
+        .getDocuments();
+    } catch (error) {
+      print('****************** DB getChatItemData error **********************');
+      throw error;
+    }
+  }
+
+  void addMediaUrl(String groupId, String url, Message mediaMsg) {
+    try {
+      var docRef = Firestore.instance
+          .collection('messages')
+          .document(groupId)
+          .collection('media')
+          .document(mediaMsg.timeStamp.millisecondsSinceEpoch.toString());
+      Firestore.instance.runTransaction((transaction) async {
+        await transaction.set(docRef, MediaModel.fromMsgToMap(mediaMsg));
+      });      
+    } catch (error) {
+      print('****************** DB addMediaUrl error **********************');
+      print(error);
+      throw error;
+    }
+  }
+
+  Stream<QuerySnapshot> getMediaCount(String groupId) {
+    try {
+      return Firestore.instance
+          .collection('messages')
+          .document(groupId)
+          .collection('media')
+          .snapshots();
+    } catch (error) {
+      print('****************** DB getMediaCount error **********************');
+      print(error);
+      throw error;
+    }
+  }
+
+  Stream<QuerySnapshot> getChatMediaStream(String groupId) {
+    try {
+      return Firestore.instance
+          .collection('messages')
+          .document(groupId)
+          .collection('media')
+          .snapshots();
+    } catch (error) {
+      print('****************** DB getChatMedia error **********************');
       print(error);
       throw error;
     }
@@ -79,7 +149,7 @@ class DB {
           .collection('messages')
           .document(groupChatId)
           .collection(groupChatId)
-          .startAfterDocument(lastSnapshot)
+          .startAfterDocument(lastSnapshot)          
           .orderBy('timeStamp')
           .snapshots();
     } catch (error) {
@@ -88,15 +158,35 @@ class DB {
       print(error);
       throw error;
     }
-  }
+  } 
 
-  Stream<QuerySnapshot> getSnapshotsWithLimit(String groupChatId, int limit) {
+  Future<QuerySnapshot> getNewChats(
+      String groupChatId, DocumentSnapshot lastSnapshot, [int limit = 20]) {
     try {
       return Firestore.instance
           .collection('messages')
           .document(groupChatId)
           .collection(groupChatId)
-          .limit(10)
+          .startAfterDocument(lastSnapshot)   
+          .limit(20)       
+          .orderBy('timeStamp', descending: true)
+          .getDocuments();
+    } catch (error) {
+      print(
+          '****************** DB getSnapshotsAfter error **********************');
+      print(error);
+      throw error;
+    }
+  } 
+
+  Stream<QuerySnapshot> getSnapshotsWithLimit(String groupChatId,
+      [int limit = 10]) {
+    try {
+      return Firestore.instance
+          .collection('messages')
+          .document(groupChatId)
+          .collection(groupChatId)
+          .limit(limit)
           .orderBy('timeStamp', descending: true)
           .snapshots();
     } catch (error) {
@@ -154,11 +244,7 @@ class DB {
 
   void updateUserInfo(String userId, dynamic data) async {
     try {
-      return getUserDocRef(userId).then((value) async {
-        await Firestore.instance.runTransaction((transaction) async {
-          await transaction.update(value.reference, data);
-        });
-      });
+      Firestore.instance.collection('users').document(userId).setData(data, merge: true);
     } catch (error) {
       print(
           '****************** DB updateUserInfo error **********************');
