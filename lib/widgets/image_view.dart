@@ -16,8 +16,7 @@ class ImageView extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).pop();
               },
-              child: Container(
-                color: Colors.red,
+              child: Container(                
                 constraints: BoxConstraints(
                   maxHeight: mq.size.height * 0.7,
                 ),

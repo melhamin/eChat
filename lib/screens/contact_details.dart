@@ -7,7 +7,7 @@ import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/database/storage.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:intl/intl.dart';
-import 'package:whatsapp_clone/screens/chat_media_screen.dart';
+import 'package:whatsapp_clone/screens/chats_screen/chat_media_screen.dart';
 import 'package:whatsapp_clone/widgets/image_view.dart';
 
 class ContactDetails extends StatefulWidget {
@@ -378,7 +378,7 @@ class _ContactDetailsState extends State<ContactDetails> {
                 padding: const EdgeInsets.only(right: 5),
                 child: CupertinoButton(
                   onPressed: () {
-                    storage.d();
+                    // storage.d();
                   },
                   child: Text(
                     'Edit',

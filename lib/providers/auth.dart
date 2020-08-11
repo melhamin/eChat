@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:whatsapp_clone/database/db.dart';
 
 abstract class BaseAuth {
@@ -14,29 +13,29 @@ abstract class BaseAuth {
 
 class Auth with ChangeNotifier implements BaseAuth {  
 
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  // Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  static FirebaseUser _user;
+  FirebaseUser _fbUser;  
 
   bool get isAuth {
-    return _user != null;
+    return _fbUser != null;
   }
 
   FirebaseUser get getUser {
-    return _user;
+    return _fbUser;
   }
 
   void reloadUser() {
-    _user.reload();
+    _fbUser.reload();
     notifyListeners();
   }
 
   @override
   Future<FirebaseUser> getCurrentUser() async {
-    _user = await _firebaseAuth.currentUser();
-    return _user;
+    _fbUser = await _firebaseAuth.currentUser();    
+    return _fbUser;
   }
 
   @override
@@ -44,7 +43,7 @@ class Auth with ChangeNotifier implements BaseAuth {
     AuthResult result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email, password: password);
     FirebaseUser user = result.user;
-    _user = user;
+    _fbUser = user;
     notifyListeners();
     return user.uid;
   }
@@ -56,15 +55,15 @@ class Auth with ChangeNotifier implements BaseAuth {
     AuthResult result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     FirebaseUser user = result.user;
-    _user = user;
+    _fbUser = user;
 
     notifyListeners();
 
-    db.addNewUser(_user.uid, _user.photoUrl, username, email); 
+    db.addNewUser(_fbUser.uid, _fbUser.photoUrl, username, email); 
     // ProfileInfo info = ProfileInfo();
     UserUpdateInfo info = UserUpdateInfo();
     info.displayName = username;    
-    _user.updateProfile(info);
+    _fbUser.updateProfile(info);
     return user.uid;
   }
 

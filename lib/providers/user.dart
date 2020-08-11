@@ -1,13 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 
 class User with ChangeNotifier {
-  final _prefs = SharedPreferences.getInstance();
+  // final _prefs = SharedPreferences.getInstance();
   final db = DB();
 
   FirebaseUser _user;
@@ -61,7 +59,7 @@ class User with ChangeNotifier {
     return groupId;
   }
 
-  Future<dynamic> getUserData() async {
+  Future<dynamic> getUserDetailsAndContacts() async {
     _user = await FirebaseAuth.instance.currentUser();
     _userId = _user.uid;
     final userData = await db.getUser(_userId);
@@ -69,7 +67,7 @@ class User with ChangeNotifier {
     _imageUrl = _user.photoUrl;
 
     if (userData.data != null)
-      userData.data['contacts'].forEach((elem) => _contacts.insert(0, elem));
+      userData.data['contacts'].forEach((elem) { _contacts.insert(0, elem);});
     notifyListeners();
     return true;
   }
@@ -82,13 +80,17 @@ class User with ChangeNotifier {
 
     List<Message> messages = [];
     for (int i = 0; i < messagesData.documents.length; i++) {
-      var tmp = Message.fromSnapshot(messagesData.documents[i]);
+      var tmp = Message.fromJson(messagesData.documents[i]);
       messages.add(tmp);
     }
 
-    final lastDoc = messagesData.documents[messagesData.documents.length - 1];
+    var lastDoc;
+    if(messagesData.documents.isNotEmpty)
+    lastDoc = messagesData.documents[messagesData.documents.length - 1];
 
     InitChatData chatData = InitChatData(
+      userId: userDetails.uid,
+      peerId: person.uid,
       groupId: groupId,
       person: person,
       messages: messages,

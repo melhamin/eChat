@@ -12,12 +12,16 @@ enum MessageType {
 
 class InitChatData {
   final String groupId;
+  final String userId;
+  final String peerId;
   final Person person;
   final List<dynamic> messages;
   DocumentSnapshot lastDoc;
   int seenIndex;
   InitChatData({
-    @required this.groupId,
+    @required this.groupId,  
+    @required this.userId,  
+    @required this.peerId,  
     @required this.person,
     @required this.messages,
     this.lastDoc,
@@ -63,7 +67,7 @@ class InitChatData {
     final newData = await db.getNewChats(groupId, lastDoc);
     newData.documents.forEach((element) {
       print('added -------------> ${element['content']}');
-      messages.add(Message.fromSnapshot(element));
+      messages.add(Message.fromJson(element));
     });
     if (newData.documents.isNotEmpty) {
       lastDoc = newData.documents[newData.documents.length - 1];      
@@ -92,7 +96,7 @@ class Message {
     this.uploadFinished,
   });
 
-  static Message fromSnapshot(DocumentSnapshot snapshot) {
+  static Message fromJson(DocumentSnapshot snapshot) {
     return Message(
       content: snapshot['content'],
       fromId: snapshot['fromId'],

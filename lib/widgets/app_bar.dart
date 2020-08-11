@@ -6,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/storage.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/screens/contact_details.dart';
 import 'package:whatsapp_clone/widgets/ios_back.dart';
@@ -65,7 +64,7 @@ class _MyAppBarState extends State<MyAppBar>
 
   stream() {
     return Firestore.instance
-        .collection('users')
+        .collection(USERS_COLLECTION)
         .document(widget.info.uid)
         .snapshots();
   }
@@ -95,6 +94,8 @@ class _MyAppBarState extends State<MyAppBar>
                     if (!snapshot.hasData)
                       return Container(width: 0, height: 0);
                     else {
+                      if(snapshot.data == null)
+                      print('online --------> null');
                       return AnimatedContainer(                        
                         duration: Duration(milliseconds: 300),
                         height: snapshot.data['isOnline'] ? 15 : 0,

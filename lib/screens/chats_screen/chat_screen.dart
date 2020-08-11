@@ -13,6 +13,7 @@ import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/screens/chats_screen/widgets/selected_image_preview.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
 import 'package:whatsapp_clone/widgets/app_bar.dart';
 import 'package:whatsapp_clone/widgets/chat/media_uploading_bubble.dart';
@@ -57,6 +58,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   CancelableOperation paginateOperation;
   LoaderStatus loaderStatus = LoaderStatus.STABLE;
   bool _isFetchingNewChats = false;
+
+  Message mediaMsg;
 
   @override
   void initState() {
@@ -103,14 +106,12 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     _textEditingController.dispose();
     _scrollController.removeListener(() {});
     _scrollController.dispose();
     _textFieldFocusNode.dispose();
-  }
-
-  Message mediaMsg;
+    super.dispose();
+  }  
 
   void onMessageSend(String type, String content) async {
     if (content != '') _textEditingController.clear();
@@ -130,11 +131,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     if (type == '1') mediaMsg = newMessage;
 
     if (type == '0') {
-      // Create a document for new message on firestore
-      var docRef = db.createMessageDocument(
-          groupChatId, time.millisecondsSinceEpoch.toString());
 
-      db.addNewMessage(docRef, {
+      db.addNewMessage(groupChatId, time, {
         'fromId': userId,
         'toId': peerId,
         'date': time.toIso8601String(),
@@ -168,6 +166,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         uploadFinished: false,
       );
       InitChatData initChatData = InitChatData(
+        userId: userId,
+        peerId: peerId,
         groupId: groupChatId,
         person: person,
         messages: [message],
@@ -179,36 +179,32 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   }
 
   void onUploadFinished(String url) {
-    // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
     if (mediaMsg == null) print('************mediamsg is null************');
-    if (mediaMsg != null)
-      setState(() {
-        var msg = widget.chatData.messages
-            .firstWhere((elem) => elem.timeStamp == mediaMsg.timeStamp);
-        msg.mediaUrl = url;
-        msg.uploadFinished = true;
+    if (mediaMsg != null) {
+      var msg = widget.chatData.messages
+          .firstWhere((elem) => elem.timeStamp == mediaMsg.timeStamp);
+      msg.mediaUrl = url;
+      msg.uploadFinished = true;
 
-        final time = DateTime.now();
-        var docRef = db.createMessageDocument(
-            groupChatId, time.millisecondsSinceEpoch.toString());
+      final time = DateTime.now();
 
-        db.addNewMessage(docRef, {
-          'fromId': userId,
-          'toId': peerId,
-          'date': mediaMsg.timeStamp.toIso8601String(),
-          'timeStamp': mediaMsg.timeStamp.millisecondsSinceEpoch.toString(),
-          'content': mediaMsg.content,
-          'isSeen': false,
-          'type': '1',
-          'mediaUrl': url,
-          'uploadFinished': true,
-        });
+      db.addNewMessage(groupChatId, time, {
+        'fromId': userId,
+        'toId': peerId,
+        'date': mediaMsg.timeStamp.toIso8601String(),
+        'timeStamp': mediaMsg.timeStamp.millisecondsSinceEpoch.toString(),
+        'content': mediaMsg.content,
+        'isSeen': false,
+        'type': '1',
+        'mediaUrl': url,
+        'uploadFinished': true,
       });
-    db.addMediaUrl(groupChatId, url, mediaMsg);
-    // });
+      db.addMediaUrl(groupChatId, url, mediaMsg);
+    }
   }
 
-  Widget _buildMessageItem(Message message, bool withoutImage) {
+  Widget _buildMessageItem(Message message, bool withoutImage, bool last,
+      bool first, bool isMiddle) {
     if (message.type == '1') {
       if (message.mediaUrl == null || !message.uploadFinished)
         return MediaUploadingBubble(
@@ -224,6 +220,9 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
           isMe: message.fromId == userId,
           peer: widget.chatData.person,
           withoutImage: withoutImage,
+          last: last,
+          first: first,
+          middle: isMiddle,
         );
     }
     return ChatBubble(
@@ -231,17 +230,18 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       isMe: message.fromId == userId,
       peer: widget.chatData.person,
       withoutImage: withoutImage,
+      last: last,
+      first: first,
+      middle: isMiddle,
     );
   }
 
   void onSend(String msgContent) {
     if (!_mediaSelected) {
       if (msgContent.isEmpty) return;
-      setState(() {
-        _textEditingController.clear();
-        _scrollController.animateTo(_scrollController.position.minScrollExtent,
-            duration: Duration(milliseconds: 200), curve: Curves.easeIn);
-      });
+      _textEditingController.clear();
+      _scrollController.animateTo(_scrollController.position.minScrollExtent,
+          duration: Duration(milliseconds: 200), curve: Curves.easeIn);
       onMessageSend('0', msgContent);
     } else {
       if (msgContent.trim().isEmpty) msgContent = null;
@@ -253,15 +253,13 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     FocusScope.of(context).requestFocus(_textFieldFocusNode);
   }
 
-  stream() {
+  Stream<QuerySnapshot> stream() {
     var snapshots;
-    if (lastSnapshot != null) {
-      print('from last snapshot ------------> ${lastSnapshot.data['content']}');
+    if (lastSnapshot != null) {      
       // lastSnapshot is set as the last message recieved or sent
       // if it is set(users interacted) fetch only messages added after this message
       snapshots = db.getSnapshotsAfter(groupChatId, lastSnapshot);
-    } else {
-      print('from limit ------------>');
+    } else {      
       // otherwise fetch a limited number of messages(10)
       snapshots = db.getSnapshotsWithLimit(groupChatId, 10);
     }
@@ -270,7 +268,9 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
   void handleSeenStatusUpdateWhenFromPeer() {
     int index = -1;
+    int count = 0;
     for (int i = 0; i < widget.chatData.messages.length; i++) {
+      count++;
       final item = widget.chatData.messages[i];
       if (i == widget.chatData.messages.length - 1) {
         index = i;
@@ -282,6 +282,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         }
       }
     }
+    print('count -----------> $count');
     if (index != -1)
       for (int i = index; i >= 0; i--)
         widget.chatData.messages[i].isSeen = true;
@@ -303,8 +304,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     }
     if (index != -1) {
       bool s =
-          newMsg.timeStamp.isAfter(widget.chatData.messages[index].timeStamp);
-      // || newMsg.timeStamp.isAtSameMomentAs(widget.chatData.messages[index].timeStamp);
+          newMsg.timeStamp.isAfter(widget.chatData.messages[index].timeStamp);      
 
       if (s && newMsg.isSeen)
         for (int i = index; i >= 0; i--)
@@ -326,7 +326,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       for (int i = 0; i < snapshots.data.documents.length; i++) {
         final snapshot = snapshots.data.documents[i];
         Future.doWhile(() {
-          Message newMsg = Message.fromSnapshot(snapshot);
+          Message newMsg = Message.fromJson(snapshot);
           if (widget.chatData.messages.isNotEmpty) {
             // add message to the list only if it's after the first item in the list
             if (newMsg.timeStamp
@@ -348,7 +348,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
           return false;
         }).then((value) {
           // Update isSeen of the message only if message is from peer
-          if (snapshot['fromId'] == peerId) {
+          if (snapshot['fromId'] == peerId && !snapshot['isSeen']) {
             db.updateMessageField(snapshot, 'isSeen', true);
           }
         });
@@ -398,89 +398,44 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     });
   }
 
-  Widget _showSelectedMediaPreview(MediaQueryData mq) {
-    return Scaffold(
-        body: Container(
-      constraints: BoxConstraints(
-        maxHeight: mq.size.height,
-      ),
-      color: Hexcolor('#121212'),
-      child: LayoutBuilder(
-        builder: (ctx, constraints) {
-          return Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: CupertinoButton(
-                  child: Icon(Icons.close, color: kBaseWhiteColor, size: 25),
-                  onPressed: () => setState(() => _mediaSelected = false),
-                ),
-              ),
-              Container(
-                alignment: Alignment.center,
-                height: constraints.maxHeight * 0.8 - 35,
-                width: double.infinity,
-                child: Image.file(_image, fit: BoxFit.cover),
-              ),
-              Spacer(),
-              Container(
-                margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-                decoration: BoxDecoration(
-                    color: Hexcolor('#303030'),
-                    borderRadius: BorderRadius.circular(25)),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    SizedBox(width: 5),
-                    Flexible(
-                      child: TextField(
-                        style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white.withOpacity(0.95)),
-                        focusNode: _textFieldFocusNode,
-                        controller: _textEditingController,
-                        keyboardType: TextInputType.text,
-                        textInputAction: TextInputAction.go,
-                        cursorColor: Theme.of(context).accentColor,
-                        keyboardAppearance: Brightness.dark,
-                        decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.only(left: 10),
-                          border: InputBorder.none,
-                          hintText: 'Add a caption...',
-                          hintStyle: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                        ),
-                        onSubmitted: (value) {
-                          onSend(value);
-                          // Navigator.of(context).pop();
-                        },
-                      ),
-                    ),
-                    // Spacer(),
-                    CupertinoButton(
-                      padding: const EdgeInsets.all(0),
-                      child: Icon(Icons.send,
-                          size: 30, color: Theme.of(context).accentColor),
-                      onPressed: () => onSend(_textEditingController.text),
-                    ),
-                    SizedBox(width: 10),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    ));
-  }
-
   // show peer avatar only once in a series of nessages
   bool withoutAvatar(int i, int length) {
     bool c1 = i != 0 && widget.chatData.messages[i - 1].fromId == peerId;
     bool c2 = i != 0 && widget.chatData.messages[i - 1].type != '1';
     return c1 && c2;
+  }
+
+  // for adding border radius to all sides except for bottomRight/bottomLeft
+  // if last message in a series from same user
+  bool isLast(int i, int length) {
+    bool c1 = i != 0 &&
+        widget.chatData.messages[i - 1].fromId ==
+            widget.chatData.messages[i].fromId;
+    bool c2 = i != 0 && widget.chatData.messages[i - 1].type != '1';
+    return i == length - 1 || c1 && c2;
+  }
+
+  // for adding border radius to only topLeft/bottomLeft or topRight/bottomRight
+  // if message is in the series of messages of one user
+  bool isMiddle(int i, int length) {
+    bool c1 = i != 0 &&
+        widget.chatData.messages[i - 1].fromId ==
+            widget.chatData.messages[i].fromId;
+    bool c2 = i != length - 1 &&
+        widget.chatData.messages[i + 1].fromId ==
+            widget.chatData.messages[i].fromId;
+    return c1 && c2;
+  }
+
+  // opposite of isLast
+  bool isFirst(int i, int length) {
+    bool c1 = i != 0 &&
+        widget.chatData.messages[i - 1].fromId !=
+            widget.chatData.messages[i].fromId;
+    bool c2 = i != length - 1 &&
+        widget.chatData.messages[i + 1].fromId ==
+            widget.chatData.messages[i].fromId;
+    return i == 0 || (c1 && c2);
   }
 
   Widget _buildChatArea() {
@@ -495,16 +450,21 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
               const EdgeInsets.only(left: 15, right: 15, top: 10, bottom: 10),
           itemCount: widget.chatData.messages.length,
           itemBuilder: (ctx, i) {
+            int length = widget.chatData.messages.length;
             return _buildMessageItem(
                 widget.chatData.messages[i],
-                withoutAvatar(
-                    i,
-                    widget.chatData.messages
-                        .length) // show peer image only one in a series
-                );
+                withoutAvatar(i, length),
+                isLast(i, length),
+                isFirst(i, length),
+                isMiddle(i, length));
           },
-          separatorBuilder: (_, __) {
-            return SizedBox(height: 10);
+          separatorBuilder: (_, i) {
+            int length = widget.chatData.messages.length;
+            if (i != length &&
+                widget.chatData.messages[i].fromId !=
+                    widget.chatData.messages[i + 1].fromId)
+              return SizedBox(height: 15);
+            return SizedBox(height: 5);
           },
         ),
       ),
@@ -564,7 +524,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   }
 
   bool onNotification(ScrollNotification notification) {
-    final mq = MediaQuery.of(context);
+    // final mq = MediaQuery.of(context);
     print('on notification -----------> ');
     if (notification is ScrollUpdateNotification) {
       // if (notification.metrics.pixels >=
@@ -598,7 +558,6 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    print('last snp ============> ${widget.chatData.lastDoc['content']}');
     return SafeArea(
       bottom: true,
       child: Scaffold(
@@ -616,7 +575,12 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
             FocusScope.of(context).requestFocus(FocusNode());
           },
           child: _mediaSelected
-              ? _showSelectedMediaPreview(mq)
+              ? SelectedImagePreview(
+                  image: _image,
+                  onClosed: () => setState(() => _mediaSelected = false),
+                  onSend: onSend,
+                  textEditingController: _textEditingController,
+                )
               : ClipRRect(
                   borderRadius: BorderRadius.only(
                     topRight: Radius.circular(25),
@@ -647,7 +611,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                                   );
                                 },
                               );
-                            }),                        
+                            }),
                       ],
                     ),
                   ),
@@ -656,5 +620,4 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       ),
     );
   }
-  
 }

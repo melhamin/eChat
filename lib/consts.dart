@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
+
+final String ALL_MESSAGES_COLLECTION = 'MESSAGES';
+final String USERS_COLLECTION = 'USERS';
+final String CHATS_COLLECTION = 'CHATS';
+final String MEDIA_COLLECTION = 'MEDIA';
 
 Color kBorderColor1 = Colors.white.withOpacity(0.1);
 Color kBorderColor2 = Colors.white.withOpacity(0.07);

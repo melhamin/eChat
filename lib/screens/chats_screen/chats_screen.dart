@@ -7,19 +7,15 @@ import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
 import 'package:whatsapp_clone/widgets/chat/stories.dart';
-import 'package:whatsapp_clone/widgets/chat/story_item.dart';
 import 'package:whatsapp_clone/widgets/chat_item.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 class ChatsScreen extends StatelessWidget {
-  /// Builds chat items located at top of the screen  
-
-  Widget _buildWithDetails(List<InitChatData> chats) => BodyList(
+  Widget _buildChats(List<InitChatData> chats) => BodyList(
         child: ListView.separated(
           padding: const EdgeInsets.only(top: 10),
           itemCount: chats.length,
-          itemBuilder: (ctx, i) =>
-              ChatItem(initChatData: chats[i]),
+          itemBuilder: (ctx, i) => ChatItem(initChatData: chats[i]),
           separatorBuilder: (ctx, i) {
             return Divider(
               indent: 85,
@@ -40,6 +36,14 @@ class ChatsScreen extends StatelessWidget {
               color: kBaseWhiteColor),
         ),
       );
+
+  Widget _buildStories(MediaQueryData mq) {
+    return Container(
+      // color: Colors.yellowAccent,
+      height: mq.size.height * 0.15,
+      child: Stories(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,17 +72,13 @@ class ChatsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                // color: Colors.yellowAccent,
-                height: mq.size.height * 0.15,
-                child: Stories(),
-              ),
+              _buildStories(mq),
             ],
           ),
         ),
-        if(isLoading) Center(child: CupertinoActivityIndicator()),
-        if(!isLoading)
-        chats.isEmpty ? _buildEmptyIndicator() : _buildWithDetails(chats),
+        isLoading
+            ? Center(child: CupertinoActivityIndicator())
+            : chats.isEmpty ? _buildEmptyIndicator() : _buildChats(chats),
       ],
     );
   }

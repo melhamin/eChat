@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,10 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/database/storage.dart';
-import 'package:whatsapp_clone/providers/auth.dart';
-import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/profile_info.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
 import 'package:whatsapp_clone/widgets/ios_back.dart';
 

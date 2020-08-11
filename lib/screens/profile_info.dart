@@ -1,10 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
-import 'package:intl/date_time_patterns.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
@@ -12,7 +9,6 @@ import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/edit_profile_picture.dart';
 import 'package:whatsapp_clone/database/db.dart';
-import 'package:whatsapp_clone/widgets/image_view.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 enum EditedField {
@@ -32,8 +28,8 @@ class _ProfileInfoState extends State<ProfileInfo>
   TextEditingController _statusController;
   ScrollController _textFieldScrollController;
 
-  bool _initLoaded = false;
-  bool _isLoading = true;
+  // bool _initLoaded = false;
+  // bool _isLoading = true;
   FirebaseUser user;
   Person details;
 
@@ -50,11 +46,11 @@ class _ProfileInfoState extends State<ProfileInfo>
         db.getUserDocRef(user.uid).then((value) {
           setState(() {
             details = Person.fromSnapshot(value);
-            _statusController =
-                TextEditingController(text: details.about ?? 'Hi there! I am using eChat.');
+            _statusController = TextEditingController(
+                text: details.about ?? 'Hi there! I am using eChat.');
             _nameController =
-                TextEditingController(text: details.name ?? 'No name.');
-            _isLoading = false;
+                TextEditingController(text: details.name ?? 'Not Availabe.');
+            // _isLoading = false;
           });
         });
       });
@@ -122,8 +118,9 @@ class _ProfileInfoState extends State<ProfileInfo>
 
   Widget _buildImageAndName(BuildContext context, FirebaseUser user) {
     var imageUrl = Provider.of<User>(context).imageUrl;
-    return Column(
-      children: [        
+    return 
+    Column(
+      children: [
         Container(
           height: 100,
           width: 100,
@@ -166,15 +163,23 @@ class _ProfileInfoState extends State<ProfileInfo>
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('USERNAME'),            
+            _buildSectionTitle('USERNAME'),
+            SizedBox(height: 5),
             user == null
                 ? CupertinoActivityIndicator()
                 : Container(
                     alignment: Alignment.centerLeft,
-                    height: 50,
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: kBorderColor1),
+                        top: BorderSide(color: kBorderColor1),
+                      ),
+                    ),
+                    // height: 50,
                     child: CupertinoTextField(
                       scrollController: _textFieldScrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 15),
                       cursorColor: Theme.of(context).accentColor,
                       keyboardAppearance: Brightness.dark,
                       style: TextStyle(

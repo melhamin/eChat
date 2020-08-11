@@ -118,7 +118,7 @@ class _StoriesState extends State<Stories> {
         Center(
           child: Text(
             // user.displayName.split(' ')[0],
-            'You Story',
+            'Your Story',
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 14,

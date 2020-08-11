@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
@@ -8,7 +7,7 @@ import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
-import 'package:whatsapp_clone/screens/chat_screen.dart';
+import 'package:whatsapp_clone/screens/chats_screen/chat_screen.dart';
 
 class ChatItem extends StatefulWidget {
   final InitChatData initChatData;
@@ -23,12 +22,17 @@ class ChatItem extends StatefulWidget {
 
 class _ChatItemState extends State<ChatItem> {
   DB db;
-  List<Message> unreadMessages = [];
+  List<dynamic> unreadMessages = [];
   int unreadCount = 0;
 
   @override
   void initState() {
     db = DB();
+    var f = widget.initChatData.messages.firstWhere((element) {
+      unreadCount++;
+      return element.isSeen;
+    }, orElse: () => null);
+    unreadCount--;
     super.initState();
   }
 
@@ -43,24 +47,18 @@ class _ChatItemState extends State<ChatItem> {
     );
   }
 
-  String getTime(Message message) {
+  String formatTime(Message message) {
     int hour = message.timeStamp.hour;
-    int min = message.timeStamp.minute;
+    int min = message.timeStamp.minute;    
     String hRes = hour <= 9 ? '0$hour' : hour.toString();
     String mRes = min <= 9 ? '0$min' : min.toString();
     return '$hRes:$mRes';
   }
 
   void _handleAditionToList(Message newMsg) {
-    final exist = unreadMessages.firstWhere(
-        (element) => element.fromId == newMsg.fromId,
-        orElse: () => null);
-
-    if (exist != null) unreadMessages.insert(0, newMsg);
-
-    if (newMsg.timeStamp.isAfter(widget.initChatData.messages[0].timeStamp))
-      // if(wid)
+    if (newMsg.timeStamp.isAfter(widget.initChatData.messages[0].timeStamp)) {
       widget.initChatData.addMessage(newMsg);
+    }
   }
 
   Widget _buildPreviewText(String peerId) {
@@ -68,11 +66,14 @@ class _ChatItemState extends State<ChatItem> {
       stream: db.getSnapshotsWithLimit(widget.initChatData.groupId, 1),
       builder: (ctx, snapshots) {
         if (snapshots.connectionState == ConnectionState.waiting)
-          return CupertinoActivityIndicator();
+          return Align(
+            alignment: Alignment.topLeft,
+            child: CupertinoActivityIndicator(),
+          );
         else {
           if (snapshots.data.documents.length != 0) {
-            final snapshot = snapshots.data.documents[0];            
-            Message newMsg = Message.fromSnapshot(snapshot);
+            final snapshot = snapshots.data.documents[0];
+            Message newMsg = Message.fromJson(snapshot);
             _handleAditionToList(newMsg);
             return Row(
               children: [
@@ -115,7 +116,6 @@ class _ChatItemState extends State<ChatItem> {
     );
   }
 
-
   Widget _buildAvatar(Person person) => CircleAvatar(
         backgroundColor: Hexcolor('#303030'),
         radius: 27,
@@ -130,12 +130,12 @@ class _ChatItemState extends State<ChatItem> {
             : null,
       );
 
-  Widget _buildLastMessage(List<Message> messages, Person person) => Column(
+  Widget _buildLastMessage(List<dynamic> messages, Person person) => Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (messages.isNotEmpty)
-            Text(getTime(messages[0]), style: kChatItemSubtitleStyle),
-          if (messages.isNotEmpty && messages[0].fromId == person.uid) ...[
+            Text(formatTime(messages[0]), style: kChatItemSubtitleStyle),
+          if (unreadCount > 0) ...[
             SizedBox(height: 5),
             Container(
               height: 25,
@@ -146,7 +146,7 @@ class _ChatItemState extends State<ChatItem> {
               ),
               child: Center(
                 child: Text(
-                  '${unreadMessages.length}',
+                  '${unreadCount}',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 14,
@@ -163,25 +163,26 @@ class _ChatItemState extends State<ChatItem> {
   Widget build(BuildContext context) {
     final person = widget.initChatData.person;
     final messages = widget.initChatData.messages;
+    // print('unread count ===========> $unreadCount');
     return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              splashColor: Colors.transparent,
-              highlightColor: Hexcolor('#121212'),
-              onTap: () {
-                Navigator.of(context).push(_buildRoute());
-              },
-              child: Container(
-                height: 80,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  leading: _buildAvatar(person),
-                  title: Text(person.name, style: kChatItemTitleStyle),
-                  subtitle: _buildPreviewText(person.uid),
-                  trailing: _buildLastMessage(messages, person),
-                ),
-              ),
-            ),
-          );
+      color: Colors.transparent,
+      child: InkWell(
+        splashColor: Colors.transparent,
+        highlightColor: Hexcolor('#121212'),
+        onTap: () {
+          Navigator.of(context).push(_buildRoute());
+        },
+        child: Container(
+          height: 80,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            leading: _buildAvatar(person),
+            title: Text(person.name, style: kChatItemTitleStyle),
+            subtitle: _buildPreviewText(person.uid),
+            trailing: _buildLastMessage(messages, person),
+          ),
+        ),
+      ),
+    );
   }
 }

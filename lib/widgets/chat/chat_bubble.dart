@@ -11,22 +11,18 @@ class ChatBubble extends StatelessWidget {
   final bool isMe;
   final Person peer;
   final bool withoutImage;
+  final bool last;
+  final bool first;
+  final bool middle;
   ChatBubble({
     @required this.message,
     @required this.isMe,
     @required this.peer,
     @required this.withoutImage,
+    @required this.last,
+    @required this.first,
+    @required this.middle,
   });
-
-  bool didExceedMaxLines(double maxWidth) {
-    final span = TextSpan(text: message.content);
-    final tp =
-        TextPainter(text: span, maxLines: 1, textDirection: TextDirection.rtl);
-    tp.layout(maxWidth: maxWidth);
-    // print('maxwidth' + maxWidth.toString());
-
-    return tp.didExceedMaxLines;
-  }
 
   String getTime() {
     int hour = message.timeStamp.hour;
@@ -127,15 +123,78 @@ class ChatBubble extends StatelessWidget {
     ));
   }
 
+  Widget _buildMediaWithoutText(
+      BuildContext context, MediaQueryData mq, BoxConstraints constraints) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            constraints: BoxConstraints(
+              minWidth: mq.size.width * 0.7,
+              maxWidth: mq.size.width * 0.7,
+              minHeight: mq.size.height * 0.35,
+              maxHeight: mq.size.height * 0.35,
+            ),
+            width: double.infinity,
+            child: CachedNetworkImage(
+              imageUrl: message.mediaUrl,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: _buildBottomDetails(context, constraints),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMediaWithText(
+      BuildContext context, MediaQueryData mq, BoxConstraints constraints) {
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.end,
+      alignment: WrapAlignment.end,
+      runAlignment: WrapAlignment.spaceBetween,
+      children: [
+        Wrap(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                constraints: BoxConstraints(
+                  minWidth: mq.size.width * 0.7,
+                  maxWidth: mq.size.width * 0.7,
+                  minHeight: mq.size.height * 0.35,
+                  maxHeight: mq.size.height * 0.35,
+                ),
+                child: CachedNetworkImage(
+                  imageUrl: message.mediaUrl,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 10.0),
+              child: _buildMediaText(context, constraints),
+            ),
+          ],
+        ),
+        _buildSeenStatus(context),
+      ],
+    );
+  }
+
   Widget _buildMediaBubble(BuildContext context) {
     final mq = MediaQuery.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (!isMe) Flexible(flex: 1, child: _buildAvatar()),
+        if (!isMe) _buildAvatar(),
         if (!isMe) SizedBox(width: 5),
         Flexible(
-          flex: 6,
           child: Hero(
             tag: message.mediaUrl,
             child: GestureDetector(
@@ -159,62 +218,8 @@ class ChatBubble extends StatelessWidget {
                     builder: (cts, constraints) {
                       // print('content ======> ${message.content}');
                       if (message.content == null || message.content.isEmpty)
-                        return Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                constraints: BoxConstraints(
-                                  minWidth: mq.size.width * 0.7,
-                                  maxWidth: mq.size.width * 0.7,
-                                  minHeight: mq.size.height * 0.35,
-                                  maxHeight: mq.size.height * 0.35,
-                                ),
-                                width: double.infinity,
-                                child: CachedNetworkImage(
-                                  imageUrl: message.mediaUrl,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: _buildBottomDetails(context, constraints),
-                            ),
-                          ],
-                        );
-                      return Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.end,
-                        alignment: WrapAlignment.end,
-                        runAlignment: WrapAlignment.spaceBetween,
-                        children: [
-                          Wrap(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                    minWidth: mq.size.width * 0.7,
-                                    maxWidth: mq.size.width * 0.7,
-                                    minHeight: mq.size.height * 0.35,
-                                    maxHeight: mq.size.height * 0.35,
-                                  ),
-                                  child: CachedNetworkImage(
-                                    imageUrl: message.mediaUrl,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 10.0),
-                                child: _buildMediaText(context, constraints),
-                              ),
-                            ],
-                          ),
-                          _buildSeenStatus(context),
-                        ],
-                      );
+                        return _buildMediaWithoutText(context, mq, constraints);
+                      return _buildMediaWithText(context, mq, constraints);
                     },
                   ),
                 ),
@@ -236,11 +241,55 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
+  dynamic getRadius() {
+    if (first && !middle)
+      return isMe
+          ? BorderRadius.only(
+              topLeft: Radius.circular(20),
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(15),
+            )
+          :BorderRadius.only(
+              bottomRight: Radius.circular(20),
+              bottomLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            );
+    if (last && !middle)
+      return isMe
+          ? BorderRadius.only(
+              topLeft: Radius.circular(20),
+              bottomLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            )
+          : BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            );          
+    if (middle)
+      return isMe
+          ? BorderRadius.only(
+              topLeft: Radius.circular(20),
+              bottomLeft: Radius.circular(20),
+            )
+          : BorderRadius.only(
+              topRight: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            );
+
+    return BorderRadius.only(
+      topLeft: Radius.circular(20),
+      bottomLeft: Radius.circular(20),
+      topRight: Radius.circular(20),
+      bottomRight: Radius.circular(20),
+    );
+  }
+
   Widget _buildWithoutAvatar(BuildContext context, BoxConstraints constraints) {
     return Container(
-      padding: const EdgeInsets.only(left: 15, top: 15, right: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: getRadius(),
         border: isMe ? null : Border.all(color: Hexcolor('#303030')),
         color: isMe ? Hexcolor('#303030') : Hexcolor('#121212'),
       ),
@@ -254,11 +303,11 @@ class ChatBubble extends StatelessWidget {
         spacing: 25,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 15),
+            padding: const EdgeInsets.only(top: 10.0, bottom: 12),
             child: _buildChatText(context),
           ),
           Padding(
-            padding: const EdgeInsets.only(bottom: 5),
+            padding: const EdgeInsets.only(bottom: 5.0),
             child: _buildSeenStatus(context),
           ),
         ],
@@ -274,7 +323,7 @@ class ChatBubble extends StatelessWidget {
         withoutImage
             ? SizedBox(width: 30)
             : Flexible(
-              flex: 1,
+                flex: 1,
                 child: CircleAvatar(
                   backgroundColor: Hexcolor('#202020'),
                   backgroundImage: peer.imageUrl == null || peer.imageUrl == ''

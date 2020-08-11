@@ -1,11 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/auth_screen.dart';
+import 'package:whatsapp_clone/screens/auth_screen/auth_screen.dart';
 import 'package:whatsapp_clone/screens/home.dart';
 
 void main() async {
@@ -21,6 +23,8 @@ enum AuthMode {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    FlutterStatusbarcolor.setStatusBarColor(Hexcolor('#121212'));
+    FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
     return MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: Auth()),
@@ -28,7 +32,7 @@ class MyApp extends StatelessWidget {
         ],
         child: Consumer<Auth>(
           builder: (ctx, auth, _) => MaterialApp(
-            title: 'Flutter Demo',
+            title: 'eChat',
             theme: ThemeData(
               primaryColor: Colors.white,
               scaffoldBackgroundColor: Hexcolor('#121212'),
@@ -45,19 +49,12 @@ class MyApp extends StatelessWidget {
             ),
             home: FutureBuilder(
               future: auth.getCurrentUser(),
-              builder: (ctx, snapshot) {
+              builder: (ctx, snapshot) {                
                 return snapshot.connectionState == ConnectionState.waiting
-                    ? CircularProgressIndicator()
+                    ? Center(child: CupertinoActivityIndicator())
                     : snapshot.data == null ? AuthScreen() : Home();
               },
-            ),
-            // FutureBuilder(
-            //     future: auth.tryAutoLogin(),
-            //     builder: (ctx, snapshot) =>
-            //         snapshot.connectionState == ConnectionState.waiting
-            //             ? CircularProgressIndicator()
-            //             : AuthScreen(),
-            //   ),
+            ),           
             debugShowCheckedModeBanner: false,
           ),
         ));

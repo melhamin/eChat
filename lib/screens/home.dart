@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
+import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/calls_screen.dart';
-import 'package:whatsapp_clone/screens/chats_screen.dart';
+import 'package:whatsapp_clone/screens/chats_screen/chats_screen.dart';
 import 'package:whatsapp_clone/screens/contacts_screen.dart';
 import 'package:whatsapp_clone/screens/profile_info.dart';
 
@@ -34,7 +34,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
     db = DB();    
     // Fetch user data(chats and contacts), and update online status
     Future.delayed(Duration.zero).then((value) {         
-        Provider.of<User>(context, listen: false).getUserData().then((value) {
+        Provider.of<User>(context, listen: false).getUserDetailsAndContacts().then((value) {
           if(value)
           Provider.of<User>(context, listen: false).fetchChats();
           _updateOnlineStatus(true);          
@@ -69,8 +69,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
   /// Update user status on Firebase
   Future<dynamic> _updateOnlineStatus(bool status) {
     final uid = Provider.of<User>(context, listen: false).getUserId;
-    final docRef = Firestore.instance.collection('users').document(uid);
-    return Firestore.instance.runTransaction((transaction) async {
+    final docRef = Firestore.instance.collection(USERS_COLLECTION).document(uid);
+    return Firestore.instance.runTransaction((transaction) async {      
       await transaction.update(docRef, {
         'isOnline': status,
       });
@@ -153,19 +153,23 @@ class _TabsState extends State<Tabs> {
       fontWeight: FontWeight.w600,
     );
 
-    BottomNavigationBarItem _buildTabBarItem(String label, IconData icon) {
+    BottomNavigationBarItem _buildTabBarItem(String label, IconData icon, IconData activeIcon) {
       return BottomNavigationBarItem(
         icon: Icon(icon),
-        title: Text(label, style: labelStyle),
+        activeIcon: Icon(activeIcon, size: 35),
+        title: Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Text(label, style: labelStyle),
+        ),
       );
     }
 
     return CupertinoTabBar(
       items: [
-        _buildTabBarItem('Calls', CupertinoIcons.phone_solid),
-        _buildTabBarItem('Chats', CupertinoIcons.conversation_bubble),
-        _buildTabBarItem('Contacts', CupertinoIcons.group_solid),
-        _buildTabBarItem('Me', CupertinoIcons.person_solid),
+        _buildTabBarItem('Calls', CupertinoIcons.phone, CupertinoIcons.phone_solid),
+        _buildTabBarItem('Chats', CupertinoIcons.conversation_bubble, CupertinoIcons.conversation_bubble),
+        _buildTabBarItem('Contacts', CupertinoIcons.group,CupertinoIcons.group_solid),
+        _buildTabBarItem('Me', CupertinoIcons.person, CupertinoIcons.person_solid),
       ],
       onTap: onTap,
       currentIndex: currentIndex,

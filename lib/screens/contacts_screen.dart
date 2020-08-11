@@ -8,7 +8,7 @@ import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/chat_screen.dart';
+import 'package:whatsapp_clone/screens/chats_screen/chat_screen.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
@@ -28,17 +28,21 @@ class ContactsScreen extends StatelessWidget {
 
   void onTap(BuildContext context, DocumentSnapshot item) {
     Person person = Person.fromSnapshot(item);
-
+    final userId = Provider.of<User>(context, listen: false).getUserId;
     // Checks if user has already interacted with peer
     // if has interacted pass chats object otherwise pass an empty one
     final initData = Provider.of<User>(context, listen: false).chats.firstWhere(
-        (element) {
-      return element.person.uid == person.uid;
-    },
-        orElse: () => new InitChatData(
-            groupId: getGroupId(context, item.documentID),
-            messages: [],
-            person: person));
+      (element) {
+        return element.person.uid == person.uid;
+      },
+      orElse: () => new InitChatData(
+        groupId: getGroupId(context, item.documentID),
+        userId: userId,
+        peerId: person.uid,
+        messages: [],
+        person: person,
+      ),
+    );
 
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => ChatItemScreen(initData),
@@ -72,7 +76,8 @@ class ContactsScreen extends StatelessWidget {
                           ? CachedNetworkImageProvider(item['imageUrl'])
                           : null,
                 ),
-                title: Text(item['username'], style: kChatItemTitleStyle)),
+                title:
+                    Text(item['username'] ?? 'NA', style: kChatItemTitleStyle)),
           ),
         ),
       ),
@@ -80,22 +85,25 @@ class ContactsScreen extends StatelessWidget {
   }
 
   Widget _buildContacts(
-          BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) =>
-      ListView.separated(
-        padding: const EdgeInsets.only(top: 20),
-        itemCount: snapshot.data.documents.length,
-        itemBuilder: (ctx, i) {
-          // print('snapshot: ${snapshot.data.documents[i].documentID}');
-          final item = snapshot.data.documents[i];
-          return _buildContactsItem(context, item);
-        },
-        separatorBuilder: (ctx, _) => Divider(
-          indent: 85,
-          // endIndent: 15,
-          height: 0,
-          color: kBorderColor1,
-        ),
-      );
+      BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+    final userId = Provider.of<User>(context, listen: false).getUserId;
+    return ListView.separated(
+      padding: const EdgeInsets.only(top: 20),
+      itemCount: snapshot.data.documents.length,
+      itemBuilder: (ctx, i) {
+        final item = snapshot.data.documents[i];
+        return item.documentID == userId
+            ? Container(height: 0, width: 0)
+            : _buildContactsItem(context, item);
+      },
+      separatorBuilder: (ctx, _) => Divider(
+        indent: 85,
+        // endIndent: 15,
+        height: 0,
+        color: kBorderColor1,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
