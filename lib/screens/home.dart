@@ -100,9 +100,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
   void updateChats(AsyncSnapshot<dynamic> snapshots) {
     final currContacts = Provider.of<User>(context).getContacts;
     final currContactLength = currContacts.length;
-    if (snapshots.data != null && snapshots.hasData) {
+    if (snapshots.hasData && snapshots.data != null) {
       if (snapshots.data != null) {
         final contacts = snapshots.data['contacts'];        
+        if(contacts != null)
         if (contacts.length > currContactLength) {          
           Provider.of<User>(context, listen: false)
               .handleMessagesNotFromContacts(contacts);

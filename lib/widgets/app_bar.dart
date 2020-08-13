@@ -50,7 +50,7 @@ class _MyAppBarState extends State<MyAppBar>
   void collapse() {
     _animationController.forward();
     Future.delayed(Duration(milliseconds: 300)).then((value) {
-      if (mounted) setState(() => collapsed = true);
+      if (this.mounted) setState(() => collapsed = true);
     });
   }
 

@@ -51,7 +51,7 @@ class _InputSectionState extends State<InputSection> {
       FocusNode focusNode]) {
     return TextInputField(
         hintText: hintText,
-        onSaved: (value) => _authData['$saveTo'] = value.trim,
+        onSaved: (value) => _authData['$saveTo'] = value.trim(),
         controller: controller,
         focusNode: focusNode,
         obscureText: obscureText,

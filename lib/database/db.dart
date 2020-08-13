@@ -228,7 +228,7 @@ class DB {
     }
   }
 
-  void updateUserInfo(String userId, dynamic data) async {
+  void updateUserInfo(String userId, Map<String, dynamic> data) async {
     try {
       _usersCollection.document(userId).setData(data, merge: true);
     } catch (error) {

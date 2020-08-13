@@ -11,7 +11,7 @@ import 'package:whatsapp_clone/widgets/chat_item.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 class ChatsScreen extends StatelessWidget {
-  Widget _buildChats(List<InitChatData> chats) => BodyList(
+  Widget _buildChats(List<InitChatData> chats) => BodyList(    
         child: ListView.separated(
           padding: const EdgeInsets.only(top: 10),
           itemCount: chats.length,

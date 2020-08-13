@@ -132,7 +132,7 @@ class _StoriesState extends State<Stories> {
 
   @override
   Widget build(BuildContext context) {
-    final chats = Provider.of<User>(context).chats;
+    final chats = Provider.of<User>(context, listen: false).chats;
     final user = Provider.of<User>(context).getUser;
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),

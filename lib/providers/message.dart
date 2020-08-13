@@ -17,7 +17,7 @@ class InitChatData {
   final Person person;
   final List<dynamic> messages;
   DocumentSnapshot lastDoc;
-  int seenIndex;
+  int unreadCount;  
   InitChatData({
     @required this.groupId,  
     @required this.userId,  
@@ -25,6 +25,7 @@ class InitChatData {
     @required this.person,
     @required this.messages,
     this.lastDoc,
+    this.unreadCount,
   });
 
   DB db = DB();
@@ -84,6 +85,8 @@ class Message {
   String type;
   String mediaUrl;
   bool uploadFinished;
+  bool hasReply;
+  String replyContent;
 
   Message({
     this.content,

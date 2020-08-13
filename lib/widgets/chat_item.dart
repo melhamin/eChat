@@ -14,32 +14,38 @@ import 'package:whatsapp_clone/screens/chats_screen/chat_screen.dart';
 class ChatItem extends StatefulWidget {
   final InitChatData initChatData;
 
-  ChatItem({
-    @required this.initChatData,
-  });
+  ChatItem({@required this.initChatData})
+      : super(key: GlobalKey<_ChatItemState>());
 
   @override
   _ChatItemState createState() => _ChatItemState();
 }
 
 class _ChatItemState extends State<ChatItem> {
+  // GlobalKey key = GlobalKey<_ChatItemState>();
   DB db;
   List<dynamic> unreadMessages = [];
-  int unreadCount = 0;
+  // int unreadCount;
 
   @override
   void initState() {
     super.initState();
+    // unreadCount = widget.initChatData.unreadCount;
     final userId = widget.initChatData.userId;
     // get number of initially unread messages
-    int c = 0;
-    int index = 0;
-    if(widget.initChatData.messages.isNotEmpty && widget.initChatData.messages[0].fromId != userId)
-    index = widget.initChatData.messages.indexWhere((element) {
-      c++;
-     return  element.isSeen;
-    });    
-    if (index != -1) unreadCount = index;
+    // int index = 0;
+    // if (widget.initChatData.messages.isNotEmpty &&
+    //     widget.initChatData.messages[0].fromId != userId)
+    //   index = widget.initChatData.messages.indexWhere((element) {
+    //     print('********* searched element ******* ----> ${element.content}');
+    //     return element.isSeen;
+    //   });
+    // print('index =======> $index');
+    // if (index > 0)
+    // {
+    //   unreadCount = index;
+    // print('init Called --- unread ocunt ====> $unreadCount');
+    // }
     db = DB();
   }
 
@@ -65,15 +71,13 @@ class _ChatItemState extends State<ChatItem> {
   void _addNewMessageToList(Message newMsg) {
     if (newMsg.timeStamp.isAfter(widget.initChatData.messages[0].timeStamp)) {
       widget.initChatData.addMessage(newMsg);
-      unreadCount++;
+      widget.initChatData.unreadCount++;
 
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        Provider.of<User>(context, listen: false)
+            .bringChatToTop(widget.initChatData.groupId);
         setState(() {});
       });
-      // if(this.mounted)
-      // setState(() {
-
-      // });
     }
   }
 
@@ -83,12 +87,8 @@ class _ChatItemState extends State<ChatItem> {
       builder: (ctx, snapshots) {
         if (snapshots.connectionState == ConnectionState.waiting)
           return Container(height: 0, width: 0);
-        // Align(
-        //   alignment: Alignment.center,
-        //   child: CupertinoActivityIndicator(radius: 10,),
-        // );
         else {
-          if (snapshots.data.documents.length != 0) {
+          if (snapshots.data.documents.isNotEmpty) {
             final snapshot = snapshots.data.documents[0];
             Message newMsg = Message.fromJson(snapshot);
             _addNewMessageToList(newMsg);
@@ -152,7 +152,7 @@ class _ChatItemState extends State<ChatItem> {
         children: [
           if (messages.isNotEmpty)
             Text(formatTime(messages[0]), style: kChatItemSubtitleStyle),
-          if (unreadCount > 0) ...[
+          if (widget.initChatData.unreadCount > 0) ...[
             SizedBox(height: 5),
             Container(
               height: 25,
@@ -163,7 +163,7 @@ class _ChatItemState extends State<ChatItem> {
               ),
               child: Center(
                 child: Text(
-                  '${unreadCount}',
+                  '${widget.initChatData.unreadCount}',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 14,
@@ -182,12 +182,14 @@ class _ChatItemState extends State<ChatItem> {
     final messages = widget.initChatData.messages;
     // print('unread count ===========> $unreadCount');
     return Material(
+      key: UniqueKey(),
       color: Colors.transparent,
       child: InkWell(
         splashColor: Colors.transparent,
         highlightColor: Hexcolor('#121212'),
         onTap: () {
-          unreadCount = 0;
+          // unreadCount = 0;
+          widget.initChatData.unreadCount = 0;
           Navigator.of(context).push(_buildRoute());
         },
         child: Container(

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:whatsapp_clone/database/db.dart';
@@ -11,7 +13,7 @@ class User with ChangeNotifier {
   FirebaseUser _user;
   Person _userDetails;
   String _userId;
-  List<dynamic> _contacts = [];
+  List<String> _contacts = [];
   List<InitChatData> _chats = [];
 
   String _imageUrl;
@@ -67,7 +69,9 @@ class User with ChangeNotifier {
     _imageUrl = _user.photoUrl;
 
     if (userData.data != null)
-      userData.data['contacts'].forEach((elem) { _contacts.insert(0, elem);});
+      userData.data['contacts'].forEach((elem) {
+        _contacts.add(elem);
+      });
     notifyListeners();
     return true;
   }
@@ -78,15 +82,17 @@ class User with ChangeNotifier {
     final Person person = Person.fromSnapshot(peer);
     final messagesData = await db.getChatItemData(groupId);
 
+    int unreadCount = 0;
     List<Message> messages = [];
     for (int i = 0; i < messagesData.documents.length; i++) {
       var tmp = Message.fromJson(messagesData.documents[i]);
       messages.add(tmp);
-    }
+      if(tmp.fromId == peerId && !tmp.isSeen) unreadCount++;
+    }      
 
     var lastDoc;
-    if(messagesData.documents.isNotEmpty)
-    lastDoc = messagesData.documents[messagesData.documents.length - 1];
+    if (messagesData.documents.isNotEmpty)
+      lastDoc = messagesData.documents[messagesData.documents.length - 1];
 
     InitChatData chatData = InitChatData(
       userId: userDetails.uid,
@@ -95,11 +101,12 @@ class User with ChangeNotifier {
       person: person,
       messages: messages,
       lastDoc: lastDoc,
+      unreadCount: unreadCount,
     );
     return chatData;
   }
 
-  Future<dynamic> fetchChats() async {
+  Future<bool> fetchChats() async {
     _isLoading = true;
     _chats.clear();
     Future.forEach(_contacts, (contact) async {
@@ -122,9 +129,7 @@ class User with ChangeNotifier {
       _contacts.removeAt(cIndex);
       _contacts.insert(0, peerId);
 
-      db.updateUserInfo(_user.uid, {
-        {'contacts': _contacts}
-      });
+      db.updateUserInfo(_user.uid, {'contacts': _contacts});
 
       var index = _chats.indexWhere((element) => element.groupId == groupId);
       var temp = _chats[index];

@@ -69,7 +69,7 @@ class ChatBubble extends StatelessWidget {
           padding: const EdgeInsets.all(5),
           height: 30,
           width: constraints.maxWidth,
-          decoration: BoxDecoration(
+          decoration: BoxDecoration(              
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(10),
               bottomRight: Radius.circular(10),
@@ -287,9 +287,12 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildWithoutAvatar(BuildContext context, BoxConstraints constraints) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+  Widget _buildWithoutAvatar(BuildContext context, BoxConstraints constraints) {    
+    return Container(                  
+      constraints: BoxConstraints(
+        maxWidth: constraints.maxWidth * 0.8,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         borderRadius: getRadius(),
         border: isMe ? null : Border.all(color: Hexcolor('#303030')),
@@ -299,7 +302,7 @@ class ChatBubble extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.end,
         runAlignment: WrapAlignment.end,
         alignment: WrapAlignment.end,
-        spacing: 25,
+        spacing: 20,
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 10.0, bottom: 12),
@@ -321,35 +324,25 @@ class ChatBubble extends StatelessWidget {
       children: [
         withoutImage
             ? SizedBox(width: 30)
-            : Flexible(                
-                child: CircleAvatar(
-                  backgroundColor: Hexcolor('#202020'),
-                  backgroundImage: peer.imageUrl == null || peer.imageUrl == ''
-                      ? null
-                      : CachedNetworkImageProvider(peer.imageUrl),
-                  child: peer.imageUrl == null || peer.imageUrl == ''
-                      ? Icon(Icons.person, color: kBaseWhiteColor)
-                      : null,
-                  radius: 15,
-                ),
-              ),
+            : CircleAvatar(
+              backgroundColor: Hexcolor('#202020'),
+              backgroundImage: peer.imageUrl == null || peer.imageUrl == ''
+                  ? null
+                  : CachedNetworkImageProvider(peer.imageUrl),
+              child: peer.imageUrl == null || peer.imageUrl == ''
+                  ? Icon(Icons.person, color: kBaseWhiteColor)
+                  : null,
+              radius: 15,
+            ),
         SizedBox(width: 5),
-        Flexible(          
-          child: _buildWithoutAvatar(context, constraints),
-        ),
+        _buildWithoutAvatar(context, constraints),
       ],
     );
   }
 
-  Widget chatItem(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    return Container(      
-      key: key,
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      margin: isMe ? EdgeInsets.only(left: 50) : EdgeInsets.only(right: 50),
-      constraints: BoxConstraints(
-        maxWidth: isMe ? mq.size.width * 0.8 : mq.size.width * 0.9,
-      ),
+  Widget chatItem(BuildContext context) {    
+    return Container(             
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,              
       child: LayoutBuilder(
         builder: (ctx, constraints) {
           if (message.type == '0') {
