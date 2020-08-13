@@ -3,10 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/providers/message.dart';
 import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_screen.dart';
 
 class ChatItem extends StatefulWidget {
@@ -27,13 +29,18 @@ class _ChatItemState extends State<ChatItem> {
 
   @override
   void initState() {
-    db = DB();
-    var f = widget.initChatData.messages.firstWhere((element) {
-      unreadCount++;
-      return element.isSeen;
-    }, orElse: () => null);
-    unreadCount--;
     super.initState();
+    final userId = widget.initChatData.userId;
+    // get number of initially unread messages
+    int c = 0;
+    int index = 0;
+    if(widget.initChatData.messages.isNotEmpty && widget.initChatData.messages[0].fromId != userId)
+    index = widget.initChatData.messages.indexWhere((element) {
+      c++;
+     return  element.isSeen;
+    });    
+    if (index != -1) unreadCount = index;
+    db = DB();
   }
 
   String getDate() {
@@ -49,15 +56,24 @@ class _ChatItemState extends State<ChatItem> {
 
   String formatTime(Message message) {
     int hour = message.timeStamp.hour;
-    int min = message.timeStamp.minute;    
+    int min = message.timeStamp.minute;
     String hRes = hour <= 9 ? '0$hour' : hour.toString();
     String mRes = min <= 9 ? '0$min' : min.toString();
     return '$hRes:$mRes';
   }
 
-  void _handleAditionToList(Message newMsg) {
+  void _addNewMessageToList(Message newMsg) {
     if (newMsg.timeStamp.isAfter(widget.initChatData.messages[0].timeStamp)) {
       widget.initChatData.addMessage(newMsg);
+      unreadCount++;
+
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        setState(() {});
+      });
+      // if(this.mounted)
+      // setState(() {
+
+      // });
     }
   }
 
@@ -66,15 +82,16 @@ class _ChatItemState extends State<ChatItem> {
       stream: db.getSnapshotsWithLimit(widget.initChatData.groupId, 1),
       builder: (ctx, snapshots) {
         if (snapshots.connectionState == ConnectionState.waiting)
-          return Align(
-            alignment: Alignment.topLeft,
-            child: CupertinoActivityIndicator(),
-          );
+          return Container(height: 0, width: 0);
+        // Align(
+        //   alignment: Alignment.center,
+        //   child: CupertinoActivityIndicator(radius: 10,),
+        // );
         else {
           if (snapshots.data.documents.length != 0) {
             final snapshot = snapshots.data.documents[0];
             Message newMsg = Message.fromJson(snapshot);
-            _handleAditionToList(newMsg);
+            _addNewMessageToList(newMsg);
             return Row(
               children: [
                 newMsg.type == '1'
@@ -130,7 +147,7 @@ class _ChatItemState extends State<ChatItem> {
             : null,
       );
 
-  Widget _buildLastMessage(List<dynamic> messages, Person person) => Column(
+  Widget _buildUnreadCount(List<dynamic> messages, Person person) => Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (messages.isNotEmpty)
@@ -170,6 +187,7 @@ class _ChatItemState extends State<ChatItem> {
         splashColor: Colors.transparent,
         highlightColor: Hexcolor('#121212'),
         onTap: () {
+          unreadCount = 0;
           Navigator.of(context).push(_buildRoute());
         },
         child: Container(
@@ -179,7 +197,7 @@ class _ChatItemState extends State<ChatItem> {
             leading: _buildAvatar(person),
             title: Text(person.name, style: kChatItemTitleStyle),
             subtitle: _buildPreviewText(person.uid),
-            trailing: _buildLastMessage(messages, person),
+            trailing: _buildUnreadCount(messages, person),
           ),
         ),
       ),

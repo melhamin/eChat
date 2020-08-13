@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
@@ -22,7 +23,7 @@ class ChatBubble extends StatelessWidget {
     @required this.last,
     @required this.first,
     @required this.middle,
-  });
+  });  
 
   String getTime() {
     int hour = message.timeStamp.hour;
@@ -242,6 +243,7 @@ class ChatBubble extends StatelessWidget {
   }
 
   dynamic getRadius() {
+    // print('Message =====> ${message.content} -- first--->$first, middle---> $middle, last ----> $last');
     if (first && !middle)
       return isMe
           ? BorderRadius.only(
@@ -249,7 +251,7 @@ class ChatBubble extends StatelessWidget {
               bottomLeft: Radius.circular(20),
               bottomRight: Radius.circular(15),
             )
-          :BorderRadius.only(
+          : BorderRadius.only(
               bottomRight: Radius.circular(20),
               bottomLeft: Radius.circular(20),
               topRight: Radius.circular(20),
@@ -265,7 +267,7 @@ class ChatBubble extends StatelessWidget {
               topLeft: Radius.circular(20),
               topRight: Radius.circular(20),
               bottomRight: Radius.circular(20),
-            );          
+            );
     if (middle)
       return isMe
           ? BorderRadius.only(
@@ -277,11 +279,11 @@ class ChatBubble extends StatelessWidget {
               bottomRight: Radius.circular(20),
             );
 
-    return BorderRadius.only(
-      topLeft: Radius.circular(20),
-      bottomLeft: Radius.circular(20),
-      topRight: Radius.circular(20),
-      bottomRight: Radius.circular(20),
+    return BorderRadius.circular(20
+      // topLeft: Radius.circular(20),
+      // bottomLeft: Radius.circular(20),
+      // topRight: Radius.circular(20),
+      // bottomRight: Radius.circular(20),
     );
   }
 
@@ -292,9 +294,6 @@ class ChatBubble extends StatelessWidget {
         borderRadius: getRadius(),
         border: isMe ? null : Border.all(color: Hexcolor('#303030')),
         color: isMe ? Hexcolor('#303030') : Hexcolor('#121212'),
-      ),
-      constraints: BoxConstraints(
-        maxWidth: constraints.maxWidth,
       ),
       child: Wrap(
         crossAxisAlignment: WrapCrossAlignment.end,
@@ -322,8 +321,7 @@ class ChatBubble extends StatelessWidget {
       children: [
         withoutImage
             ? SizedBox(width: 30)
-            : Flexible(
-                flex: 1,
+            : Flexible(                
                 child: CircleAvatar(
                   backgroundColor: Hexcolor('#202020'),
                   backgroundImage: peer.imageUrl == null || peer.imageUrl == ''
@@ -336,18 +334,17 @@ class ChatBubble extends StatelessWidget {
                 ),
               ),
         SizedBox(width: 5),
-        Flexible(
-          flex: 10,
+        Flexible(          
           child: _buildWithoutAvatar(context, constraints),
         ),
       ],
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget chatItem(BuildContext context) {
     final mq = MediaQuery.of(context);
-    return Container(
+    return Container(      
+      key: key,
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       margin: isMe ? EdgeInsets.only(left: 50) : EdgeInsets.only(right: 50),
       constraints: BoxConstraints(
@@ -366,4 +363,51 @@ class ChatBubble extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    // return CupertinoContextMenu(
+    //   actions: [
+    //     CupertinoContextMenuAction(
+    //       child: Text('Reply'),
+    //       onPressed: () {
+    //         Navigator.of(context).pop();
+    //       },
+    //     ),
+    //     CupertinoContextMenuAction(
+    //       child: Text('Forward'),
+    //       onPressed: () {
+    //         Navigator.of(context).pop();
+    //       },
+    //     ),
+    //   ],
+    //   previewBuilder: (ctx, animation, wid)  {
+    //     return chatItem(context);
+    //   },
+    // );
+    return chatItem(context);
+  }
+
+  // void onLongPress(BuildContext context) {
+  //   final screenWidth = MediaQuery.of(context).size.width;
+  //   RenderBox box = key.currentContext.findRenderObject();
+  //   Offset position = box.localToGlobal(Offset.zero);
+  //   double top = position.dy;
+  //   double left = position.dx;
+  //   double right = screenWidth - left;
+
+  //   print('dx =====> $left ---- dy ========> $top');
+  //   showMenu(
+  //     context: context,
+  //     items: [
+  //       PopupMenuItem(
+  //         child: Text('Forward'),
+  //       ),
+  //       PopupMenuItem(
+  //         child: Text('Reply'),
+  //       ),
+  //     ],
+  //     position: RelativeRect.fromLTRB(left, top, right, 0),
+  //   );
+  // }
 }

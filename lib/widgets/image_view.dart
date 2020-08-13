@@ -16,13 +16,17 @@ class ImageView extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).pop();
               },
-              child: Container(                
-                constraints: BoxConstraints(
-                  maxHeight: mq.size.height * 0.7,
+              child: InteractiveViewer(
+                minScale: 1,
+                
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: mq.size.height * 0.7,
+                  ),
+                  height: double.infinity,
+                  width: double.infinity,
+                  child: CachedNetworkImage(imageUrl: url, fit: BoxFit.cover),
                 ),
-                height: double.infinity,
-                width: double.infinity,
-                child: CachedNetworkImage(imageUrl: url, fit: BoxFit.cover),
               ),
             ),
           ),
