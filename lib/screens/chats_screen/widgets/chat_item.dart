@@ -6,10 +6,10 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
-import 'package:whatsapp_clone/providers/message.dart';
-import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/models/message.dart';
+import 'package:whatsapp_clone/models/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/chats_screen/chat_screen.dart';
+import 'package:whatsapp_clone/screens/chats_screen/chat_item_screen.dart';
 
 class ChatItem extends StatefulWidget {
   final InitChatData initChatData;
@@ -152,7 +152,7 @@ class _ChatItemState extends State<ChatItem> {
         children: [
           if (messages.isNotEmpty)
             Text(formatTime(messages[0]), style: kChatItemSubtitleStyle),
-          if (widget.initChatData.unreadCount > 0) ...[
+          if (widget.initChatData.unreadCount != null && widget.initChatData.unreadCount > 0) ...[
             SizedBox(height: 5),
             Container(
               height: 25,

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/widgets/back_button.dart';
 
 class ChatMediaScreen extends StatefulWidget {
   final String groupId;
@@ -19,25 +20,16 @@ class _ChatMediaScreenState extends State<ChatMediaScreen> {
     db = DB();
   }
 
-  Widget _buildIOSBackButton() => CupertinoButton(
-        child: Icon(CupertinoIcons.back, color: Theme.of(context).accentColor),
-        onPressed: () => Navigator.of(context).pop(),
-      );
-
   @override
-  Widget build(BuildContext context) {
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+  Widget build(BuildContext context) {    
     return SafeArea(
       child: Scaffold(
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight),
           child: AppBar(
-            leading: isIOS ? _buildIOSBackButton() : BackButton(color: Theme.of(context).accentColor),            
+            leading: CBackButton(),
             centerTitle: true,
-            title: Text(
-              'Chat Media',
-              style: kAppBarTitleStyle,
-            ),
+            title: Text('Chat Media', style: kAppBarTitleStyle),
           ),
         ),
         body: StreamBuilder(

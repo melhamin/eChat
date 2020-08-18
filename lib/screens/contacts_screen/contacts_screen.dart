@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -5,11 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/providers/message.dart';
-import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/models/message.dart';
+import 'package:whatsapp_clone/models/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/chats_screen/chat_screen.dart';
+import 'package:whatsapp_clone/screens/chats_screen/chat_item_screen.dart';
 import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/screens/contacts_screen/widget/contact_item.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
@@ -31,58 +34,27 @@ class ContactsScreen extends StatelessWidget {
     final userId = Provider.of<User>(context, listen: false).getUserId;
     // Checks if user has already interacted with peer
     // if has interacted pass chats object otherwise pass an empty one
-    final initData = Provider.of<User>(context, listen: false).chats.firstWhere(
-      (element) {
-        return element.person.uid == person.uid;
-      },
-      orElse: () => new InitChatData(
+    final initData =
+        Provider.of<User>(context, listen: false).chats.firstWhere((element) {
+      return element.person.uid == person.uid;
+    }, orElse: () {
+      // set reply color pair
+      int n = Random().nextInt(replyColors.length);
+      final replyColorPair = replyColors[n];
+      return new InitChatData(
         groupId: getGroupId(context, item.documentID),
         userId: userId,
         peerId: person.uid,
         messages: [],
         person: person,
-      ),
-    );
+        replyColorPair: replyColorPair,      
+      );
+    });
 
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => ChatItemScreen(initData),
     ));
-  }
-
-  Widget _buildContactsItem(BuildContext context, DocumentSnapshot item) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        splashColor: Colors.transparent,
-        highlightColor: Hexcolor('#121212'),
-        onTap: () => onTap(context, item),
-        child: Container(
-          height: 70,
-          child: Center(
-            child: ListTile(
-                // contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                leading: CircleAvatar(
-                  backgroundColor: Hexcolor('#303030'),
-                  radius: 27,
-                  child: (item['imageUrl'] == null || item['imageUrl'] == '')
-                      ? Icon(
-                          Icons.person,
-                          size: 25,
-                          color: kBaseWhiteColor,
-                        )
-                      : null,
-                  backgroundImage:
-                      (item['imageUrl'] != null && item['imageUrl'] != '')
-                          ? CachedNetworkImageProvider(item['imageUrl'])
-                          : null,
-                ),
-                title:
-                    Text(item['username'] ?? 'NA', style: kChatItemTitleStyle)),
-          ),
-        ),
-      ),
-    );
-  }
+  }  
 
   Widget _buildContacts(
       BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -94,11 +66,10 @@ class ContactsScreen extends StatelessWidget {
         final item = snapshot.data.documents[i];
         return item.documentID == userId
             ? Container(height: 0, width: 0)
-            : _buildContactsItem(context, item);
+            : ContactItem(item: item, onTap: onTap);
       },
       separatorBuilder: (ctx, _) => Divider(
-        indent: 85,
-        // endIndent: 15,
+        indent: 85,        
         height: 0,
         color: kBorderColor1,
       ),

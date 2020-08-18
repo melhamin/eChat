@@ -21,6 +21,8 @@ enum AuthMode {
 }
 
 class MyApp extends StatelessWidget {
+  final future = Auth().getCurrentUser();
+
   @override
   Widget build(BuildContext context) {
     FlutterStatusbarcolor.setStatusBarColor(Hexcolor('#121212'));
@@ -28,7 +30,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: Auth()),
-          ChangeNotifierProvider.value(value: User()),          
+          ChangeNotifierProvider.value(value: User()),
         ],
         child: Consumer<Auth>(
           builder: (ctx, auth, _) => MaterialApp(
@@ -36,11 +38,11 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(
               primaryColor: Colors.white,
               scaffoldBackgroundColor: Hexcolor('#121212'),
-              accentColor: Color(0xFFFFAD32),
-              // accentColor: Hexcolor('#0A84FF'),
+              accentColor: Color(0xFFFFAD32),              
+              // accentColor: Hexcolor('#1DA1F2'),
               brightness: Brightness.dark,
               appBarTheme: AppBarTheme(
-                color: Hexcolor('#202020'),                
+                color: Hexcolor('#202020'),
                 actionsIconTheme: IconThemeData(
                   color: kBaseWhiteColor,
                 ),
@@ -49,12 +51,12 @@ class MyApp extends StatelessWidget {
             ),
             home: FutureBuilder(
               future: auth.getCurrentUser(),
-              builder: (ctx, snapshot) {                
+              builder: (ctx, snapshot) {
                 return snapshot.connectionState == ConnectionState.waiting
                     ? Center(child: CupertinoActivityIndicator())
                     : snapshot.data == null ? AuthScreen() : Home();
               },
-            ),           
+            ),
             debugShowCheckedModeBanner: false,
           ),
         ));

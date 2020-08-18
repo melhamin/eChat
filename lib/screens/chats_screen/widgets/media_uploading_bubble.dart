@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/storage.dart';
-import 'package:whatsapp_clone/providers/message.dart';
+import 'package:whatsapp_clone/models/message.dart';
 
 class MediaUploadingBubble extends StatefulWidget {
   final String groupId;

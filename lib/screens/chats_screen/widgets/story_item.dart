@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/providers/message.dart';
-import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/models/message.dart';
+import 'package:whatsapp_clone/models/person.dart';
 
 class StoryItem extends StatefulWidget {
   final InitChatData chatData;

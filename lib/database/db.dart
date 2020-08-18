@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/media_model.dart';
-import 'package:whatsapp_clone/providers/message.dart';
+import 'package:whatsapp_clone/models/message.dart';
 
 class DB {
   final CollectionReference _usersCollection =

@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'dart:convert';
 
-import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/models/person.dart';
 
 enum MessageType {
   Text,
@@ -18,6 +19,7 @@ class InitChatData {
   final List<dynamic> messages;
   DocumentSnapshot lastDoc;
   int unreadCount;  
+  ReplyColorPair replyColorPair;
   InitChatData({
     @required this.groupId,  
     @required this.userId,  
@@ -25,7 +27,8 @@ class InitChatData {
     @required this.person,
     @required this.messages,
     this.lastDoc,
-    this.unreadCount,
+    this.unreadCount = 0,
+    this.replyColorPair,
   });
 
   DB db = DB();
@@ -76,6 +79,39 @@ class InitChatData {
   }
 }
 
+class ReplyMessage {
+  String content;
+  String replierId;
+  String repliedToId;
+  String type;
+
+  ReplyMessage({
+    this.content,
+    this.replierId,
+    this.repliedToId,
+    this.type,
+  });
+
+  static toJson(ReplyMessage msg)   {
+    return json.encode({
+      "content": msg.content,
+      "replierId": msg.replierId,
+      "repliedToId": msg.repliedToId,
+      "type": msg.type,
+    });
+  }
+
+  static ReplyMessage fromJson(Map<String, dynamic> json) {
+    return ReplyMessage(
+      content: json
+      ['content'],
+      replierId: json['replierId'],
+      repliedToId: json['repliedToId'],
+      type: json['type'],
+    );
+  }
+}
+
 class Message {
   String content;
   String fromId;
@@ -85,8 +121,12 @@ class Message {
   String type;
   String mediaUrl;
   bool uploadFinished;
-  bool hasReply;
+  ReplyMessage reply;
+
   String replyContent;
+  String replyType;
+  String replyMsgSenderId;
+
 
   Message({
     this.content,
@@ -96,7 +136,11 @@ class Message {
     this.isSeen,
     this.type,
     this.mediaUrl,
-    this.uploadFinished,
+    this.uploadFinished, 
+    this.replyContent,
+    this.replyType,
+    this.replyMsgSenderId,
+    this.reply,
   });
 
   static Message fromJson(DocumentSnapshot snapshot) {
@@ -108,7 +152,11 @@ class Message {
       isSeen: snapshot['isSeen'],
       type: snapshot['type'],
       mediaUrl: snapshot['mediaUrl'],
-      uploadFinished: snapshot['uploadFinished'],
+      uploadFinished: snapshot['uploadFinished'],  
+      replyContent: snapshot['replyContent'],
+      replyType: snapshot['replyType'],
+      replyMsgSenderId: snapshot['replyMsgSenderId'],
+      reply: snapshot['reply'] != null ? ReplyMessage.fromJson(json.decode(snapshot['reply'])) : null,
     );
   }
 
@@ -121,7 +169,11 @@ class Message {
       'isSeen': message.isSeen,
       'type': message.type,
       'mediaUrl': message.mediaUrl,
-      'uploadFinished': message.uploadFinished,
+      'uploadFinished': message.uploadFinished,      
+      'replyContent': message.replyContent,
+      'replyType': message.replyType,
+      'replyMsgSenderId': message.replyMsgSenderId,
+      'reply': message.reply != null ? ReplyMessage.toJson(message.reply) : null,
     });
   }
 }

@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
-import 'package:whatsapp_clone/providers/message.dart';
-import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/models/message.dart';
+import 'package:whatsapp_clone/models/person.dart';
 
 class User with ChangeNotifier {
   // final _prefs = SharedPreferences.getInstance();
@@ -94,6 +96,10 @@ class User with ChangeNotifier {
     if (messagesData.documents.isNotEmpty)
       lastDoc = messagesData.documents[messagesData.documents.length - 1];
 
+    // set reply color pair    
+    int n = Random().nextInt(replyColors.length);
+    final replyColorPair = replyColors[n];
+
     InitChatData chatData = InitChatData(
       userId: userDetails.uid,
       peerId: person.uid,
@@ -102,6 +108,7 @@ class User with ChangeNotifier {
       messages: messages,
       lastDoc: lastDoc,
       unreadCount: unreadCount,
+      replyColorPair: replyColorPair,
     );
     return chatData;
   }
@@ -164,14 +171,14 @@ class User with ChangeNotifier {
       for (int i = _contacts.length; i < newContacts.length; ++i) {
         final chatData = await getChatData(newContacts[i]);
         _chats.insert(0, chatData);
-        _contacts.add(newContacts[i]);
+        _contacts.insert(0, newContacts[i]);
       }
       notifyListeners();
+      db.updateContacts(userDetails.uid, _contacts);
     }
   }
 
-  void clearChatsAndContacts() {
-    // return Future.delayed(Duration.zero).then((value) {
+  void clearChatsAndContacts() {    
     _chats.clear();
     _contacts.clear();
     // });

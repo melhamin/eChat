@@ -5,9 +5,10 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/database/storage.dart';
-import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/models/person.dart';
 import 'package:intl/intl.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_media_screen.dart';
+import 'package:whatsapp_clone/widgets/back_button.dart';
 import 'package:whatsapp_clone/widgets/image_view.dart';
 
 class ContactDetails extends StatefulWidget {
@@ -345,15 +346,9 @@ class _ContactDetailsState extends State<ContactDetails> {
         ),
       );
 
-  Widget _buildIOSBackButton() => CupertinoButton(
-        child: Icon(CupertinoIcons.back, color: Theme.of(context).accentColor),
-        onPressed: () => Navigator.of(context).pop(),
-      );
-
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    final mq = MediaQuery.of(context);    
     return SafeArea(
       child: Scaffold(
         appBar: PreferredSize(
@@ -362,9 +357,7 @@ class _ContactDetailsState extends State<ContactDetails> {
             centerTitle: true,
             backgroundColor: Hexcolor('#121212'),
             elevation: 0,
-            leading: isIos
-                ? _buildIOSBackButton()
-                : BackButton(color: Theme.of(context).accentColor),
+            leading: CBackButton(),
             title: Text(
               'Contact Info',
               style: TextStyle(

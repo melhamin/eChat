@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hexcolor/hexcolor.dart';
 
 final String ALL_MESSAGES_COLLECTION = 'MESSAGES';
 final String USERS_COLLECTION = 'USERS';
@@ -49,3 +50,28 @@ TextStyle kChatBubbleTextStyle = TextStyle(
   fontSize: 17,
   color: kBaseWhiteColor,
 );
+
+TextStyle kReplyTitleStyle = TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.w600,
+  color: Hexcolor('#FF0266'),
+);
+
+TextStyle kReplySubtitleStyle = TextStyle(
+  fontSize: 14,
+  color: kBaseWhiteColor,
+);
+
+class ReplyColorPair {
+  final Color user;
+  final Color peer;
+  ReplyColorPair({this.user, this.peer});
+}
+
+List<ReplyColorPair> replyColors = [
+  ReplyColorPair(user: Hexcolor('#09af00'), peer: Hexcolor('#FF0266')),  
+  ReplyColorPair(user: Hexcolor('#C62828'), peer: Hexcolor('#d602ee')),  
+  ReplyColorPair(user: Hexcolor('#f47100'), peer: Hexcolor('#61d800')),  
+  ReplyColorPair(user: Hexcolor('#4E342E'), peer: Hexcolor('#BF360C')),  
+  
+];

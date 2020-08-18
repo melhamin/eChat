@@ -8,10 +8,12 @@ import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/calls_screen.dart';
-import 'package:whatsapp_clone/screens/chats_screen/chats_screen.dart';
-import 'package:whatsapp_clone/screens/contacts_screen.dart';
-import 'package:whatsapp_clone/screens/profile_info.dart';
+import 'package:whatsapp_clone/screens/calls_screen/calls_screen.dart';
+import 'package:whatsapp_clone/screens/chats_screen/all_chats_screen.dart';
+import 'package:whatsapp_clone/screens/profile_screen/profile_info.dart';
+
+import 'contacts_screen/contacts_screen.dart';
+
 
 class Home extends StatefulWidget {
   @override
@@ -22,9 +24,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
   TabController tabController;
   DB db;
   bool isLoading = true;
-  bool initLoaded = false;
+  bool initLoaded = true;
 
   AppLifecycleState _appLifecycleState;
+
+  Stream<QuerySnapshot> _contactsStream;
 
   @override
   void initState() {
@@ -32,6 +36,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
     WidgetsBinding.instance.addObserver(this);
     tabController = TabController(length: 4, vsync: this, initialIndex: 0);
     db = DB();    
+    _contactsStream = db.getContactsStream();
     // Fetch user data(chats and contacts), and update online status
     Future.delayed(Duration.zero).then((value) {         
         Provider.of<User>(context, listen: false).getUserDetailsAndContacts().then((value) {
@@ -43,12 +48,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
   }
 
   @override
-  void didChangeDependencies() {    
-    if (initLoaded) {
-      setState(() {
-        isLoading = false;
-        initLoaded = false;
-      });
+  void didChangeDependencies() {   
+    if(initLoaded)
+    {
+      initLoaded= false;
+      isLoading = false;
     }
     super.didChangeDependencies();
   }
@@ -90,7 +94,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
       controller: tabController,
       children: [
         CallsScreen(),
-        ChatsScreen(),
+        AllChatsScreen(),
         ContactsScreen(),
         ProfileInfo(),
       ],
@@ -98,16 +102,16 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
   }
 
   void updateChats(AsyncSnapshot<dynamic> snapshots) {
-    final currContacts = Provider.of<User>(context).getContacts;
-    final currContactLength = currContacts.length;
-    if (snapshots.hasData && snapshots.data != null) {
-      if (snapshots.data != null) {
+    print('snapshots ======> $snapshots');
+    print('data =========> ${snapshots.data['contacts']}');
+    if (snapshots != null && snapshots.data != null) {      
+      final currContacts = Provider.of<User>(context, listen:false).getContacts;
+      final currContactLength = currContacts.length;      
         final contacts = snapshots.data['contacts'];        
         if(contacts != null)
         if (contacts.length > currContactLength) {          
           Provider.of<User>(context, listen: false)
-              .handleMessagesNotFromContacts(contacts);
-        }
+              .handleMessagesNotFromContacts(contacts);        
       }
     }
   }
@@ -117,13 +121,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
     final uid = Provider.of<User>(context).getUserId;    
     return SafeArea(
       child: Scaffold(
-        body: StreamBuilder(
-          stream: db.getUserContactsStream(uid),
-          builder: (ctx, snapshots) {
-            if (!isLoading) updateChats(snapshots);
-            return _buildTabContent();
-          },
-        ),
+        body:_buildTabContent(),
+        // StreamBuilder(
+        //   stream: db.getUserContactsStream(uid),
+        //   builder: (ctx, snapshots) {
+        //     if (!isLoading && snapshots.hasData) updateChats(snapshots);
+        //     return _buildTabContent();
+        //   },
+        // ),
         bottomNavigationBar: _buildTabs(),
       ),
     );
@@ -158,10 +163,10 @@ class _TabsState extends State<Tabs> {
       return BottomNavigationBarItem(
         icon: Icon(icon),
         activeIcon: Icon(activeIcon, size: 35),
-        title: Padding(
-          padding: const EdgeInsets.only(top: 5),
-          child: Text(label, style: labelStyle),
-        ),
+        // title: Padding(
+        //   padding: const EdgeInsets.only(top: 5),
+        //   child: Text(label, style: labelStyle),
+        // ),
       );
     }
 
@@ -176,7 +181,7 @@ class _TabsState extends State<Tabs> {
       currentIndex: currentIndex,
       activeColor: Theme.of(context).accentColor,
       inactiveColor: Colors.white.withOpacity(0.7),
-      backgroundColor: Hexcolor('#121212'),
+      backgroundColor: Hexcolor('#303030'),
     );
   }
 }

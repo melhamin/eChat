@@ -6,9 +6,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/providers/person.dart';
-import 'package:whatsapp_clone/screens/contact_details.dart';
-import 'package:whatsapp_clone/widgets/ios_back.dart';
+import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/screens/contacts_screen/contact_details.dart';
+import 'package:whatsapp_clone/widgets/back_button.dart';
 
 class MyAppBar extends StatefulWidget {
   final Person info;
@@ -44,6 +44,9 @@ class _MyAppBarState extends State<MyAppBar>
 
   @override
   void dispose() {
+    _animationController.removeListener(() { });
+    _animationController.dispose();
+    _timer.cancel();    
     super.dispose();
   }
 
@@ -76,8 +79,7 @@ class _MyAppBarState extends State<MyAppBar>
       backgroundColor: Hexcolor('#202020'),
       centerTitle: true,
       elevation: 0,
-      leading:
-          isIos ? IOSBack() : BackButton(color: Theme.of(context).accentColor),
+      leading: CBackButton(),
       title: CupertinoButton(
         onPressed: goToContactDetails,
         child: Column(

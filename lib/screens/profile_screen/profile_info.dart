@@ -5,9 +5,9 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
-import 'package:whatsapp_clone/providers/person.dart';
+import 'package:whatsapp_clone/models/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/screens/edit_profile_picture.dart';
+import 'package:whatsapp_clone/screens/profile_screen/edit_profile_picture.dart';
 import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 

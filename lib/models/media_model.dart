@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
-import 'package:whatsapp_clone/providers/message.dart';
+import 'package:whatsapp_clone/models/message.dart';
 
 class MediaModel {
   final String url;

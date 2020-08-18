@@ -3,14 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
+import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/providers/message.dart';
+import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
-import 'package:whatsapp_clone/widgets/chat/stories.dart';
-import 'package:whatsapp_clone/widgets/chat_item.dart';
+import 'package:whatsapp_clone/screens/chats_screen/widgets/stories.dart';
+import 'package:whatsapp_clone/screens/chats_screen/widgets/chat_item.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
-class ChatsScreen extends StatelessWidget {
+class AllChatsScreen extends StatefulWidget {
+
+  @override
+  _AllChatsScreenState createState() => _AllChatsScreenState();
+}
+
+class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAliveClientMixin {
+  DB db = DB();
+
   Widget _buildChats(List<InitChatData> chats) => BodyList(    
         child: ListView.separated(
           padding: const EdgeInsets.only(top: 10),
@@ -45,12 +54,31 @@ class ChatsScreen extends StatelessWidget {
     );
   }
 
+  void updateChats(BuildContext context, AsyncSnapshot<dynamic> snapshots) {    
+    if (snapshots != null && snapshots.data != null) {      
+      final currContacts = Provider.of<User>(context, listen:false).getContacts;
+      final currContactLength = currContacts.length;      
+        final contacts = snapshots.data['contacts'];        
+        if(contacts != null)
+        if (contacts.length > currContactLength) {          
+          Provider.of<User>(context, listen: false)
+              .handleMessagesNotFromContacts(contacts);        
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final chats = Provider.of<User>(context).chats;
     final isLoading = Provider.of<User>(context).isLoading;
+    final uid = Provider.of<User>(context).getUserId;
     final mq = MediaQuery.of(context);
-    return Column(
+    return StreamBuilder(
+          stream: db.getUserContactsStream(uid),
+          builder: (ctx, snapshots) {
+            if (!isLoading && snapshots.hasData) updateChats(context, snapshots);
+            return Column(
       children: [
         Container(
           height: mq.size.height * 0.25,
@@ -81,5 +109,11 @@ class ChatsScreen extends StatelessWidget {
             : chats.isEmpty ? _buildEmptyIndicator() : _buildChats(chats),
       ],
     );
+          },
+        );
+    
   }
+
+  @override  
+  bool get wantKeepAlive => true;
 }

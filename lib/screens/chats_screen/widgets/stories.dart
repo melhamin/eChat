@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
-import 'package:whatsapp_clone/widgets/chat/story_item.dart';
+import 'package:whatsapp_clone/screens/chats_screen/widgets/story_item.dart';
 
 class Stories extends StatefulWidget {
   @override
