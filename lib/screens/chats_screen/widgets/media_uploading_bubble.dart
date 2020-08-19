@@ -5,18 +5,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/storage.dart';
 import 'package:whatsapp_clone/models/message.dart';
+import 'package:whatsapp_clone/services/storage.dart';
 
 class MediaUploadingBubble extends StatefulWidget {
   final String groupId;
-  final File image;
+  final File file;
   final DateTime time;
   final Function onUploadFinished;
   final Message message;
   MediaUploadingBubble({
     @required this.groupId,
-    @required this.image,
+    @required this.file,
     @required this.time,
     @required this.onUploadFinished,
     @required this.message,
@@ -40,14 +40,15 @@ class _MediaUploadingBubbleState extends State<MediaUploadingBubble> {
     setState(() {
       timestamp = widget.time.millisecondsSinceEpoch;
       path = 'ChatsMedia/${widget.groupId}/$timestamp.png';
-      _uploadTask = _storage.getUploadTask(widget.image, path);
+      _uploadTask = _storage.getUploadTask(widget.file, path);
     });
   }
 
-  void onUploadCompleted() async {
+  void onUploadCompleted() async {    
     var url =
         await _storage.getUrl('ChatsMedia/${widget.groupId}', '$timestamp');
     widget.onUploadFinished(url);
+    print('url ================> $url');
   }
 
   @override
@@ -81,7 +82,7 @@ class _MediaUploadingBubbleState extends State<MediaUploadingBubble> {
                         ),
                         height: double.infinity,
                         width: double.infinity,
-                        child: Image.file(widget.image, fit: BoxFit.cover),
+                        child: Image.file(widget.file, fit: BoxFit.cover),
                       ),
                     ),
                     StreamBuilder<StorageTaskEvent>(

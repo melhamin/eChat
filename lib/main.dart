@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FlutterStatusbarcolor.setStatusBarColor(Hexcolor('#121212'));
+    FlutterStatusbarcolor.setStatusBarColor(kBlackColor);
     FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
     return MultiProvider(
         providers: [
@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
             title: 'eChat',
             theme: ThemeData(
               primaryColor: Colors.white,
-              scaffoldBackgroundColor: Hexcolor('#121212'),
+              scaffoldBackgroundColor: kBlackColor,
               accentColor: Color(0xFFFFAD32),              
               // accentColor: Hexcolor('#1DA1F2'),
               brightness: Brightness.dark,

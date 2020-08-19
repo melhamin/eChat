@@ -2,16 +2,14 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/db.dart';
-import 'package:whatsapp_clone/database/storage.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/profile_screen/widgets/photo_uploader.dart';
+import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
 import 'package:whatsapp_clone/widgets/back_button.dart';
 
@@ -43,30 +41,35 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
 
   Widget _buildSelectedImage(MediaQueryData mq) {
     return Container(
-        width: mq.size.width,
-        child: PhotoUploader(
-            file: _image, uid: widget.info.uid, getUrl: updateProfilePicture));
-  }
-
-  Widget _buildProfileImage(MediaQueryData mq) {
-    return widget.imageUrl == null ? Container(
-        height: mq.size.height * 0.7 - kToolbarHeight,
-        width: mq.size.width,
-        child: _getImage(mq),
-      ):
-     Hero(
-      tag: widget.imageUrl,
-      child: Container(
-        height: mq.size.height * 0.7 - kToolbarHeight,
-        width: mq.size.width,
-        child: _getImage(mq),
+      width: mq.size.width,
+      child: PhotoUploader(
+        file: _image,
+        uid: widget.info.uid,
+        getUrl: updateProfilePicture,
       ),
     );
   }
 
+  Widget _buildProfileImage(MediaQueryData mq) {
+    return widget.imageUrl == null
+        ? Container(
+            height: mq.size.height * 0.7 - kToolbarHeight,
+            width: mq.size.width,
+            child: _getImage(mq),
+          )
+        : Hero(
+            tag: widget.imageUrl,
+            child: Container(
+              height: mq.size.height * 0.7 - kToolbarHeight,
+              width: mq.size.width,
+              child: _getImage(mq),
+            ),
+          );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);    
+    final mq = MediaQuery.of(context);
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -160,34 +163,26 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
   }
 
   void pickImage() async {
-    showImageSourceModal().then((value) async {
-      if (value != null) {
-        _image = null;
-        var pickedFile = await Utils.pickImage(
-            value ? ImageSource.gallery : ImageSource.camera);
-        if (pickedFile != null) {
-          setState(() {
-            _image = File(pickedFile.path);
-            imageSelected = true;
-          });
-          // Navigator.of(context).pop();
-        }
-      }
-    });
+    var pickedFile = await Utils.pickImage(context);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        imageSelected = true;
+      });
+    }
+    }
+
+    void updateProfilePicture(String url) {
+      final user = Provider.of<User>(context, listen: false).getUser;
+      final info = UserUpdateInfo();
+      info.photoUrl = url;
+      user.updateProfile(info);
+
+      db.updateUserInfo(widget.info.uid, {
+        'imageUrl': url,
+      });
+
+      Provider.of<User>(context, listen: false).setImageUrl(url);
+      Navigator.of(context).pop();
+    }
   }
-
-  void updateProfilePicture(String url) {
-    final user = Provider.of<User>(context, listen: false).getUser;
-    final info = UserUpdateInfo();
-    info.photoUrl = url;
-    user.updateProfile(info);
-
-    db.updateUserInfo(widget.info.uid, {
-      'imageUrl': url,
-    });
-
-    Provider.of<User>(context, listen: false).setImageUrl(url);
-    Navigator.of(context).pop();
-  }
-}
-

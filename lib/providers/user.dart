@@ -4,9 +4,10 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/services/db.dart';
 
 class User with ChangeNotifier {
   // final _prefs = SharedPreferences.getInstance();
@@ -107,8 +108,7 @@ class User with ChangeNotifier {
       person: person,
       messages: messages,
       lastDoc: lastDoc,
-      unreadCount: unreadCount,
-      replyColorPair: replyColorPair,
+      unreadCount: unreadCount,      
     );
     return chatData;
   }

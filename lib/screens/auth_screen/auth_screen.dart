@@ -4,6 +4,8 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/screens/auth_screen/widgets/input_section.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
+import '../../consts.dart';
+
 
 
 class AuthScreen extends StatelessWidget {
@@ -11,7 +13,7 @@ class AuthScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Hexcolor('#121212'),
+        backgroundColor: kBlackColor,
         body: GestureDetector(
           onTap: () {
             FocusScope.of(context).requestFocus(FocusNode());

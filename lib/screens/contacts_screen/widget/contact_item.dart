@@ -21,7 +21,7 @@ class ContactItem extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         splashColor: Colors.transparent,
-        highlightColor: Hexcolor('#121212'),
+        highlightColor: kBlackColor,
         onTap: () => onTap(context, item),
         child: Container(
           height: 70,
@@ -29,7 +29,7 @@ class ContactItem extends StatelessWidget {
             child: ListTile(
                 // contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 leading: CircleAvatar(
-                  backgroundColor: Hexcolor('#303030'),
+                  backgroundColor: kBlackColor3,
                   radius: 27,
                   child: (item['imageUrl'] == null || item['imageUrl'] == '')
                       ? Icon(

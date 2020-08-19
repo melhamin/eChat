@@ -1,5 +1,3 @@
-
-
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -21,7 +19,6 @@ class Stories extends StatefulWidget {
 }
 
 class _StoriesState extends State<Stories> {
-
   File _image;
   bool _mediaSelected = false;
   final picker = ImagePicker();
@@ -53,19 +50,13 @@ class _StoriesState extends State<Stories> {
   }
 
   Future getImage() async {
-    showImageSourceModal().then((value) async {
-      if (value != null) {
-        _image = null;
-        var pickedFile = await Utils.pickImage(
-            value ? ImageSource.gallery : ImageSource.camera);
-        if (pickedFile != null) {
-          setState(() {
-            _image = File(pickedFile.path);
-            _mediaSelected = true;
-          });          
-        }
-      }
-    });
+    var pickedFile = await Utils.pickImage(context);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        _mediaSelected = true;
+      });
+    }
   }
 
   Widget _buildMyStoryItem(FirebaseUser user) {
@@ -75,8 +66,8 @@ class _StoriesState extends State<Stories> {
       children: [
         CupertinoButton(
           padding: const EdgeInsets.all(0),
-              onPressed: () => getImage(),
-                  child: Stack(
+          onPressed: () => getImage(),
+          child: Stack(
             children: [
               Container(
                 padding: const EdgeInsets.all(3),
@@ -86,7 +77,7 @@ class _StoriesState extends State<Stories> {
                       color: Theme.of(context).accentColor, width: 1.5),
                 ),
                 child: CircleAvatar(
-                  backgroundColor: Hexcolor('#303030'),
+                  backgroundColor: kBlackColor3,
                   backgroundImage:
                       (user.photoUrl != null && user.photoUrl != '')
                           ? CachedNetworkImageProvider(user.photoUrl)
@@ -105,7 +96,7 @@ class _StoriesState extends State<Stories> {
                 right: 3,
                 child: Container(
                   decoration: BoxDecoration(
-                  color: Colors.blue,
+                    color: Colors.blue,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(Icons.add, color: Colors.white, size: 18),

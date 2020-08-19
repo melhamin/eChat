@@ -1,124 +1,25 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/db.dart';
 import 'dart:convert';
 
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-enum MessageType {
-  Text,
-  Image,
-}
+import 'package:whatsapp_clone/consts.dart';
+import 'package:whatsapp_clone/models/reply_message.dart';
 
-class InitChatData {
-  final String groupId;
-  final String userId;
-  final String peerId;
-  final Person person;
-  final List<dynamic> messages;
-  DocumentSnapshot lastDoc;
-  int unreadCount;  
-  ReplyColorPair replyColorPair;
-  InitChatData({
-    @required this.groupId,  
-    @required this.userId,  
-    @required this.peerId,  
-    @required this.person,
-    @required this.messages,
-    this.lastDoc,
-    this.unreadCount = 0,
-    this.replyColorPair,
-  });
+/// This allows the `User` class to access private members in
+/// the generated file. The value for this is *.g.dart, where
+/// the star denotes the source file name.
+// part 'message.g.dart';
 
-  DB db = DB();
-
-  void setLastDoc(DocumentSnapshot doc) {
-    lastDoc = doc;
-  }
-
-  void addMessage(Message newMsg) {
-    if (messages.length > 5) {
-      print('removed ----------->${messages.last.content}');
-      messages.removeLast();
-    }
-
-    messages.insert(0, newMsg);
-    print('added ---------> ${newMsg.content}');
-  }
-
-  dynamic gettojson() {
-    return Person.toJson(person);
-  }
-
-  dynamic getMessagesJson() {
-    var res = [];
-    messages.forEach((element) {
-      res.add(Message.toJson(element));
-    });
-    return json.encode(res);
-  }
-
-  static toJson(InitChatData chatData) {
-    final map = {
-      'person': Person.toJson(chatData.person),
-      'messages': chatData.getMessagesJson(),
-    };
-    return json.encode(map);
-  }
-
-  Future<void> fetchNewChats() async {
-    final newData = await db.getNewChats(groupId, lastDoc);
-    newData.documents.forEach((element) {
-      print('added -------------> ${element['content']}');
-      messages.add(Message.fromJson(element));
-    });
-    if (newData.documents.isNotEmpty) {
-      lastDoc = newData.documents[newData.documents.length - 1];      
-    }
-  }
-}
-
-class ReplyMessage {
-  String content;
-  String replierId;
-  String repliedToId;
-  String type;
-
-  ReplyMessage({
-    this.content,
-    this.replierId,
-    this.repliedToId,
-    this.type,
-  });
-
-  static toJson(ReplyMessage msg)   {
-    return json.encode({
-      "content": msg.content,
-      "replierId": msg.replierId,
-      "repliedToId": msg.repliedToId,
-      "type": msg.type,
-    });
-  }
-
-  static ReplyMessage fromJson(Map<String, dynamic> json) {
-    return ReplyMessage(
-      content: json
-      ['content'],
-      replierId: json['replierId'],
-      repliedToId: json['repliedToId'],
-      type: json['type'],
-    );
-  }
-}
-
+@JsonSerializable()
 class Message {
   String content;
   String fromId;
   String toId;
   DateTime timeStamp;
   bool isSeen;
-  String type;
+  MessageType type;
+  PickedMediaType mediaType;
   String mediaUrl;
   bool uploadFinished;
   ReplyMessage reply;
@@ -135,6 +36,7 @@ class Message {
     this.timeStamp,
     this.isSeen,
     this.type,
+    this.mediaType,
     this.mediaUrl,
     this.uploadFinished, 
     this.replyContent,
@@ -151,6 +53,7 @@ class Message {
       timeStamp: DateTime.parse(snapshot['date']),
       isSeen: snapshot['isSeen'],
       type: snapshot['type'],
+      mediaType: snapshot['mediaType'],
       mediaUrl: snapshot['mediaUrl'],
       uploadFinished: snapshot['uploadFinished'],  
       replyContent: snapshot['replyContent'],
@@ -168,6 +71,7 @@ class Message {
       'timeStamp': message.timeStamp.toIso8601String(),
       'isSeen': message.isSeen,
       'type': message.type,
+      'mediaType': message.mediaType,
       'mediaUrl': message.mediaUrl,
       'uploadFinished': message.uploadFinished,      
       'replyContent': message.replyContent,

@@ -2,21 +2,23 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:async/async.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/reply_message.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/reply_message_preview.dart';
-import 'package:whatsapp_clone/screens/chats_screen/widgets/selected_image_preview.dart';
+import 'package:whatsapp_clone/screens/chats_screen/widgets/selected_media_preview.dart';
+import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
 import 'package:whatsapp_clone/widgets/app_bar.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/media_uploading_bubble.dart';
@@ -26,6 +28,8 @@ enum LoaderStatus {
   STABLE,
   LOADING,
 }
+
+
 
 class ChatItemScreen extends StatefulWidget {
   final InitChatData chatData;
@@ -49,7 +53,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   String groupChatId;
 
   // variable for handling image selection
-  File _image;
+  File _selectedMedia;
+  PickedMediaType pickedMediaType;
   bool _mediaSelected = false;
   final picker = ImagePicker();
   Message mediaMsg;
@@ -119,8 +124,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     super.dispose();
   }
 
-  void onMessageSend(String type, String content,
-      {ReplyMessage replyDetails}) async {
+  void onMessageSend(MessageType type, String content,
+      {ReplyMessage replyDetails}) async {    
     if (content != '') _textEditingController.clear();
     DateTime time = DateTime.now();
     final newMessage = Message(
@@ -134,13 +139,15 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       uploadFinished: false,
       reply: replyDetails,
     );
+
     widget.chatData.messages.insert(0, newMessage);
 
-    // print('reply content ----------------> ${replyContent}');
+    // play new message sound
+    if (newMessage.fromId != userId) Utils.playSound('mp3/newMessage.mp3');
 
-    if (type == '1') mediaMsg = newMessage;
+    if (type == MessageType.Media) mediaMsg = newMessage;
 
-    if (type == '0') {
+    if (type == MessageType.Text) {
       db.addNewMessage(groupChatId, time, {
         'fromId': userId,
         'toId': peerId,
@@ -186,8 +193,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         peerId: peerId,
         groupId: groupChatId,
         person: person,
-        messages: [message],
-        replyColorPair: replyColorPair,
+        messages: [message],        
       );
       Provider.of<User>(context, listen: false).addToInitChats(initChatData);
     } else {
@@ -212,7 +218,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         'timeStamp': mediaMsg.timeStamp.millisecondsSinceEpoch.toString(),
         'content': mediaMsg.content,
         'isSeen': false,
-        'type': '1',
+        'type': MessageType.Media,
         'mediaUrl': url,
         'uploadFinished': true,
       });
@@ -222,11 +228,11 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
   Widget _buildMessageItem(Message message, bool withoutAvatar, bool last,
       bool first, bool isMiddle) {
-    if (message.type == '1') {
+    if (message.type == MessageType.Media) {
       if (message.mediaUrl == null || !message.uploadFinished)
         return MediaUploadingBubble(
           groupId: groupChatId,
-          image: _image,
+          file: _selectedMedia,
           time: message.timeStamp,
           onUploadFinished: onUploadFinished,
           message: message,
@@ -270,16 +276,18 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     }
   }
 
-  void onSend(String msgContent, {ReplyMessage replyDetails}) {
-    if (!_mediaSelected) {
+  void onSend(String msgContent, {MessageType type, PickedMediaType mediaTypeType, ReplyMessage replyDetails}) {
+    // if not media is not selected add new message as text message
+    if (type == MessageType.Text) {
       if (msgContent.isEmpty) return;
       _textEditingController.clear();
       _scrollController.animateTo(_scrollController.position.minScrollExtent,
           duration: Duration(milliseconds: 200), curve: Curves.easeIn);
-      onMessageSend('0', msgContent, replyDetails: replyDetails);
+      // send new message
+      onMessageSend(MessageType.Text, msgContent, replyDetails: replyDetails);
     } else {
       if (msgContent.trim().isEmpty) msgContent = null;
-      onMessageSend('1', msgContent, replyDetails: replyDetails);
+      onMessageSend(MessageType.Media, msgContent, replyDetails: replyDetails);
       setState(() {
         _mediaSelected = false;
       });
@@ -372,6 +380,9 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                 .isAfter(widget.chatData.messages[0].timeStamp)) {
               widget.chatData.messages.insert(0, newMsg);
 
+              // play notification sound
+              Utils.playSound('mp3/newMessage.mp3');
+
               // if message is from peer update seen status of all unseen messages
               if (newMsg.fromId == peerId) {
                 handleSeenStatusUpdateWhenFromPeer();
@@ -396,19 +407,25 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   }
 
   Future getImage() async {
-    Utils.showImageSourceModal(context).then((value) async {
-      if (value != null) {
-        _image = null;
-        var pickedFile = await Utils.pickImage(
-            value ? ImageSource.gallery : ImageSource.camera);
-        if (pickedFile != null) {
-          setState(() {
-            _image = File(pickedFile.path);
-            _mediaSelected = true;
-          });
-        }
-      }
-    });
+    var pickedFile = await Utils.pickImage(context);
+    if (pickedFile != null) {
+      setState(() {
+        pickedMediaType = PickedMediaType.Photo;
+        _selectedMedia = File(pickedFile.path);
+        _mediaSelected = true;
+      });
+    }
+  }
+
+  Future getVideo() async {
+    var pickedFile = await Utils.pickVideo(context);
+    if (pickedFile != null) {
+      setState(() {
+        pickedMediaType = PickedMediaType.Video;
+        _selectedMedia = File(pickedFile.path);                
+        _mediaSelected = true;
+      });
+    }
   }
 
   Widget _buildChatArea() {
@@ -452,6 +469,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         bool reply = false;
         Message repliedMessage;
 
+        // update state when message is being replied
         thisState(() {
           reply = replied;
           repliedMessage = msgToReply;
@@ -463,19 +481,15 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
             replyDetails = ReplyMessage();
             replyDetails.replierId = userId;
             replyDetails.repliedToId = repliedMessage.fromId;
-            if (repliedMessage.type == '0')
+            if (repliedMessage.type == MessageType.Text)
               replyDetails.content = repliedMessage.content;
             else
               replyDetails.content = repliedMessage.mediaUrl;
             replyDetails.type = repliedMessage?.type;
           }
-          onSend(
-            _textEditingController.text,
-            replyDetails: replyDetails,
-            // replyContent: replyContent,
-            // replyMsgSenderId: replyMsgSenderId,
-          );
+          onSend(_textEditingController.text, type: MessageType.Text, replyDetails: replyDetails);
 
+          // reset state
           thisState(() {
             reply = false;
             repliedMessage = null;
@@ -530,8 +544,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                     repliedMessage: repliedMessage,
                     peerName: widget.chatData.person.name,
                     reply: reply,
-                    userId: userId,
-                    color: widget.chatData.replyColorPair.user,
+                    userId: userId,                    
                   )
                 : Container(width: 0, height: 0),
           );
@@ -540,7 +553,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         return Container(
           margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
           decoration: BoxDecoration(
-              color: Hexcolor('#303030'),
+              color: kBlackColor3,
               borderRadius: reply
                   ? BorderRadius.only(
                       topLeft: Radius.circular(10),
@@ -557,11 +570,23 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   SizedBox(width: 5),
+                  CupertinoButton(                    
+                    padding: const EdgeInsets.all(0),
+                    child: Icon(                      
+                      Icons.image,
+                      size: 20,
+                      color: Theme.of(context).accentColor,
+                    ),
+                    onPressed: () => getImage(),
+                  ),
                   CupertinoButton(
                     padding: const EdgeInsets.all(0),
-                    child: Icon(Icons.camera_alt,
-                        size: 27, color: Theme.of(context).accentColor),
-                    onPressed: () => getImage(),
+                    child: Icon(
+                      Icons.videocam,
+                      size: 25,
+                      color: Theme.of(context).accentColor,
+                    ),
+                    onPressed: () => getVideo(),
                   ),
                   _buildTextField(),
                   // Spacer(),
@@ -622,11 +647,12 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
             FocusScope.of(context).requestFocus(bodyFocusNode);
           },
           child: _mediaSelected
-              ? SelectedImagePreview(
-                  image: _image,
+              ? SelectedMediaPreview(
+                  file: _selectedMedia,
                   onClosed: () => setState(() => _mediaSelected = false),
                   onSend: onSend,
                   textEditingController: _textEditingController,
+                  pickedMediaType: pickedMediaType,
                 )
               : ClipRRect(
                   borderRadius: BorderRadius.only(
@@ -634,7 +660,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                     topLeft: Radius.circular(25),
                   ),
                   child: Container(
-                    color: Hexcolor('#121212'),
+                    color: kBlackColor,
                     child: Stack(
                       children: [
                         StreamBuilder(
@@ -674,7 +700,7 @@ class ChatOps {
   static bool withoutAvatar(
       int i, int length, List<dynamic> messages, String peerId) {
     bool c1 = i != 0 && messages[i - 1].fromId == peerId;
-    bool c2 = i != 0 && messages[i - 1].type != '1';
+    bool c2 = i != 0 && messages[i - 1].type != MessageType.Media;
     return c1 && c2;
   }
 
@@ -682,7 +708,7 @@ class ChatOps {
   // if last message in a series from same user
   static bool isLast(int i, int length, List<dynamic> messages) {
     bool c1 = i != 0 && messages[i - 1].fromId == messages[i].fromId;
-    bool c2 = i != 0 && messages[i - 1].type != '1';
+    bool c2 = i != 0 && messages[i - 1].type != MessageType.Media;
     return i == length - 1 || c1 && c2;
   }
 

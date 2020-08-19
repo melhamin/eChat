@@ -12,7 +12,7 @@ import 'avatar.dart';
 import 'chat_text.dart';
 import 'dismissible_bubble.dart';
 
-class ChatBubble extends StatefulWidget {
+class ChatBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
   final Person peer;
@@ -26,17 +26,12 @@ class ChatBubble extends StatefulWidget {
     this.onReplyPressed,
   }) : super();
 
-  @override
-  _ChatBubbleState createState() => _ChatBubbleState();
-}
-
-class _ChatBubbleState extends State<ChatBubble>
-    with AutomaticKeepAliveClientMixin {
-  GlobalKey key = GlobalKey<_ChatBubbleState>();
+     
+  // GlobalKey key = GlobalKey<_ChatBubbleState>();
 
   dynamic getRadius() {
-    if (widget.message.reply != null) {
-      if (widget.isMe)
+    if (message.reply != null) {
+      if (isMe)
         return BorderRadius.only(
           topLeft: Radius.circular(20),
           bottomLeft: Radius.circular(20),
@@ -51,35 +46,34 @@ class _ChatBubbleState extends State<ChatBubble>
 
     return BorderRadius.circular(20);
   }
-  
 
   Widget _buildWithoutAvatar(BuildContext context, BoxConstraints constraints) {
-    final size = MediaQuery.of(context).size;    
+    final size = MediaQuery.of(context).size;
     return DismssibleBubble(
-      isMe: widget.isMe,
-      message: widget.message,
-      onDismissed: widget.onReplyPressed,
+      isMe: isMe,
+      message: message,
+      onDismissed: onReplyPressed,
       child: Wrap(
         children: [
           Stack(
             children: [
-              if (widget.message.reply != null)
+              if (message.reply != null)
                 Align(
                   alignment:
-                      widget.isMe ? Alignment.topRight : Alignment.topLeft,
+                      isMe ? Alignment.topRight : Alignment.topLeft,
                   child: ChatReplyBubble(
-                    message: widget.message,
-                    peer: widget.peer,
+                    message: message,
+                    peer: peer,
                   ),
                 ),
               Align(
                 alignment: Alignment.bottomRight,
                 child: Container(
                   // key: key,
-                  margin: widget.message.reply != null
+                  margin: message.reply != null
                       ? EdgeInsets.only(
-                          top: (widget.message.reply != null &&
-                                  widget.message.reply.type == '0')
+                          top: (message.reply != null &&
+                                  message.reply.type == MessageType.Text)
                               ? 50
                               : size.height * 0.25 - 5,
                         )
@@ -89,11 +83,11 @@ class _ChatBubbleState extends State<ChatBubble>
                   ),
                   decoration: BoxDecoration(
                     borderRadius: getRadius(),
-                    border: widget.isMe
+                    border: isMe
                         ? null
-                        : Border.all(color: Hexcolor('#303030')),
+                        : Border.all(color: kBlackColor3),
                     color:
-                        widget.isMe ? Hexcolor('#303030') : Hexcolor('#121212'),
+                        isMe ? kBlackColor3 : kBlackColor,
                   ),
                   child: Padding(
                     key: key,
@@ -106,14 +100,14 @@ class _ChatBubbleState extends State<ChatBubble>
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(top: 10.0, bottom: 12),
-                          child: ChatText(text: widget.message.content),
+                          child: ChatText(text: message.content),
                         ),
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5.0),
                           child: SeenStatus(
-                            isMe: widget.isMe,
-                            isSeen: widget.message.isSeen,
-                            timestamp: widget.message.timeStamp,
+                            isMe: isMe,
+                            isSeen: message.isSeen,
+                            timestamp: message.timeStamp,
                           ),
                         ),
                       ],
@@ -133,9 +127,9 @@ class _ChatBubbleState extends State<ChatBubble>
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        widget.withoutAvatar
+        withoutAvatar
             ? SizedBox(width: 30)
-            : Avatar(imageUrl: widget.peer.imageUrl),
+            : Avatar(imageUrl: peer.imageUrl),
         SizedBox(width: 5),
         _buildWithoutAvatar(context, constraints),
       ],
@@ -144,18 +138,19 @@ class _ChatBubbleState extends State<ChatBubble>
 
   Widget chatItem(BuildContext context) {
     return Container(
-      alignment: widget.isMe ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: LayoutBuilder(
         builder: (ctx, constraints) {
-          if (widget.message.type == '0') {
-            return !widget.isMe
+          if (message.type == MessageType.Text) {
+            return !isMe
                 ? _buildWithAvatar(context, constraints)
                 : _buildWithoutAvatar(context, constraints);
           } else {
             return MediaBubble(
-                message: widget.message,
-                onReplied: widget.onReplyPressed,
-                avatarImageUrl: widget.peer.imageUrl);
+              message: message,
+              onReplied: onReplyPressed,
+              avatarImageUrl: peer.imageUrl,
+            );
           }
         },
       ),
@@ -164,40 +159,40 @@ class _ChatBubbleState extends State<ChatBubble>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    // super.build(context);
     return GestureDetector(
-      onLongPress: () => onLongPress(context),
+      onLongPress: () {}, // () => onLongPress(context),
       child: chatItem(context),
     );
   }
 
-  void onLongPress(BuildContext context) async {
-    final screenWidth = MediaQuery.of(context).size.width;
-    RenderBox box = key.currentContext.findRenderObject();
-    Offset position = box.localToGlobal(Offset.zero);
-    double top = position.dy;
-    double left = position.dx;
-    double right = screenWidth - left;
+  // void onLongPress(BuildContext context) async {
+  //   final screenWidth = MediaQuery.of(context).size.width;
+  //   RenderBox box = key.currentContext.findRenderObject();
+  //   Offset position = box.localToGlobal(Offset.zero);
+  //   double top = position.dy;
+  //   double left = position.dx;
+  //   double right = screenWidth - left;
 
-    int selectedOption = await showMenu(
-      context: context,
-      items: [
-        PopupMenuItem(
-          child: Text('Forward'),
-          value: 1,
-        ),
-        PopupMenuItem(
-          child: Text('Reply'),
-          value: 2,
-        ),
-      ],
-      position: RelativeRect.fromLTRB(left, top, right, 0),
-    );
-    if (selectedOption != null) {
-      if (selectedOption == 2) widget.onReplyPressed(widget.message);
-    }
-  }
+  //   int selectedOption = await showMenu(
+  //     context: context,
+  //     items: [
+  //       PopupMenuItem(
+  //         child: Text('Forward'),
+  //         value: 1,
+  //       ),
+  //       PopupMenuItem(
+  //         child: Text('Reply'),
+  //         value: 2,
+  //       ),
+  //     ],
+  //     position: RelativeRect.fromLTRB(left, top, right, 0),
+  //   );
+  //   if (selectedOption != null) {
+  //     if (selectedOption == 2) widget.onReplyPressed(widget.message);
+  //   }
+  // }
 
-  @override
-  bool get wantKeepAlive => true;
+  // @override
+  // bool get wantKeepAlive => true;
 }

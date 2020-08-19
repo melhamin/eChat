@@ -60,9 +60,10 @@ class ReplyMessagePreview extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: repliedMessage.type == '0' ? 5 : 0),
+                SizedBox(
+                    height: repliedMessage.type == MessageType.Text ? 5 : 0),
                 Flexible(
-                  child: repliedMessage.type == '0'
+                  child: repliedMessage.type == MessageType.Text
                       ? Text(
                           repliedMessage?.content,
                           style: TextStyle(
@@ -88,37 +89,40 @@ class ReplyMessagePreview extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            constraints: BoxConstraints(maxWidth: repliedMessage.type == '0' ? 54 : 130 ),
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (repliedMessage.type == '1')
-                  Container(
-                    width: 40,
-                    height: 50,
-                    child: CachedNetworkImage(
-                      imageUrl: repliedMessage.mediaUrl,
-                      fit: BoxFit.cover,
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                  maxWidth: repliedMessage.type == MessageType.Text ? 54 : 130),
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (repliedMessage.type == MessageType.Media)
+                    Container(
+                      width: 40,
+                      height: 50,
+                      child: CachedNetworkImage(
+                        imageUrl: repliedMessage.mediaUrl,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  SizedBox(width: 10),
+                  CupertinoButton(
+                    padding: const EdgeInsets.only(
+                        left: 0, top: 0, bottom: 0, right: 10),
+                    onPressed: onCanceled,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(50),
+                          border: Border.all(
+                              color: Theme.of(context).accentColor, width: 2)),
+                      child: Icon(Icons.close,
+                          color: Theme.of(context).accentColor, size: 17),
                     ),
                   ),
-                SizedBox(width: 10),
-                CupertinoButton(
-                  padding: const EdgeInsets.only(
-                      left: 0, top: 0, bottom: 0, right: 10),
-                  onPressed: onCanceled,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(50),
-                        border: Border.all(
-                            color: Theme.of(context).accentColor, width: 2)),
-                    child: Icon(Icons.close,
-                        color: Theme.of(context).accentColor, size: 17),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

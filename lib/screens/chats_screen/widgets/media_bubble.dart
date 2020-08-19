@@ -9,6 +9,7 @@ import 'package:whatsapp_clone/screens/chats_screen/widgets/chat_text.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/seen_status.dart';
 import 'package:whatsapp_clone/widgets/image_view.dart';
 
+import '../../../consts.dart';
 import 'dismissible_bubble.dart';
 
 class MediaBubble extends StatelessWidget {
@@ -156,8 +157,8 @@ class MediaBubble extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Hexcolor('#303030')),
-                      color: isMe ? Hexcolor('#202020') : Hexcolor('#121212'),
+                      border: Border.all(color: kBlackColor3),
+                      color: isMe ? Hexcolor('#202020') : kBlackColor,
                     ),
                     padding: const EdgeInsets.all(5),
                     constraints: BoxConstraints(

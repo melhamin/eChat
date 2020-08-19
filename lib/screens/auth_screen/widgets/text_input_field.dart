@@ -31,7 +31,7 @@ class TextInputField extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25),
         border: Border.all(color: Colors.transparent),
-        color: Hexcolor('#303030'),
+        color: kBlackColor3,
       ),
       margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: TextFormField(

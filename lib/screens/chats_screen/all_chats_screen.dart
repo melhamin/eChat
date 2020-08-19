@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/providers/user.dart';
-import 'package:whatsapp_clone/models/message.dart';
+import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/stories.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/chat_item.dart';
@@ -47,9 +47,8 @@ class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAlive
       );
 
   Widget _buildStories(MediaQueryData mq) {
-    return Container(
-      // color: Colors.yellowAccent,
-      height: mq.size.height * 0.15,
+    return Container(      
+      height: 100,
       child: Stories(),
     );
   }
@@ -80,8 +79,7 @@ class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAlive
             if (!isLoading && snapshots.hasData) updateChats(context, snapshots);
             return Column(
       children: [
-        Container(
-          height: mq.size.height * 0.25,
+        Container(          
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -100,10 +98,12 @@ class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAlive
                   ),
                 ),
               ),
+              SizedBox(height: 15),
               _buildStories(mq),
             ],
           ),
         ),
+        SizedBox(height: 10),
         isLoading
             ? Center(child: CupertinoActivityIndicator())
             : chats.isEmpty ? _buildEmptyIndicator() : _buildChats(chats),

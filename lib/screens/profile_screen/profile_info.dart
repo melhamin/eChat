@@ -8,7 +8,7 @@ import 'package:whatsapp_clone/providers/auth.dart';
 import 'package:whatsapp_clone/models/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/profile_screen/edit_profile_picture.dart';
-import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 enum EditedField {

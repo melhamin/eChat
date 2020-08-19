@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/widgets/back_button.dart';
 
 class ChatMediaScreen extends StatefulWidget {

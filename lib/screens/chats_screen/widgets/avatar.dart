@@ -7,11 +7,14 @@ import '../../../consts.dart';
 class Avatar extends StatelessWidget {
   const Avatar({
     @required this.imageUrl,
+    this.radius = 15,
+
     Key key,
    
   }) : super(key: key);  
 
   final String imageUrl;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +27,7 @@ class Avatar extends StatelessWidget {
           child: imageUrl == null || imageUrl == ''
               ? Icon(Icons.person, color: kBaseWhiteColor)
               : null,
-          radius: 15,
+          radius: radius,
         );
   }
 }

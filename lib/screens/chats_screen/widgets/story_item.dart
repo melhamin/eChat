@@ -1,9 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/message.dart';
+import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/models/person.dart';
 
 class StoryItem extends StatefulWidget {
@@ -30,7 +29,7 @@ class _StoryItemState extends State<StoryItem> {
                   Border.all(color: Theme.of(context).accentColor, width: 1.5),
             ),
             child: CircleAvatar(
-              backgroundColor: Hexcolor('#303030'),
+              backgroundColor: kBlackColor3,
               backgroundImage: (info.imageUrl != null && info.imageUrl != '')
                   ? CachedNetworkImageProvider(info.imageUrl)
                   : null,

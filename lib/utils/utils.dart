@@ -1,3 +1,4 @@
+import 'package:audioplayers/audio_cache.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import '../consts.dart';
 
 class Utils {
-
   static Future<bool> showImageSourceModal(BuildContext context) async {
     return await showCupertinoModalPopup(
       context: context,
@@ -32,9 +32,30 @@ class Utils {
     );
   }
 
-  static Future<PickedFile> pickImage(ImageSource source) async {
+  static Future<PickedFile> pickImage(BuildContext context) async {
+    final res = await showImageSourceModal(context);
+    if (res == null) return null;
+    ImageSource src = res ? ImageSource.gallery : ImageSource.camera;
     ImagePicker imagePicker = ImagePicker();
     return await imagePicker.getImage(
-        source: source, maxHeight: 500, maxWidth: 500, imageQuality: 85);
+      source: src,
+      maxHeight: 500,
+      maxWidth: 500,
+      imageQuality: 85,
+    );
   }
+
+  static Future<PickedFile> pickVideo(BuildContext context) async {
+    final res = await showImageSourceModal(context);
+    if (res == null) return null;
+    ImageSource src = res ? ImageSource.gallery : ImageSource.camera;
+    ImagePicker videoPicker = ImagePicker();
+    return await videoPicker.getVideo(
+      source: src,
+      maxDuration: Duration(minutes: 1),
+    );
+  }
+
+  static final AudioCache player = AudioCache();
+  static playSound(String path) => player.play(path);
 }

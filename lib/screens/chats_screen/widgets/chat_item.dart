@@ -1,3 +1,4 @@
+import 'package:audioplayers/audio_cache.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -5,11 +6,13 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/db.dart';
+import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_item_screen.dart';
+import 'package:whatsapp_clone/services/db.dart';
+import 'package:whatsapp_clone/utils/utils.dart';
 
 class ChatItem extends StatefulWidget {
   final InitChatData initChatData;
@@ -66,12 +69,19 @@ class _ChatItemState extends State<ChatItem> {
     String hRes = hour <= 9 ? '0$hour' : hour.toString();
     String mRes = min <= 9 ? '0$min' : min.toString();
     return '$hRes:$mRes';
-  }
+  }  
 
-  void _addNewMessageToList(Message newMsg) {
+  void _addNewMessageToList(Message newMsg) { 
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     if (newMsg.timeStamp.isAfter(widget.initChatData.messages[0].timeStamp)) {
       widget.initChatData.addMessage(newMsg);
       widget.initChatData.unreadCount++;
+
+      // play notification sound
+      if(isIos)
+        Utils.playSound('mp3/notificationIphone.mp3');
+      else Utils.playSound('mp3/notificationAndroid.mp3');
+
 
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         Provider.of<User>(context, listen: false)
@@ -94,7 +104,7 @@ class _ChatItemState extends State<ChatItem> {
             _addNewMessageToList(newMsg);
             return Row(
               children: [
-                newMsg.type == '1'
+                newMsg.type == MessageType.Media
                     ? Container(
                         child: Row(
                           children: [
@@ -134,7 +144,7 @@ class _ChatItemState extends State<ChatItem> {
   }
 
   Widget _buildAvatar(Person person) => CircleAvatar(
-        backgroundColor: Hexcolor('#303030'),
+        backgroundColor: kBlackColor3,
         radius: 27,
         backgroundImage: (person.imageUrl != null && person.imageUrl != '')
             ? CachedNetworkImageProvider(person.imageUrl)
@@ -186,7 +196,7 @@ class _ChatItemState extends State<ChatItem> {
       color: Colors.transparent,
       child: InkWell(
         splashColor: Colors.transparent,
-        highlightColor: Hexcolor('#121212'),
+        highlightColor: kBlackColor,
         onTap: () {
           // unreadCount = 0;
           widget.initChatData.unreadCount = 0;

@@ -7,12 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/message.dart';
+import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/models/person.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_item_screen.dart';
-import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/screens/contacts_screen/widget/contact_item.dart';
+import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
@@ -47,7 +47,6 @@ class ContactsScreen extends StatelessWidget {
         peerId: person.uid,
         messages: [],
         person: person,
-        replyColorPair: replyColorPair,      
       );
     });
 

@@ -44,9 +44,9 @@ class _MyAppBarState extends State<MyAppBar>
 
   @override
   void dispose() {
-    _animationController.removeListener(() { });
+    _animationController.removeListener(() {});
     _animationController.dispose();
-    _timer.cancel();    
+    _timer.cancel();
     super.dispose();
   }
 
@@ -74,7 +74,6 @@ class _MyAppBarState extends State<MyAppBar>
 
   @override
   Widget build(BuildContext context) {
-    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return AppBar(
       backgroundColor: Hexcolor('#202020'),
       centerTitle: true,
@@ -85,10 +84,7 @@ class _MyAppBarState extends State<MyAppBar>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              widget.info.name,
-              style: kAppBarTitleStyle,
-            ),
+            Text(widget.info.name, style: kAppBarTitleStyle),
             if (collapsed)
               StreamBuilder(
                   stream: stream(),
@@ -96,9 +92,8 @@ class _MyAppBarState extends State<MyAppBar>
                     if (!snapshot.hasData)
                       return Container(width: 0, height: 0);
                     else {
-                      if(snapshot.data == null)
-                      print('online --------> null');
-                      return AnimatedContainer(                        
+                      if (snapshot.data == null) print('online --------> null');
+                      return AnimatedContainer(
                         duration: Duration(milliseconds: 300),
                         height: snapshot.data['isOnline'] ? 15 : 0,
                         child: Text(
@@ -138,7 +133,7 @@ class _MyAppBarState extends State<MyAppBar>
             onPressed: goToContactDetails,
             padding: const EdgeInsets.all(0),
             child: CircleAvatar(
-              backgroundColor: Hexcolor('#303030'),
+              backgroundColor: kBlackColor3,
               radius: 23,
               backgroundImage:
                   (widget.info.imageUrl != null && widget.info.imageUrl != '')

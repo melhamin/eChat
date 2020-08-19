@@ -5,6 +5,7 @@ import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/person.dart';
 
 import '../../../consts.dart';
+
 class ChatReplyBubble extends StatelessWidget {
   const ChatReplyBubble({
     @required this.message,
@@ -42,7 +43,7 @@ class ChatReplyBubble extends StatelessWidget {
               : CrossAxisAlignment.end,
           children: [
             Padding(
-              padding: EdgeInsets.only(right: message.reply.type == '0' ? 15 : 0),
+              padding: EdgeInsets.only(right: message.reply.type == MessageType.Text ? 15 : 0),
               child: FittedBox(
                 child: Row(
                   children: [
@@ -64,8 +65,8 @@ class ChatReplyBubble extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: message.reply.type == '0' ? 2 : 5),
-            message.reply.type == '0'
+            SizedBox(height: message.reply.type ==MessageType.Text ? 2 : 5),
+            message.reply.type == MessageType.Text
                 ? _buildReplyText(size, isPeerMsg)
                 : _buildMediaReply(size),
           ],
@@ -85,7 +86,7 @@ class ChatReplyBubble extends StatelessWidget {
       // margin: EdgeInsets.only(bottom: 25),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Hexcolor('#212121').withOpacity(0.45),
+        color: kBlackColor2.withOpacity(0.45),
       ),
       child: Text(
         message.reply.content,
@@ -110,7 +111,7 @@ class ChatReplyBubble extends StatelessWidget {
       height: size.height * 0.25,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Hexcolor('#212121').withOpacity(0.45),
+        color: kBlackColor2.withOpacity(0.45),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),

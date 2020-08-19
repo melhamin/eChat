@@ -3,11 +3,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/db.dart';
-import 'package:whatsapp_clone/database/storage.dart';
 import 'package:whatsapp_clone/models/person.dart';
 import 'package:intl/intl.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_media_screen.dart';
+import 'package:whatsapp_clone/services/db.dart';
+import 'package:whatsapp_clone/services/storage.dart';
 import 'package:whatsapp_clone/widgets/back_button.dart';
 import 'package:whatsapp_clone/widgets/image_view.dart';
 
@@ -85,7 +85,7 @@ class _ContactDetailsState extends State<ContactDetails> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration:
-            BoxDecoration(shape: BoxShape.circle, color: Hexcolor('#303030')),
+            BoxDecoration(shape: BoxShape.circle, color: kBlackColor3),
         child: Icon(
           icon,
           size: 20,
@@ -184,7 +184,7 @@ class _ContactDetailsState extends State<ContactDetails> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          highlightColor: Hexcolor('#121212'),
+          highlightColor: kBlackColor,
           splashColor: Colors.transparent,
           child: Padding(
             padding:
@@ -223,7 +223,7 @@ class _ContactDetailsState extends State<ContactDetails> {
       color: Colors.transparent,
       child: InkWell(
         onTap: navToMedia,
-        highlightColor: Hexcolor('#121212'),
+        highlightColor: kBlackColor,
         splashColor: Colors.transparent,
         child: Padding(
           padding:
@@ -305,7 +305,7 @@ class _ContactDetailsState extends State<ContactDetails> {
         color: Colors.transparent,
         child: InkWell(
           splashColor: Colors.transparent,
-          highlightColor: Hexcolor('#121212'),
+          highlightColor: kBlackColor,
           onTap: () {},
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
@@ -355,7 +355,7 @@ class _ContactDetailsState extends State<ContactDetails> {
           preferredSize: Size.fromHeight(kToolbarHeight + 5),
           child: AppBar(
             centerTitle: true,
-            backgroundColor: Hexcolor('#121212'),
+            backgroundColor: kBlackColor,
             elevation: 0,
             leading: CBackButton(),
             title: Text(

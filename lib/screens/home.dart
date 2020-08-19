@@ -3,14 +3,13 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/database/db.dart';
 import 'package:whatsapp_clone/providers/user.dart';
 import 'package:whatsapp_clone/screens/calls_screen/calls_screen.dart';
 import 'package:whatsapp_clone/screens/chats_screen/all_chats_screen.dart';
 import 'package:whatsapp_clone/screens/profile_screen/profile_info.dart';
+import 'package:whatsapp_clone/services/db.dart';
 
 import 'contacts_screen/contacts_screen.dart';
 
@@ -83,8 +82,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
 
   Widget _buildTabs() {
     return Container(
-      color: Hexcolor('#121212'),
-      padding: const EdgeInsets.only(bottom: 8.0),
+      color: kBlackColor,      
       child: Tabs(tabController),
     );
   }
@@ -120,16 +118,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
   Widget build(BuildContext context) {    
     final uid = Provider.of<User>(context).getUserId;    
     return SafeArea(
+      bottom: false,
       child: Scaffold(
         body:_buildTabContent(),
-        // StreamBuilder(
-        //   stream: db.getUserContactsStream(uid),
-        //   builder: (ctx, snapshots) {
-        //     if (!isLoading && snapshots.hasData) updateChats(snapshots);
-        //     return _buildTabContent();
-        //   },
-        // ),
-        bottomNavigationBar: _buildTabs(),
+        bottomNavigationBar: _buildTabs(),        
       ),
     );
   }
@@ -181,7 +173,7 @@ class _TabsState extends State<Tabs> {
       currentIndex: currentIndex,
       activeColor: Theme.of(context).accentColor,
       inactiveColor: Colors.white.withOpacity(0.7),
-      backgroundColor: Hexcolor('#303030'),
+      backgroundColor: kBlackColor3,
     );
   }
 }

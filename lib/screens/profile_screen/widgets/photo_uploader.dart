@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/database/storage.dart';
+import 'package:whatsapp_clone/services/storage.dart';
 
 class PhotoUploader extends StatefulWidget {
   final File file;

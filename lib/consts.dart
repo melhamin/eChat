@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 
+enum PickedMediaType {
+  Photo,
+  Video,
+}
+
+enum MessageType {
+  Text,
+  Media,
+}
+
 final String ALL_MESSAGES_COLLECTION = 'MESSAGES';
 final String USERS_COLLECTION = 'USERS';
 final String CHATS_COLLECTION = 'CHATS';
@@ -8,8 +18,11 @@ final String MEDIA_COLLECTION = 'MEDIA';
 
 Color kBorderColor1 = Colors.white.withOpacity(0.1);
 Color kBorderColor2 = Colors.white.withOpacity(0.07);
-
 Color kBaseWhiteColor = Colors.white.withOpacity(0.87);
+
+Color kBlackColor = Hexcolor('#1C1C1E');
+Color kBlackColor2 = Hexcolor('#161616');
+Color kBlackColor3 = Hexcolor('#2C2C2E');
 
 TextStyle kWhatsAppStyle = TextStyle(
   fontSize: 21,
@@ -75,3 +88,5 @@ List<ReplyColorPair> replyColors = [
   ReplyColorPair(user: Hexcolor('#4E342E'), peer: Hexcolor('#BF360C')),  
   
 ];
+
+String myPic = 'https://firebasestorage.googleapis.com/v0/b/flutter-whatsapp-1ab58.appspot.com/o/profilePictures%2FBn2lfah2dRRXfp3uZankMDJcgqs1.png?alt=media&token=2d633673-c650-4947-aff2-f0c8287abd31';
