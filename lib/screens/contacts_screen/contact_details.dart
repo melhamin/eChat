@@ -3,16 +3,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
 import 'package:intl/intl.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_media_screen.dart';
 import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/services/storage.dart';
 import 'package:whatsapp_clone/widgets/back_button.dart';
-import 'package:whatsapp_clone/widgets/image_view.dart';
+import 'package:whatsapp_clone/widgets/media_view.dart';
 
 class ContactDetails extends StatefulWidget {
-  final Person info;
+  final User info;
   final String groupId;
   ContactDetails(this.info, this.groupId);
   @override
@@ -33,7 +33,7 @@ class _ContactDetailsState extends State<ContactDetails> {
   void navToImageView() {
     Navigator.of(context).push(PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
-          ImageView(widget.info.imageUrl),
+          MediaView(url: widget.info.imageUrl, type: MediaType.Photo),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(
           opacity: animation,
@@ -47,7 +47,7 @@ class _ContactDetailsState extends State<ContactDetails> {
     if (widget.info.imageUrl == null || widget.info.imageUrl == '') {
       return Container(
         width: mq.size.width,
-        color: Hexcolor('#202020'),
+        color: kBlackColor,
         height: mq.size.height * 0.3,
         child: Icon(
           Icons.person,
@@ -63,18 +63,20 @@ class _ContactDetailsState extends State<ContactDetails> {
         height: mq.size.height * 0.3,
         child: Hero(
           tag: widget.info.imageUrl,
-          child: ClipRRect(
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(25),
-              topLeft: Radius.circular(25),
-            ),
-            child: CachedNetworkImage(
+          child: 
+          // ClipRRect(
+          //   borderRadius: BorderRadius.only(
+          //     topRight: Radius.circular(25),
+          //     topLeft: Radius.circular(25),
+          //   ),
+          //   child: 
+            CachedNetworkImage(
               imageUrl: widget.info.imageUrl,
               fit: BoxFit.cover,
             ),
           ),
         ),
-      ),
+      // ),
     );
   }
 
@@ -110,7 +112,7 @@ class _ContactDetailsState extends State<ContactDetails> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.info.name,
+                widget.info.username,
                 style: TextStyle(
                     color: kBaseWhiteColor,
                     fontSize: 18,
@@ -159,10 +161,10 @@ class _ContactDetailsState extends State<ContactDetails> {
 
   Widget _buildInfo() => Container(
         decoration: BoxDecoration(
-          color: Hexcolor('#202020'),
+          color: kBlackColor,
           border: Border(
-            top: BorderSide(color: kBorderColor2),
-            bottom: BorderSide(color: kBorderColor2),
+            top: BorderSide(color: kBlackColor2),
+            bottom: BorderSide(color: kBlackColor2),
           ),
         ),
         child: Column(
@@ -184,8 +186,8 @@ class _ContactDetailsState extends State<ContactDetails> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          highlightColor: kBlackColor,
-          splashColor: Colors.transparent,
+          highlightColor: kBlackColor2,
+          // splashColor: Colors.transparent,
           child: Padding(
             padding:
                 const EdgeInsets.only(left: 20, right: 10, top: 10, bottom: 10),
@@ -223,8 +225,8 @@ class _ContactDetailsState extends State<ContactDetails> {
       color: Colors.transparent,
       child: InkWell(
         onTap: navToMedia,
-        highlightColor: kBlackColor,
-        splashColor: Colors.transparent,
+        highlightColor: kBlackColor2,
+        // splashColor: Colors.transparent,
         child: Padding(
           padding:
               const EdgeInsets.only(left: 20, right: 10, top: 10, bottom: 10),
@@ -277,10 +279,10 @@ class _ContactDetailsState extends State<ContactDetails> {
 
   Widget _buildMediaInfo() => Container(
         decoration: BoxDecoration(
-          color: Hexcolor('#202020'),
+          color: kBlackColor,
           border: Border(
-            top: BorderSide(color: kBorderColor2),
-            bottom: BorderSide(color: kBorderColor2),
+            top: BorderSide(color: kBlackColor2),
+            bottom: BorderSide(color: kBlackColor2),
           ),
         ),
         child: Column(
@@ -304,8 +306,8 @@ class _ContactDetailsState extends State<ContactDetails> {
   Widget _buildActionsTile(String title, MediaQueryData mq) => Material(
         color: Colors.transparent,
         child: InkWell(
-          splashColor: Colors.transparent,
-          highlightColor: kBlackColor,
+          // splashColor: Colors.transparent,
+          highlightColor: kBlackColor2,
           onTap: () {},
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
@@ -323,10 +325,10 @@ class _ContactDetailsState extends State<ContactDetails> {
 
   Widget _buildContactActions(MediaQueryData mq) => Container(
         decoration: BoxDecoration(
-          color: Hexcolor('#202020'),
+          color: kBlackColor,
           border: Border(
-            top: BorderSide(color: kBorderColor2),
-            bottom: BorderSide(color: kBorderColor2),
+            top: BorderSide(color: kBlackColor2),
+            bottom: BorderSide(color: kBlackColor2),
           ),
         ),
         child: Column(
@@ -350,12 +352,12 @@ class _ContactDetailsState extends State<ContactDetails> {
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);    
     return SafeArea(
-      child: Scaffold(
+      child: Scaffold(                
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight + 5),
           child: AppBar(
             centerTitle: true,
-            backgroundColor: kBlackColor,
+            backgroundColor: kBlackColor2,
             elevation: 0,
             leading: CBackButton(),
             title: Text(
@@ -389,15 +391,16 @@ class _ContactDetailsState extends State<ContactDetails> {
               topRight: Radius.circular(25),
               topLeft: Radius.circular(25),
             ),
-            // color: Hexcolor('#202020'),
+            // color: kBlackColor2,
           ),
           width: mq.size.width,
-          child: ClipRRect(
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(25),
-              topLeft: Radius.circular(25),
-            ),
-            child: ListView(
+          child: 
+          // ClipRRect(
+          //   borderRadius: BorderRadius.only(
+          //     topRight: Radius.circular(25),
+          //     topLeft: Radius.circular(25),
+          //   ),
+          ListView(
               children: [
                 _buildImage(mq),
                 _buildInfo(),
@@ -410,7 +413,7 @@ class _ContactDetailsState extends State<ContactDetails> {
             ),
           ),
         ),
-      ),
+      // ),
     );
   }
 }

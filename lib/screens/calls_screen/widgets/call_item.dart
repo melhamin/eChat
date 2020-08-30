@@ -2,29 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/screens/calls_screen/widgets/call.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/avatar.dart';
-import 'package:whatsapp_clone/widgets/toast_utils.dart';
+import 'package:whatsapp_clone/widgets/overlay_utils.dart';
 
 class CallItem extends StatelessWidget {
-  void call(BuildContext context) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => Call(),
-    ));
-  }
+  final Function onTap;
+
+  const CallItem({Key key, this.onTap}) : super(key: key);
+  
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        highlightColor: kBlackColor,
-        splashColor: Colors.transparent,
-        onTap: () => ToastUtils.myToastMessage(
+        highlightColor: kBlackColor2,
+        // splashColor: Colors.transparent,
+        onTap: () => OverlayUtils.overlay(
           context: context,
           alignment: Alignment.topCenter,
-          child: Call(),
+          child: CallingScreen(),
           duration: Duration(seconds: 5),
         ),
         child: ListTile(

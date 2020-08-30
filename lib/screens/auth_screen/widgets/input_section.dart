@@ -76,7 +76,7 @@ class _InputSectionState extends State<InputSection> {
     final mq = MediaQuery.of(context);
     return ListView(
       children: [
-        SizedBox(height: 30),
+        // SizedBox(height: 30),
         Form(
           key: _formKey,
           child: Column(

@@ -11,7 +11,7 @@ class Storage {
       String url = '';
       await FirebaseStorage.instance
           .ref()
-          .child('$path/$id.png')
+          .child('$path/$id')
           .getDownloadURL()
           .then((value) => url = value);
       return url;

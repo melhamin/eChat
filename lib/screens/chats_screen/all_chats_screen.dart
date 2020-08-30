@@ -1,14 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/init_chat_data.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
+import 'package:whatsapp_clone/screens/chats_screen/widgets/chats_list_item.dart';
 import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/stories.dart';
-import 'package:whatsapp_clone/screens/chats_screen/widgets/chat_item.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 class AllChatsScreen extends StatefulWidget {
@@ -24,13 +23,14 @@ class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAlive
         child: ListView.separated(
           padding: const EdgeInsets.only(top: 10),
           itemCount: chats.length,
-          itemBuilder: (ctx, i) => ChatItem(initChatData: chats[i]),
+          itemBuilder: (ctx, i) => ChatListItem(initChatData: chats[i]),
           separatorBuilder: (ctx, i) {
             return Divider(
               indent: 85,
               endIndent: 15,
               height: 0,
-              color: kBorderColor1,
+              thickness: 1,
+              color: kBlackColor3,
             );
           },
         ),
@@ -55,12 +55,12 @@ class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAlive
 
   void updateChats(BuildContext context, AsyncSnapshot<dynamic> snapshots) {    
     if (snapshots != null && snapshots.data != null) {      
-      final currContacts = Provider.of<User>(context, listen:false).getContacts;
+      final currContacts = Provider.of<Chat>(context, listen:false).getContacts;
       final currContactLength = currContacts.length;      
         final contacts = snapshots.data['contacts'];        
         if(contacts != null)
         if (contacts.length > currContactLength) {          
-          Provider.of<User>(context, listen: false)
+          Provider.of<Chat>(context, listen: false)
               .handleMessagesNotFromContacts(contacts);        
       }
     }
@@ -68,10 +68,10 @@ class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAlive
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-    final chats = Provider.of<User>(context).chats;
-    final isLoading = Provider.of<User>(context).isLoading;
-    final uid = Provider.of<User>(context).getUserId;
+    super.build(context);   
+    final chats = Provider.of<Chat>(context).chats;
+    final isLoading = Provider.of<Chat>(context).isLoading;
+    final uid = Provider.of<Chat>(context).getUserId;
     final mq = MediaQuery.of(context);
     return StreamBuilder(
           stream: db.getUserContactsStream(uid),
@@ -92,7 +92,7 @@ class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAlive
                     padding: const EdgeInsets.all(5),
                     child: Icon(Icons.add, color: Colors.white, size: 25),
                     decoration: BoxDecoration(
-                      color: Hexcolor('#202020'),
+                      color: kBlackColor3,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -104,6 +104,7 @@ class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAlive
           ),
         ),
         SizedBox(height: 10),
+              Divider(color: kBorderColor3, height: 0,),
         isLoading
             ? Center(child: CupertinoActivityIndicator())
             : chats.isEmpty ? _buildEmptyIndicator() : _buildChats(chats),

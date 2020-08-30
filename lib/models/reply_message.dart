@@ -1,7 +1,12 @@
 import 'dart:convert';
 
+import 'package:json_annotation/json_annotation.dart';
+
 import '../consts.dart';
 
+part 'reply_message.g.dart';
+
+@JsonSerializable()
 class ReplyMessage {
   String content;
   String replierId;
@@ -15,22 +20,11 @@ class ReplyMessage {
     this.type,
   });
 
-  static toJson(ReplyMessage msg)   {
-    return json.encode({
-      "content": msg.content,
-      "replierId": msg.replierId,
-      "repliedToId": msg.repliedToId,
-      "type": msg.type,
-    });
+   Map<String, dynamic> toJson()   {
+    return _$ReplyMessageToJson(this);
   }
 
-  static ReplyMessage fromJson(Map<String, dynamic> json) {
-    return ReplyMessage(
-      content: json
-      ['content'],
-      replierId: json['replierId'],
-      repliedToId: json['repliedToId'],
-      type: json['type'],
-    );
+  factory ReplyMessage.fromJson(Map<String, dynamic> json) {
+    return _$ReplyMessageFromJson(json);
   }
 }

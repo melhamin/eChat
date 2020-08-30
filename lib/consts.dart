@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 
-enum PickedMediaType {
+enum MediaType {
   Photo,
   Video,
 }
@@ -18,11 +18,13 @@ final String MEDIA_COLLECTION = 'MEDIA';
 
 Color kBorderColor1 = Colors.white.withOpacity(0.1);
 Color kBorderColor2 = Colors.white.withOpacity(0.07);
+Color kBorderColor3 = Colors.white.withOpacity(0.2);
+Color kBorderColor4 = Colors.white.withOpacity(0.2);
 Color kBaseWhiteColor = Colors.white.withOpacity(0.87);
 
-Color kBlackColor = Hexcolor('#1C1C1E');
-Color kBlackColor2 = Hexcolor('#161616');
-Color kBlackColor3 = Hexcolor('#2C2C2E');
+Color kBlackColor = Colors.black; //('#1C1C1E');
+Color kBlackColor2 = Hexcolor('#121212');// Hexcolor('#161616');
+Color kBlackColor3 = Hexcolor('#1C1C1E');// Hexcolor('#2C2C2E');
 
 TextStyle kWhatsAppStyle = TextStyle(
   fontSize: 21,

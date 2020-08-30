@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/message.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/chat_reply_bubble.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/media_bubble.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/seen_status.dart';
@@ -15,7 +15,7 @@ import 'dismissible_bubble.dart';
 class ChatBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
-  final Person peer;
+  final User peer;
   final bool withoutAvatar;
   final Function onReplyPressed;
   ChatBubble({
@@ -85,7 +85,7 @@ class ChatBubble extends StatelessWidget {
                     borderRadius: getRadius(),
                     border: isMe
                         ? null
-                        : Border.all(color: kBlackColor3),
+                        : Border.all(color: kBorderColor3),
                     color:
                         isMe ? kBlackColor3 : kBlackColor,
                   ),
@@ -107,7 +107,7 @@ class ChatBubble extends StatelessWidget {
                           child: SeenStatus(
                             isMe: isMe,
                             isSeen: message.isSeen,
-                            timestamp: message.timeStamp,
+                            timestamp: message.sendDate,
                           ),
                         ),
                       ],
@@ -137,7 +137,7 @@ class ChatBubble extends StatelessWidget {
   }
 
   Widget chatItem(BuildContext context) {
-    return Container(
+    return Container(      
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: LayoutBuilder(
         builder: (ctx, constraints) {
@@ -160,10 +160,7 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // super.build(context);
-    return GestureDetector(
-      onLongPress: () {}, // () => onLongPress(context),
-      child: chatItem(context),
-    );
+    return chatItem(context);
   }
 
   // void onLongPress(BuildContext context) async {

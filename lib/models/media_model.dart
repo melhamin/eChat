@@ -34,6 +34,6 @@ class MediaModel {
     'url': msg.mediaUrl,
     'fromId': msg.fromId,
     'toId': msg.toId,
-    'timeStamp': msg.timeStamp.toIso8601String(),
+    'timeStamp': msg.sendDate,
   };
 }

@@ -6,7 +6,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/auth_screen/auth_screen.dart';
 import 'package:whatsapp_clone/screens/home.dart';
 
@@ -25,12 +25,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FlutterStatusbarcolor.setStatusBarColor(kBlackColor);
+    FlutterStatusbarcolor.setStatusBarColor(kBlackColor2);
     FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
     return MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: Auth()),
-          ChangeNotifierProvider.value(value: User()),
+          ChangeNotifierProvider.value(value: Chat()),
         ],
         child: Consumer<Auth>(
           builder: (ctx, auth, _) => MaterialApp(
@@ -38,11 +38,10 @@ class MyApp extends StatelessWidget {
             theme: ThemeData(
               primaryColor: Colors.white,
               scaffoldBackgroundColor: kBlackColor,
-              accentColor: Color(0xFFFFAD32),              
-              // accentColor: Hexcolor('#1DA1F2'),
+              accentColor: Color(0xFFFFAD32),                                 
               brightness: Brightness.dark,
               appBarTheme: AppBarTheme(
-                color: Hexcolor('#202020'),
+                color: kBlackColor2,
                 actionsIconTheme: IconThemeData(
                   color: kBaseWhiteColor,
                 ),

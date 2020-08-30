@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/services/db.dart';
 
 import 'message.dart';
@@ -13,7 +13,7 @@ class InitChatData {
   final String groupId;
   final String userId;
   final String peerId;
-  final Person person;
+  final User person;
   final List<dynamic> messages;
   DocumentSnapshot lastDoc;
   int unreadCount;
@@ -32,7 +32,7 @@ class InitChatData {
   }
 
   void addMessage(Message newMsg) {
-    if (messages.length > 5) {
+    if (messages.length > 20) {
       print('removed ----------->${messages.last.content}');
       messages.removeLast();
     }
@@ -42,7 +42,7 @@ class InitChatData {
   }
 
   dynamic gettojson() {
-    return Person.toJson(person);
+    return User.toJson(person);
   }
 
   dynamic getMessagesJson() {
@@ -55,20 +55,25 @@ class InitChatData {
 
   static toJson(InitChatData chatData) {
     final map = {
-      'person': Person.toJson(chatData.person),
+      'person': User.toJson(chatData.person),
       'messages': chatData.getMessagesJson(),
     };
     return json.encode(map);
   }
 
-  Future<void> fetchNewChats() async {
+  Future<bool> fetchNewChats() async {
     final newData = await db.getNewChats(groupId, lastDoc);
-    newData.documents.forEach((element) {
-      print('added -------------> ${element['content']}');
-      messages.add(Message.fromJson(element));
+    await Future.delayed(Duration.zero).then((value) {
+      newData.documents.forEach((element) {
+      // print('new message added -------------> ${element['content']}');
+      messages.add(Message.fromJson(element.data));      
     });
+
     if (newData.documents.isNotEmpty) {
       lastDoc = newData.documents[newData.documents.length - 1];
     }
-  }
+    }).then((value) => value);    
+
+    return true;
+  }  
 }

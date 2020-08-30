@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:provider/provider.dart';
@@ -13,9 +14,9 @@ import 'package:whatsapp_clone/consts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/models/reply_message.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/reply_message_preview.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/selected_media_preview.dart';
 import 'package:whatsapp_clone/services/db.dart';
@@ -28,8 +29,6 @@ enum LoaderStatus {
   STABLE,
   LOADING,
 }
-
-
 
 class ChatItemScreen extends StatefulWidget {
   final InitChatData chatData;
@@ -54,7 +53,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
   // variable for handling image selection
   File _selectedMedia;
-  PickedMediaType pickedMediaType;
+  MediaType pickedMediaType;
   bool _mediaSelected = false;
   final picker = ImagePicker();
   Message mediaMsg;
@@ -85,16 +84,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     _textFieldFocusNode = FocusNode();
     _keyboard = KeyboardVisibilityNotification();
 
-    bodyFocusNode = FocusNode();
-
-    // _scrollController.addListener(() {
-    //   if (_scrollController.position.pixels ==
-    //       _scrollController.position.minScrollExtent + 200) {
-    //     setState(() {
-    //       scrolledAbove = true;
-    //     });
-    //   }
-    // });
+    bodyFocusNode = FocusNode();    
 
     // used for animating body when keyboard appeares
     _keyboard.addNewListener(onChange: (visible) {
@@ -124,17 +114,21 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     super.dispose();
   }
 
-  void onMessageSend(MessageType type, String content,
-      {ReplyMessage replyDetails}) async {    
+  void onMessageSend(String content, MessageType type,
+      {MediaType mediaType, ReplyMessage replyDetails}) async {
+    // clear text field
     if (content != '') _textEditingController.clear();
+    // create timestamp
     DateTime time = DateTime.now();
     final newMessage = Message(
       content: content,
       fromId: userId,
       toId: peerId,
-      timeStamp: time,
+      sendDate: time,
+      timeStamp: time.millisecondsSinceEpoch.toString(),
       isSeen: false,
       type: type,
+      mediaType: mediaType,
       mediaUrl: null,
       uploadFinished: false,
       reply: replyDetails,
@@ -142,62 +136,39 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
     widget.chatData.messages.insert(0, newMessage);
 
-    // play new message sound
-    if (newMessage.fromId != userId) Utils.playSound('mp3/newMessage.mp3');
-
+    // set media message
     if (type == MessageType.Media) mediaMsg = newMessage;
 
+    // add message to database only if its text message
+    // media message should be added after uploading and getting its media url
     if (type == MessageType.Text) {
-      db.addNewMessage(groupChatId, time, {
-        'fromId': userId,
-        'toId': peerId,
-        'date': time.toIso8601String(),
-        'timeStamp': time.millisecondsSinceEpoch.toString(),
-        'content': content,
-        'isSeen': false,
-        'type': type,
-        'mediaUrl': '',
-        'uploadFinished': true,
-        'reply':
-            replyDetails != null ? ReplyMessage.toJson(replyDetails) : null,
-      });
+      db.addNewMessage(
+        groupChatId,
+        time,
+        Message.toJson(newMessage),
+      );
     }
 
-    final userContacts = Provider.of<User>(context, listen: false).getContacts;
+    final userContacts = Provider.of<Chat>(context, listen: false).getContacts;
     // add user to contacts if not already in contacts
     if (!userContacts.contains(peerId)) {
-      Provider.of<User>(context, listen: false).addToContacts(peerId);
+      Provider.of<Chat>(context, listen: false).addToContacts(peerId);
       db.updateContacts(userId, userContacts);
 
       // add to peer contacts too
       var userRef = await db.addToPeerContacts(peerId, userId);
 
-      // add reply color pair
-      int n = Random().nextInt(replyColors.length);
-      final replyColorPair = replyColors[n];
-
-      Person person = Person.fromSnapshot(userRef);
-      Message message = Message(
-        content: content,
-        timeStamp: time,
-        fromId: userId,
-        toId: peerId,
-        isSeen: false,
-        mediaUrl: null,
-        type: type,
-        uploadFinished: false,
-        reply: replyDetails,
-      );
+      User person = User.fromJson(userRef.data);
       InitChatData initChatData = InitChatData(
         userId: userId,
         peerId: peerId,
         groupId: groupChatId,
         person: person,
-        messages: [message],        
+        messages: [newMessage],
       );
-      Provider.of<User>(context, listen: false).addToInitChats(initChatData);
+      Provider.of<Chat>(context, listen: false).addToInitChats(initChatData);
     } else {
-      Provider.of<User>(context, listen: false).bringChatToTop(groupChatId);
+      Provider.of<Chat>(context, listen: false).bringChatToTop(groupChatId);
     }
   }
 
@@ -205,23 +176,18 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     if (mediaMsg == null) print('************mediamsg is null************');
     if (mediaMsg != null) {
       var msg = widget.chatData.messages
-          .firstWhere((elem) => elem.timeStamp == mediaMsg.timeStamp);
+          .firstWhere((elem) => elem.sendDate == mediaMsg.sendDate);
       msg.mediaUrl = url;
       msg.uploadFinished = true;
 
       final time = DateTime.now();
 
-      db.addNewMessage(groupChatId, time, {
-        'fromId': userId,
-        'toId': peerId,
-        'date': mediaMsg.timeStamp.toIso8601String(),
-        'timeStamp': mediaMsg.timeStamp.millisecondsSinceEpoch.toString(),
-        'content': mediaMsg.content,
-        'isSeen': false,
-        'type': MessageType.Media,
-        'mediaUrl': url,
-        'uploadFinished': true,
-      });
+      // add message to database after grabbing it's media url
+      db.addNewMessage(
+        groupChatId,
+        time,
+        Message.toJson(msg),
+      );
       db.addMediaUrl(groupChatId, url, mediaMsg);
     }
   }
@@ -229,13 +195,17 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
   Widget _buildMessageItem(Message message, bool withoutAvatar, bool last,
       bool first, bool isMiddle) {
     if (message.type == MessageType.Media) {
+      print('message Type is --=======> MEDIA');
+      print('Media Type is global --=======> ${pickedMediaType}');
+      print('Media Type is msg --=======> ${message.mediaType}');
       if (message.mediaUrl == null || !message.uploadFinished)
         return MediaUploadingBubble(
           groupId: groupChatId,
           file: _selectedMedia,
-          time: message.timeStamp,
+          time: message.sendDate,
           onUploadFinished: onUploadFinished,
           message: message,
+          mediaType: message.mediaType,
         );
       else
         return ChatBubble(
@@ -264,19 +234,11 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     if (isVisible) {
       // update input field state to show reply preview
       textFieldKey.currentState.setState(() {});
-      // add postframcallback and reset values
-      // if reseted before the statefuilbuilder will also be rebuilt and reseted
-      // await Future.delayed(Duration.zero).then((value) {
-      //   // reset values to close reply preview when message sent
-      //   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      //     replied = false;
-      //     msgToReply = null;
-      //   });
-      // });
     }
   }
 
-  void onSend(String msgContent, {MessageType type, PickedMediaType mediaTypeType, ReplyMessage replyDetails}) {
+  void onSend(String msgContent,
+      {MessageType type, MediaType mediaType, ReplyMessage replyDetails}) {
     // if not media is not selected add new message as text message
     if (type == MessageType.Text) {
       if (msgContent.isEmpty) return;
@@ -284,12 +246,15 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       _scrollController.animateTo(_scrollController.position.minScrollExtent,
           duration: Duration(milliseconds: 200), curve: Curves.easeIn);
       // send new message
-      onMessageSend(MessageType.Text, msgContent, replyDetails: replyDetails);
+      onMessageSend(msgContent, MessageType.Text, replyDetails: replyDetails);
     } else {
       if (msgContent.trim().isEmpty) msgContent = null;
-      onMessageSend(MessageType.Media, msgContent, replyDetails: replyDetails);
+      onMessageSend(msgContent, MessageType.Media,
+          mediaType: mediaType, replyDetails: replyDetails);
       setState(() {
         _mediaSelected = false;
+        // pickedMediaType = null;
+        // _selectedMedia = null;
       });
     }
     // remove reply preview after send if the message is replied
@@ -349,7 +314,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     }
     if (index != -1) {
       bool s =
-          newMsg.timeStamp.isAfter(widget.chatData.messages[index].timeStamp);
+          newMsg.sendDate.isAfter(widget.chatData.messages[index].sendDate);
 
       if (s && newMsg.isSeen)
         for (int i = index; i >= 0; i--)
@@ -373,15 +338,14 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       for (int i = 0; i < snapshots.data.documents.length; i++) {
         final snapshot = snapshots.data.documents[i];
         Future.doWhile(() {
-          Message newMsg = Message.fromJson(snapshot);
+          Message newMsg = Message.fromJson(snapshot.data);
           if (widget.chatData.messages.isNotEmpty) {
             // add message to the list only if it's after the first item in the list
-            if (newMsg.timeStamp
-                .isAfter(widget.chatData.messages[0].timeStamp)) {
+            if (newMsg.sendDate.isAfter(widget.chatData.messages[0].sendDate)) {
               widget.chatData.messages.insert(0, newMsg);
 
-              // play notification sound
-              Utils.playSound('mp3/newMessage.mp3');
+              // // play notification sound
+              // Utils.playSound('mp3/newMessage.mp3');
 
               // if message is from peer update seen status of all unseen messages
               if (newMsg.fromId == peerId) {
@@ -410,7 +374,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     var pickedFile = await Utils.pickImage(context);
     if (pickedFile != null) {
       setState(() {
-        pickedMediaType = PickedMediaType.Photo;
+        pickedMediaType = MediaType.Photo;
         _selectedMedia = File(pickedFile.path);
         _mediaSelected = true;
       });
@@ -421,8 +385,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     var pickedFile = await Utils.pickVideo(context);
     if (pickedFile != null) {
       setState(() {
-        pickedMediaType = PickedMediaType.Video;
-        _selectedMedia = File(pickedFile.path);                
+        pickedMediaType = MediaType.Video;
+        _selectedMedia = File(pickedFile.path);
         _mediaSelected = true;
       });
     }
@@ -487,7 +451,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
               replyDetails.content = repliedMessage.mediaUrl;
             replyDetails.type = repliedMessage?.type;
           }
-          onSend(_textEditingController.text, type: MessageType.Text, replyDetails: replyDetails);
+          onSend(_textEditingController.text,
+              type: MessageType.Text, replyDetails: replyDetails);
 
           // reset state
           thisState(() {
@@ -542,9 +507,9 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                       msgToReply = null;
                     }),
                     repliedMessage: repliedMessage,
-                    peerName: widget.chatData.person.name,
+                    peerName: widget.chatData.person.username,
                     reply: reply,
-                    userId: userId,                    
+                    userId: userId,
                   )
                 : Container(width: 0, height: 0),
           );
@@ -553,15 +518,18 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         return Container(
           margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
           decoration: BoxDecoration(
-              color: kBlackColor3,
-              borderRadius: reply
-                  ? BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      topRight: Radius.circular(10),
-                      bottomLeft: Radius.circular(25),
-                      bottomRight: Radius.circular(25),
-                    )
-                  : BorderRadius.circular(25)),
+              color: kBlackColor2,
+              // border: Border.all(color: kBorderColor3),
+              borderRadius:
+              //  reply
+              //     ? BorderRadius.only(
+              //         topLeft: Radius.circular(10),
+              //         topRight: Radius.circular(10),
+              //         bottomLeft: Radius.circular(25),
+              //         bottomRight: Radius.circular(25),
+              //       )
+                  // : 
+                  BorderRadius.circular(25)),
           // borderRadius: BorderRadius.circular(25)),
           child: Column(
             children: [
@@ -570,9 +538,9 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   SizedBox(width: 5),
-                  CupertinoButton(                    
+                  CupertinoButton(
                     padding: const EdgeInsets.all(0),
-                    child: Icon(                      
+                    child: Icon(
                       Icons.image,
                       size: 20,
                       color: Theme.of(context).accentColor,
@@ -629,66 +597,58 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('*************** build call ****************');
+    // FlutterStatusbarcolor.setStatusBarColor(kBlackColor2);    
+    // FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
     return SafeArea(
-      bottom: true,
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        // resizeToAvoidBottomInset: false,
-        backgroundColor: Hexcolor('#202020'),
+      bottom: false,
+          child: Scaffold(
+        resizeToAvoidBottomInset: false,        
         appBar: PreferredSize(
           preferredSize: _mediaSelected
               ? Size.fromHeight(0)
-              : Size.fromHeight(kToolbarHeight + 5),
+              : Size.fromHeight(kToolbarHeight),
           child: MyAppBar(widget.chatData.person, widget.chatData.groupId),
         ),
         body: GestureDetector(
           onTap: () {
             FocusScope.of(context).requestFocus(bodyFocusNode);
           },
-          child: _mediaSelected
-              ? SelectedMediaPreview(
+          child: Container(
+            color: kBlackColor,
+            child: Stack(
+              children: [
+                StreamBuilder(
+                  stream: stream(),
+                  builder: (ctx, snapshots) {
+                    addNewMessages(snapshots);
+                    return LayoutBuilder(
+                      builder: (ctx, constraints) {
+                        return Column(
+                          children: [
+                            _buildChatArea(),
+                            _buildInputSection(),
+                            AnimatedContainer(
+                                duration: Duration(milliseconds: 100),
+                                height: isVisible
+                                    ? MediaQuery.of(context).viewInsets.bottom
+                                    : 0),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+                if(_mediaSelected)
+                SelectedMediaPreview(
                   file: _selectedMedia,
                   onClosed: () => setState(() => _mediaSelected = false),
                   onSend: onSend,
                   textEditingController: _textEditingController,
                   pickedMediaType: pickedMediaType,
                 )
-              : ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(25),
-                    topLeft: Radius.circular(25),
-                  ),
-                  child: Container(
-                    color: kBlackColor,
-                    child: Stack(
-                      children: [
-                        StreamBuilder(
-                            stream: stream(),
-                            builder: (ctx, snapshots) {
-                              addNewMessages(snapshots);
-                              return LayoutBuilder(
-                                builder: (ctx, constraints) {
-                                  return Column(
-                                    children: [
-                                      _buildChatArea(),
-                                      _buildInputSection(),
-                                      AnimatedContainer(
-                                          duration: Duration(milliseconds: 100),
-                                          height: isVisible
-                                              ? MediaQuery.of(context)
-                                                  .viewInsets
-                                                  .bottom
-                                              : 0),
-                                    ],
-                                  );
-                                },
-                              );
-                            }),
-                      ],
-                    ),
-                  ),
-                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

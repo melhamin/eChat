@@ -13,20 +13,20 @@ class AuthScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: kBlackColor,
+        backgroundColor: kBlackColor2,
         body: GestureDetector(
           onTap: () {
             FocusScope.of(context).requestFocus(FocusNode());
           },
           child: Column(
             children: [
-              TabScreenTitle(title: 'Welcome'),
-              SizedBox(height: 20),
+              TabScreenTitle(title: 'Welcome',),
+              // SizedBox(height: 20),
               Expanded(
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Hexcolor('#202020'),
+                    color: kBlackColor2,
                     borderRadius: BorderRadius.only(
                       topRight: Radius.circular(25),
                       topLeft: Radius.circular(25),

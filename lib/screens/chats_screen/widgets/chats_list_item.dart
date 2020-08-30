@@ -8,23 +8,23 @@ import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
-import 'package:whatsapp_clone/models/person.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/models/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_item_screen.dart';
 import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
 
-class ChatItem extends StatefulWidget {
+class ChatListItem extends StatefulWidget {
   final InitChatData initChatData;
 
-  ChatItem({@required this.initChatData})
-      : super(key: GlobalKey<_ChatItemState>());
+  ChatListItem({@required this.initChatData})
+      : super(key: GlobalKey<_ChatListItemState>());
 
   @override
-  _ChatItemState createState() => _ChatItemState();
+  _ChatListItemState createState() => _ChatListItemState();
 }
 
-class _ChatItemState extends State<ChatItem> {
+class _ChatListItemState extends State<ChatListItem> {
   // GlobalKey key = GlobalKey<_ChatItemState>();
   DB db;
   List<dynamic> unreadMessages = [];
@@ -33,22 +33,6 @@ class _ChatItemState extends State<ChatItem> {
   @override
   void initState() {
     super.initState();
-    // unreadCount = widget.initChatData.unreadCount;
-    final userId = widget.initChatData.userId;
-    // get number of initially unread messages
-    // int index = 0;
-    // if (widget.initChatData.messages.isNotEmpty &&
-    //     widget.initChatData.messages[0].fromId != userId)
-    //   index = widget.initChatData.messages.indexWhere((element) {
-    //     print('********* searched element ******* ----> ${element.content}');
-    //     return element.isSeen;
-    //   });
-    // print('index =======> $index');
-    // if (index > 0)
-    // {
-    //   unreadCount = index;
-    // print('init Called --- unread ocunt ====> $unreadCount');
-    // }
     db = DB();
   }
 
@@ -64,8 +48,8 @@ class _ChatItemState extends State<ChatItem> {
   }
 
   String formatTime(Message message) {
-    int hour = message.timeStamp.hour;
-    int min = message.timeStamp.minute;
+    int hour = message.sendDate.hour;
+    int min = message.sendDate.minute;
     String hRes = hour <= 9 ? '0$hour' : hour.toString();
     String mRes = min <= 9 ? '0$min' : min.toString();
     return '$hRes:$mRes';
@@ -73,21 +57,25 @@ class _ChatItemState extends State<ChatItem> {
 
   void _addNewMessageToList(Message newMsg) { 
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    if (newMsg.timeStamp.isAfter(widget.initChatData.messages[0].timeStamp)) {
+    if (widget.initChatData.messages.isEmpty || newMsg.sendDate.isAfter(widget.initChatData.messages[0].sendDate)) {      
       widget.initChatData.addMessage(newMsg);
+
+      if(newMsg.fromId != widget.initChatData.userId) {
       widget.initChatData.unreadCount++;
 
       // play notification sound
-      if(isIos)
-        Utils.playSound('mp3/notificationIphone.mp3');
-      else Utils.playSound('mp3/notificationAndroid.mp3');
+      // if(widget.initChatData.messages.isNotEmpty && widget.initChatData.messages[0].sendDate != newMsg.sendDate)
+      // if(isIos)
+      //   Utils.playSound('mp3/notificationIphone.mp3');
+      // else Utils.playSound('mp3/notificationAndroid.mp3');
 
 
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        Provider.of<User>(context, listen: false)
+        Provider.of<Chat>(context, listen: false)
             .bringChatToTop(widget.initChatData.groupId);
         setState(() {});
       });
+      }
     }
   }
 
@@ -100,7 +88,7 @@ class _ChatItemState extends State<ChatItem> {
         else {
           if (snapshots.data.documents.isNotEmpty) {
             final snapshot = snapshots.data.documents[0];
-            Message newMsg = Message.fromJson(snapshot);
+            Message newMsg = Message.fromJson(snapshot.data);
             _addNewMessageToList(newMsg);
             return Row(
               children: [
@@ -109,12 +97,13 @@ class _ChatItemState extends State<ChatItem> {
                         child: Row(
                           children: [
                             Icon(
-                              Icons.photo_camera,
-                              size: 15,
+                              newMsg.mediaType == MediaType.Photo ?                            
+                              Icons.photo_camera : Icons.videocam,
+                              size: newMsg.mediaType == MediaType.Photo ?    15 : 20,
                               color: Colors.white.withOpacity(0.45),
                             ),
                             SizedBox(width: 8),
-                            Text('Photo', style: kChatItemSubtitleStyle)
+                            Text(newMsg.mediaType == MediaType.Photo ? 'Photo' : 'Video', style: kChatItemSubtitleStyle)
                           ],
                         ),
                       )
@@ -143,7 +132,7 @@ class _ChatItemState extends State<ChatItem> {
     );
   }
 
-  Widget _buildAvatar(Person person) => CircleAvatar(
+  Widget _buildAvatar(User person) => CircleAvatar(
         backgroundColor: kBlackColor3,
         radius: 27,
         backgroundImage: (person.imageUrl != null && person.imageUrl != '')
@@ -157,7 +146,7 @@ class _ChatItemState extends State<ChatItem> {
             : null,
       );
 
-  Widget _buildUnreadCount(List<dynamic> messages, Person person) => Column(
+  Widget _buildUnreadCount(List<dynamic> messages, User person) => Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (messages.isNotEmpty)
@@ -195,8 +184,8 @@ class _ChatItemState extends State<ChatItem> {
       key: UniqueKey(),
       color: Colors.transparent,
       child: InkWell(
-        splashColor: Colors.transparent,
-        highlightColor: kBlackColor,
+        // splashColor: Colors.transparent,
+        highlightColor: kBlackColor2,
         onTap: () {
           // unreadCount = 0;
           widget.initChatData.unreadCount = 0;
@@ -207,8 +196,8 @@ class _ChatItemState extends State<ChatItem> {
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16),
             leading: _buildAvatar(person),
-            title: Text(person.name, style: kChatItemTitleStyle),
-            subtitle: _buildPreviewText(person.uid),
+            title: Text(person.username, style: kChatItemTitleStyle),
+            subtitle: _buildPreviewText(person.id),
             trailing: _buildUnreadCount(messages, person),
           ),
         ),

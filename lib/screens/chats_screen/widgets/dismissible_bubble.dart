@@ -20,7 +20,7 @@ class DismssibleBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dismissible(
+    return Dismissible(      
       direction: isMe
           ? DismissDirection.endToStart
           : DismissDirection.startToEnd,
@@ -37,13 +37,15 @@ class DismssibleBubble extends StatelessWidget {
         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
         child: Wrap(
           children: [
-            SizedBox(width: isMe ? 0 : 20),
+            if(!isMe)
+            SizedBox(width: 20),
             FittedBox(
                 child: Icon(
               Icons.reply,
               color: kBaseWhiteColor.withOpacity(0.5),
             )),
-            SizedBox(width: isMe ? 20 : 0),
+            if(isMe)
+            SizedBox(width: 20),
           ],
         ),
       ),

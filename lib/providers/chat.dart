@@ -6,15 +6,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/init_chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/services/db.dart';
 
-class User with ChangeNotifier {
+class Chat with ChangeNotifier {
   // final _prefs = SharedPreferences.getInstance();
   final db = DB();
 
   FirebaseUser _user;
-  Person _userDetails;
+  User _userDetails;
   String _userId;
   List<String> _contacts = [];
   List<InitChatData> _chats = [];
@@ -30,7 +30,7 @@ class User with ChangeNotifier {
     return _user;
   }
 
-  Person get userDetails {
+  User get userDetails {
     return _userDetails;
   }
 
@@ -68,7 +68,7 @@ class User with ChangeNotifier {
     _user = await FirebaseAuth.instance.currentUser();
     _userId = _user.uid;
     final userData = await db.getUser(_userId);
-    _userDetails = Person.fromSnapshot(userData);
+    _userDetails = User.fromJson(userData.data);
     _imageUrl = _user.photoUrl;
 
     if (userData.data != null)
@@ -81,14 +81,14 @@ class User with ChangeNotifier {
 
   Future<InitChatData> getChatData(String peerId) async {
     String groupId = getGroupId(peerId);
-    final peer = await db.getUser(peerId);
-    final Person person = Person.fromSnapshot(peer);
+    final peer = await db.getUser(peerId);    
+    final User person = User.fromJson(peer.data);
     final messagesData = await db.getChatItemData(groupId);
 
     int unreadCount = 0;
     List<Message> messages = [];
     for (int i = 0; i < messagesData.documents.length; i++) {
-      var tmp = Message.fromJson(messagesData.documents[i]);
+      var tmp = Message.fromJson(Map<String, dynamic>.from(messagesData.documents[i].data));
       messages.add(tmp);
       if(tmp.fromId == peerId && !tmp.isSeen) unreadCount++;
     }      
@@ -97,13 +97,10 @@ class User with ChangeNotifier {
     if (messagesData.documents.isNotEmpty)
       lastDoc = messagesData.documents[messagesData.documents.length - 1];
 
-    // set reply color pair    
-    int n = Random().nextInt(replyColors.length);
-    final replyColorPair = replyColors[n];
 
     InitChatData chatData = InitChatData(
-      userId: userDetails.uid,
-      peerId: person.uid,
+      userId: userDetails.id,
+      peerId: person.id,
       groupId: groupId,
       person: person,
       messages: messages,
@@ -126,6 +123,7 @@ class User with ChangeNotifier {
     return true;
   }
 
+  // updates the order of chats when a new message is recieved
   void bringChatToTop(String groupId) {
     if (_chats.isNotEmpty && _chats[0].groupId != groupId) {
       // bring latest interacted contact and chat to top
@@ -154,7 +152,7 @@ class User with ChangeNotifier {
 
   void addMessageToInitChats(InitChatData chatRoom, Message msg) {
     _chats
-        .firstWhere((element) => element.person.uid == chatRoom.person.uid)
+        .firstWhere((element) => element.person.id == chatRoom.person.id)
         .messages
         .insert(0, msg);
     // print('at cahts -------> ${x.messages[0].content}');
@@ -174,7 +172,7 @@ class User with ChangeNotifier {
         _contacts.insert(0, newContacts[i]);
       }
       notifyListeners();
-      db.updateContacts(userDetails.uid, _contacts);
+      db.updateContacts(userDetails.id, _contacts);
     }
   }
 

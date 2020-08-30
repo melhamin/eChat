@@ -1,7 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
-
 import '../../../consts.dart';
 
 class Avatar extends StatelessWidget {
@@ -9,17 +7,18 @@ class Avatar extends StatelessWidget {
     @required this.imageUrl,
     this.radius = 15,
 
-    Key key,
+    Key key, this.color,
    
   }) : super(key: key);  
 
   final String imageUrl;
   final double radius;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
-          backgroundColor: Hexcolor('#202020'),
+          backgroundColor: color?? kBlackColor2,
           backgroundImage:
             imageUrl == null || imageUrl == ''
                   ? null

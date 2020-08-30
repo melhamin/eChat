@@ -7,6 +7,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/services/storage.dart';
+import 'package:whatsapp_clone/widgets/video_player.dart';
 
 class MediaUploadingBubble extends StatefulWidget {
   final String groupId;
@@ -14,12 +15,14 @@ class MediaUploadingBubble extends StatefulWidget {
   final DateTime time;
   final Function onUploadFinished;
   final Message message;
+  final MediaType mediaType;
   MediaUploadingBubble({
     @required this.groupId,
     @required this.file,
     @required this.time,
     @required this.onUploadFinished,
     @required this.message,
+    @required this.mediaType,
   });
   @override
   _MediaUploadingBubbleState createState() => _MediaUploadingBubbleState();
@@ -36,19 +39,16 @@ class _MediaUploadingBubbleState extends State<MediaUploadingBubble> {
   @override
   void initState() {
     super.initState();
-    _storage = Storage();
-    setState(() {
+    _storage = Storage();    
       timestamp = widget.time.millisecondsSinceEpoch;
-      path = 'ChatsMedia/${widget.groupId}/$timestamp.png';
-      _uploadTask = _storage.getUploadTask(widget.file, path);
-    });
+      path = 'ChatsMedia/${widget.groupId}/$timestamp';
+      _uploadTask = _storage.getUploadTask(widget.file, path);    
   }
 
-  void onUploadCompleted() async {    
+  void onUploadCompleted() async {
     var url =
         await _storage.getUrl('ChatsMedia/${widget.groupId}', '$timestamp');
     widget.onUploadFinished(url);
-    print('url ================> $url');
   }
 
   @override
@@ -59,7 +59,7 @@ class _MediaUploadingBubbleState extends State<MediaUploadingBubble> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: Hexcolor('#202020'),
+          color: kBlackColor3,
         ),
         padding: const EdgeInsets.all(5),
         // height: mq.size.height * 0.35,
@@ -82,7 +82,9 @@ class _MediaUploadingBubbleState extends State<MediaUploadingBubble> {
                         ),
                         height: double.infinity,
                         width: double.infinity,
-                        child: Image.file(widget.file, fit: BoxFit.cover),
+                        child: widget.mediaType == MediaType.Video
+                            ? CVideoPlayer(video: widget.file, isLocal: true)
+                            : Image.file(widget.file, fit: BoxFit.cover),
                       ),
                     ),
                     StreamBuilder<StorageTaskEvent>(
@@ -154,8 +156,8 @@ class _MediaUploadingBubbleState extends State<MediaUploadingBubble> {
       );
 
   String getTime() {
-    int hour = widget.message.timeStamp.hour;
-    int min = widget.message.timeStamp.minute;
+    int hour = widget.message.sendDate.hour;
+    int min = widget.message.sendDate.minute;
     String hRes = hour <= 9 ? '0$hour' : hour.toString();
     String mRes = min <= 9 ? '0$min' : min.toString();
 

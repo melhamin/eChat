@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/init_chat_data.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
 
 class StoryItem extends StatefulWidget {
   final InitChatData chatData;
@@ -13,7 +13,7 @@ class StoryItem extends StatefulWidget {
 }
 
 class _StoryItemState extends State<StoryItem> {
-  Widget _buildItem(Person info) {
+  Widget _buildItem(User info) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -48,7 +48,7 @@ class _StoryItemState extends State<StoryItem> {
           width: 54,
           child: Center(
             child: Text(
-              info.name.split(' ')[0],
+              info.username.split(' ')[0],
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 14,

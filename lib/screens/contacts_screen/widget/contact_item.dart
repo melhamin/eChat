@@ -20,8 +20,8 @@ class ContactItem extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        splashColor: Colors.transparent,
-        highlightColor: kBlackColor,
+        // splashColor: Colors.transparent,
+        highlightColor: kBlackColor2,
         onTap: () => onTap(context, item),
         child: Container(
           height: 70,

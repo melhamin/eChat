@@ -13,11 +13,11 @@ class Utils {
         actions: [
           CupertinoButton(
             child:
-                Text('Choose Photo', style: TextStyle(color: kBaseWhiteColor)),
+                Text('Open Gallery', style: TextStyle(color: kBaseWhiteColor)),
             onPressed: () => Navigator.of(context).pop(true),
           ),
           CupertinoButton(
-            child: Text('Take Photo', style: TextStyle(color: kBaseWhiteColor)),
+            child: Text('Open Camera', style: TextStyle(color: kBaseWhiteColor)),
             onPressed: () => Navigator.of(context).pop(false),
           ),
         ],
@@ -52,7 +52,7 @@ class Utils {
     ImagePicker videoPicker = ImagePicker();
     return await videoPicker.getVideo(
       source: src,
-      maxDuration: Duration(minutes: 1),
+      // maxDuration: Duration(minutes: 1),
     );
   }
 

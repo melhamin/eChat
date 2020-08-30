@@ -5,8 +5,8 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/providers/auth.dart';
-import 'package:whatsapp_clone/models/person.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/models/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/profile_screen/edit_profile_picture.dart';
 import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
@@ -31,7 +31,7 @@ class _ProfileInfoState extends State<ProfileInfo>
   // bool _initLoaded = false;
   // bool _isLoading = true;
   FirebaseUser user;
-  Person details;
+  User details;
 
   @override
   void initState() {
@@ -45,11 +45,11 @@ class _ProfileInfoState extends State<ProfileInfo>
         });
         db.getUserDocRef(user.uid).then((value) {
           setState(() {
-            details = Person.fromSnapshot(value);
+            details = User.fromJson(value.data);
             _statusController = TextEditingController(
                 text: details.about ?? 'Hi there! I am using eChat.');
             _nameController =
-                TextEditingController(text: details.name ?? 'Not Availabe.');
+                TextEditingController(text: details.username ?? 'Not Availabe.');
             // _isLoading = false;
           });
         });
@@ -117,7 +117,7 @@ class _ProfileInfoState extends State<ProfileInfo>
   }
 
   Widget _buildImageAndName(BuildContext context, FirebaseUser user) {
-    var imageUrl = Provider.of<User>(context).imageUrl;
+    var imageUrl = Provider.of<Chat>(context).imageUrl;
     return 
     Column(
       children: [
@@ -187,7 +187,7 @@ class _ProfileInfoState extends State<ProfileInfo>
                         color: kBaseWhiteColor,
                       ),
                       decoration: BoxDecoration(
-                        color: Hexcolor('#202020'),
+                        color: kBlackColor2,
                       ),
                       controller: _nameController,
                       onSubmitted: (value) => updateUsername(value),
@@ -218,7 +218,7 @@ class _ProfileInfoState extends State<ProfileInfo>
         SizedBox(height: 5),
         Container(
           decoration: BoxDecoration(
-            color: Hexcolor('#202020'),
+            color: kBlackColor2,
             border: Border(
               bottom: BorderSide(color: kBorderColor2),
               top: BorderSide(color: kBorderColor2),
@@ -248,7 +248,7 @@ class _ProfileInfoState extends State<ProfileInfo>
         SizedBox(height: 5),
         Container(
           decoration: BoxDecoration(
-            color: Hexcolor('#202020'),
+            color: kBlackColor2,
             border: Border(
               bottom: BorderSide(color: kBorderColor2),
               top: BorderSide(color: kBorderColor2),
@@ -267,7 +267,7 @@ class _ProfileInfoState extends State<ProfileInfo>
                 color: kBaseWhiteColor,
               ),
               decoration: BoxDecoration(
-                color: Hexcolor('#202020'),
+                color: kBlackColor2,
               ),
               controller: _statusController,
               onSubmitted: (value) => updateAbout(value),
@@ -279,7 +279,7 @@ class _ProfileInfoState extends State<ProfileInfo>
   }
 
   void _handleLogout() {
-    Provider.of<User>(context, listen: false).clearChatsAndContacts();
+    Provider.of<Chat>(context, listen: false).clearChatsAndContacts();
     Provider.of<Auth>(context, listen: false).signOut();
     Navigator.of(context).pop();
   }
@@ -293,7 +293,7 @@ class _ProfileInfoState extends State<ProfileInfo>
         //   child: Text('Logout?'),
         // ),
         content: Text(
-          'Log out of ${details.name}?',
+          'Log out of ${details.username}?',
           style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -322,58 +322,62 @@ class _ProfileInfoState extends State<ProfileInfo>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final user = Provider.of<User>(context).getUser;
+    final user = Provider.of<Chat>(context).getUser;
     final mq = MediaQuery.of(context);
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).requestFocus(FocusNode());
       },
-      child: Column(
-        children: [
-          Container(
-            height: mq.size.height * 0.12,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TabScreenTitle(
-                  title: 'Edit Profile',
-                  actionWidget: CupertinoButton(
-                    padding: const EdgeInsets.all(0),
-                    onPressed: () {
-                      showConfirmDialog(context);
-                    },
-                    child: Text(
-                      'Log Out',
-                      style: TextStyle(
-                          fontSize: 17, color: Theme.of(context).errorColor),
+      child: Container(
+        color: kBlackColor,
+        child: Column(
+          children: [
+            Container(
+              // height: mq.size.height * 0.12,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TabScreenTitle(
+                    title: 'Edit Profile',
+                    actionWidget: CupertinoButton(
+                      padding: const EdgeInsets.all(0),
+                      onPressed: () {
+                        showConfirmDialog(context);
+                      },
+                      child: Text(
+                        'Log Out',
+                        style: TextStyle(
+                            fontSize: 17, color: Theme.of(context).errorColor),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(25),
-                topLeft: Radius.circular(25),
-              ),
-              child: ListView(
-                children: [
-                  _buildImageAndName(context, user),
-                  SizedBox(height: 30),
-                  user == null
-                      ? CupertinoActivityIndicator()
-                      : _buildEmail(user),
-                  SizedBox(height: 30),
-                  user == null
-                      ? CupertinoActivityIndicator()
-                      : _buildAbout(user),
                 ],
               ),
             ),
-          ),
-        ],
+            SizedBox(height: 15),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(25),
+                  topLeft: Radius.circular(25),
+                ),
+                child: ListView(
+                  children: [
+                    _buildImageAndName(context, user),
+                    SizedBox(height: 30),
+                    user == null
+                        ? CupertinoActivityIndicator()
+                        : _buildEmail(user),
+                    SizedBox(height: 30),
+                    user == null
+                        ? CupertinoActivityIndicator()
+                        : _buildAbout(user),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

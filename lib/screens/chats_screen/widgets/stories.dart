@@ -9,7 +9,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/story_item.dart';
 
@@ -123,8 +123,8 @@ class _StoriesState extends State<Stories> {
 
   @override
   Widget build(BuildContext context) {
-    final chats = Provider.of<User>(context, listen: false).chats;
-    final user = Provider.of<User>(context).getUser;
+    final chats = Provider.of<Chat>(context, listen: false).chats;
+    final user = Provider.of<Chat>(context).getUser;
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(left: 15),

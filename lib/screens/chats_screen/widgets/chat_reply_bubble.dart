@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/models/message.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
 
 import '../../../consts.dart';
 
@@ -14,16 +14,16 @@ class ChatReplyBubble extends StatelessWidget {
   }) : super(key: key);
 
   final Message message;
-  final Person peer;  
+  final User peer;  
 
   String _getReplyDetails() {    
-    if (message.fromId == peer.uid) {
-      if (message.reply.repliedToId == peer.uid)
-        return '${peer.name.split(' ')[0]} replied to themselve';
-      return '${peer.name.split(' ')[0]} replied to you';
+    if (message.fromId == peer.id) {
+      if (message.reply.repliedToId == peer.id)
+        return '${peer.username.split(' ')[0]} replied to themselve';
+      return '${peer.username.split(' ')[0]} replied to you';
     } else {
-      if (message.reply.repliedToId == peer.uid)
-        return 'You replied to ${peer.name.split(' ')[0]}';
+      if (message.reply.repliedToId == peer.id)
+        return 'You replied to ${peer.username.split(' ')[0]}';
       return 'You replied to yourself';
     }
   }
@@ -32,13 +32,13 @@ class ChatReplyBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     // check if message is replied by peer or user and
     // render details accordingly
-    final isPeerMsg = message.fromId == peer.uid;
+    final isPeerMsg = message.fromId == peer.id;
     final size = MediaQuery.of(context).size;
     return GestureDetector(
       onTap: _getReplyDetails,
       child: Container(
         child: Column(
-          crossAxisAlignment: message.fromId == peer.uid
+          crossAxisAlignment: message.fromId == peer.id
               ? CrossAxisAlignment.start
               : CrossAxisAlignment.end,
           children: [
@@ -86,7 +86,7 @@ class ChatReplyBubble extends StatelessWidget {
       // margin: EdgeInsets.only(bottom: 25),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: kBlackColor2.withOpacity(0.45),
+        color: kBlackColor2
       ),
       child: Text(
         message.reply.content,

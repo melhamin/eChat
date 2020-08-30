@@ -55,7 +55,7 @@ class DB {
       _messagesCollection
           .document(groupId)
           .collection(MEDIA_COLLECTION)
-          .document(mediaMsg.timeStamp.millisecondsSinceEpoch.toString())
+          .document(mediaMsg.timeStamp)
           .setData(MediaModel.fromMsgToMap(mediaMsg));
     } catch (error) {
       print('****************** DB addMediaUrl error **********************');
@@ -206,10 +206,11 @@ class DB {
       String userId, String imageUrl, String username, String email) {
     try {
       _usersCollection.document(userId).setData({
-        'contacts': [],
+        'id': userId,
         'imageUrl': imageUrl,
         'username': username,
-        'email': email,
+        'email': email,        
+        'contacts': [],
       });
     } catch (error) {
       print('****************** DB addNewUser error **********************');

@@ -1,13 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/models/message.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/avatar.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/chat_text.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/seen_status.dart';
-import 'package:whatsapp_clone/widgets/image_view.dart';
+import 'package:whatsapp_clone/widgets/media_view.dart';
+import 'package:whatsapp_clone/widgets/video_player.dart';
 
 import '../../../consts.dart';
 import 'dismissible_bubble.dart';
@@ -27,7 +27,7 @@ class MediaBubble extends StatelessWidget {
   void navToImageView(BuildContext context) {
     Navigator.of(context).push(PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
-          ImageView(message.mediaUrl),
+          MediaView(url: message.mediaUrl, type:message.mediaType),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         var begin = 0.0;
         var end = 1.0;
@@ -42,51 +42,68 @@ class MediaBubble extends StatelessWidget {
     ));
   }
 
-  Widget _buildWithoutText(BuildContext context, Size size, bool isMe) {
+  Widget _buildWithoutText(BuildContext context, Size size, bool isMe) {    
     return Stack(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Container(
-            constraints: BoxConstraints(
-              minWidth: size.width * 0.7,
-              maxWidth: size.width * 0.7,
-              minHeight: size.height * 0.35,
-              maxHeight: size.height * 0.35,
-            ),
-            width: double.infinity,
-            child: CachedNetworkImage(
-                imageUrl: message.mediaUrl, fit: BoxFit.cover),
+        Container(          
+          constraints: BoxConstraints(
+            minWidth: size.width * 0.7,
+            maxWidth: size.width * 0.7,
+            minHeight: size.height * 0.35,
+            maxHeight: size.height * 0.35,
           ),
+          width: double.infinity,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: message.mediaType == MediaType.Video
+              ? CVideoPlayer(
+                  url: message.mediaUrl,
+                  isLocal: false,
+                )
+              : CachedNetworkImage(
+                  imageUrl: message.mediaUrl,                          
+                  fit: BoxFit.cover,
+                ),
+          ),
+           
         ),
         Positioned(
           bottom: 0,
           right: 0,
           child: Material(
             color: Colors.transparent,
-            child: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.all(5),
-              height: 30,
-              width: size.width * 0.8,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(10),
                   bottomRight: Radius.circular(10),
                 ),
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.black.withOpacity(0.6),
-                    Colors.black.withOpacity(0.01),
-                  ],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
+                          child: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.all(5),
+                height: 30,
+                constraints: BoxConstraints(
+                  maxWidth: size.width * 0.8,
                 ),
-              ),
-              child: SeenStatus(
-                isMe: isMe,
-                isSeen: message.isSeen,
-                timestamp: message.timeStamp,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  // borderRadius: BorderRadius.only(
+                  //   bottomLeft: Radius.circular(10),
+                  //   bottomRight: Radius.circular(10),
+                  // ),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.6),
+                      Colors.black.withOpacity(0.01),
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
+                ),
+                child: SeenStatus(
+                  isMe: isMe,
+                  isSeen: message.isSeen,
+                  timestamp: message.sendDate,
+                ),
               ),
             ),
           ),
@@ -126,7 +143,7 @@ class MediaBubble extends StatelessWidget {
         SeenStatus(
           isMe: isMe,
           isSeen: message.isSeen,
-          timestamp: message.timeStamp,
+          timestamp: message.sendDate,
         ),
       ],
     );
@@ -136,7 +153,7 @@ class MediaBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isMe =
-        Provider.of<User>(context, listen: false).getUserId == message.fromId;
+        Provider.of<Chat>(context, listen: false).getUserId == message.fromId;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -157,8 +174,8 @@ class MediaBubble extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: kBlackColor3),
-                      color: isMe ? Hexcolor('#202020') : kBlackColor,
+                      border: isMe ? null : (message.type != MessageType.Media && message.content != null) ?  Border.all(color: kBorderColor3) : null,
+                      color: isMe ? kBlackColor3 : kBlackColor,
                     ),
                     padding: const EdgeInsets.all(5),
                     constraints: BoxConstraints(
@@ -173,7 +190,7 @@ class MediaBubble extends StatelessWidget {
                   ),
                 ),
               ),
-            ),          
+            ),
           ),
         ),
       ],

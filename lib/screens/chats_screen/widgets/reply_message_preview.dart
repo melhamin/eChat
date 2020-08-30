@@ -9,12 +9,10 @@ class ReplyMessagePreview extends StatelessWidget {
   const ReplyMessagePreview({
     Key key,
     @required this.repliedMessage,
-    @required this.userId,
-    // @required this.replyMsg,
+    @required this.userId,    
     @required this.reply,
     @required this.peerName,
-    @required this.onCanceled,
-    @required this.color,
+    @required this.onCanceled,    
   }) : super(key: key);
 
   final Message repliedMessage;
@@ -22,8 +20,7 @@ class ReplyMessagePreview extends StatelessWidget {
   // final Message replyMsg;
   final String peerName;
   final bool reply;
-  final Function onCanceled;
-  final Color color;
+  final Function onCanceled;  
 
   @override
   Widget build(BuildContext context) {

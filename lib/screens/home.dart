@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/calls_screen/calls_screen.dart';
 import 'package:whatsapp_clone/screens/chats_screen/all_chats_screen.dart';
 import 'package:whatsapp_clone/screens/profile_screen/profile_info.dart';
@@ -23,24 +23,19 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
   TabController tabController;
   DB db;
   bool isLoading = true;
-  bool initLoaded = true;
-
-  AppLifecycleState _appLifecycleState;
-
-  Stream<QuerySnapshot> _contactsStream;
+  bool initLoaded = true;  
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     tabController = TabController(length: 4, vsync: this, initialIndex: 0);
-    db = DB();    
-    _contactsStream = db.getContactsStream();
+    db = DB();        
     // Fetch user data(chats and contacts), and update online status
     Future.delayed(Duration.zero).then((value) {         
-        Provider.of<User>(context, listen: false).getUserDetailsAndContacts().then((value) {
+        Provider.of<Chat>(context, listen: false).getUserDetailsAndContacts().then((value) {
           if(value)
-          Provider.of<User>(context, listen: false).fetchChats();
+          Provider.of<Chat>(context, listen: false).fetchChats();
           _updateOnlineStatus(true);          
         });        
       }).then((value) => setState(() => initLoaded = true));    
@@ -71,7 +66,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
 
   /// Update user status on Firebase
   Future<dynamic> _updateOnlineStatus(bool status) {
-    final uid = Provider.of<User>(context, listen: false).getUserId;
+    final uid = Provider.of<Chat>(context, listen: false).getUserId;
     final docRef = Firestore.instance.collection(USERS_COLLECTION).document(uid);
     return Firestore.instance.runTransaction((transaction) async {      
       await transaction.update(docRef, {
@@ -97,26 +92,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin, Widget
         ProfileInfo(),
       ],
     );
-  }
-
-  void updateChats(AsyncSnapshot<dynamic> snapshots) {
-    print('snapshots ======> $snapshots');
-    print('data =========> ${snapshots.data['contacts']}');
-    if (snapshots != null && snapshots.data != null) {      
-      final currContacts = Provider.of<User>(context, listen:false).getContacts;
-      final currContactLength = currContacts.length;      
-        final contacts = snapshots.data['contacts'];        
-        if(contacts != null)
-        if (contacts.length > currContactLength) {          
-          Provider.of<User>(context, listen: false)
-              .handleMessagesNotFromContacts(contacts);        
-      }
-    }
-  }
+  }  
 
   @override
-  Widget build(BuildContext context) {    
-    final uid = Provider.of<User>(context).getUserId;    
+  Widget build(BuildContext context) {        
     return SafeArea(
       bottom: false,
       child: Scaffold(
@@ -173,7 +152,7 @@ class _TabsState extends State<Tabs> {
       currentIndex: currentIndex,
       activeColor: Theme.of(context).accentColor,
       inactiveColor: Colors.white.withOpacity(0.7),
-      backgroundColor: kBlackColor3,
+      backgroundColor: kBlackColor2,
     );
   }
 }

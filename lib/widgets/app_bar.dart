@@ -6,14 +6,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/person.dart';
+import 'package:whatsapp_clone/models/user.dart';
+import 'package:whatsapp_clone/screens/calls_screen/widgets/call.dart';
+import 'package:whatsapp_clone/screens/chats_screen/widgets/avatar.dart';
 import 'package:whatsapp_clone/screens/contacts_screen/contact_details.dart';
 import 'package:whatsapp_clone/widgets/back_button.dart';
+import 'package:whatsapp_clone/widgets/overlay_utils.dart';
 
 class MyAppBar extends StatefulWidget {
-  final Person info;
+  final User peer;
   final String groupId;
-  MyAppBar(this.info, this.groupId);
+  MyAppBar(this.peer, this.groupId);
   @override
   _MyAppBarState createState() => _MyAppBarState();
 }
@@ -60,7 +63,7 @@ class _MyAppBarState extends State<MyAppBar>
   void goToContactDetails() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ContactDetails(widget.info, widget.groupId),
+        builder: (context) => ContactDetails(widget.peer, widget.groupId),
       ),
     );
   }
@@ -68,14 +71,21 @@ class _MyAppBarState extends State<MyAppBar>
   stream() {
     return Firestore.instance
         .collection(USERS_COLLECTION)
-        .document(widget.info.uid)
+        .document(widget.peer.id)
         .snapshots();
+  }
+
+  bool tapped = false;
+  void toggle() {
+    setState(() {
+      tapped = !tapped;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Hexcolor('#202020'),
+      backgroundColor: kBlackColor2,
       centerTitle: true,
       elevation: 0,
       leading: CBackButton(),
@@ -84,7 +94,7 @@ class _MyAppBarState extends State<MyAppBar>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(widget.info.name, style: kAppBarTitleStyle),
+            Text(widget.peer.username, style: kAppBarTitleStyle),
             if (collapsed)
               StreamBuilder(
                   stream: stream(),
@@ -92,7 +102,6 @@ class _MyAppBarState extends State<MyAppBar>
                     if (!snapshot.hasData)
                       return Container(width: 0, height: 0);
                     else {
-                      if (snapshot.data == null) print('online --------> null');
                       return AnimatedContainer(
                         duration: Duration(milliseconds: 300),
                         height: snapshot.data['isOnline'] ? 15 : 0,
@@ -105,6 +114,7 @@ class _MyAppBarState extends State<MyAppBar>
                           ),
                         ),
                       );
+                      // return Container();
                     }
                   }),
             AnimatedContainer(
@@ -129,27 +139,43 @@ class _MyAppBarState extends State<MyAppBar>
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 20, top: 5, bottom: 5),
-          child: CupertinoButton(
-            onPressed: goToContactDetails,
-            padding: const EdgeInsets.all(0),
-            child: CircleAvatar(
-              backgroundColor: kBlackColor3,
-              radius: 23,
-              backgroundImage:
-                  (widget.info.imageUrl != null && widget.info.imageUrl != '')
-                      ? CachedNetworkImageProvider(widget.info.imageUrl)
-                      : null,
-              child:
-                  (widget.info.imageUrl == null || widget.info.imageUrl == '')
-                      ? Icon(
-                          Icons.person,
-                          color: kBaseWhiteColor,
-                        )
-                      : null,
-            ),
+          child: Wrap(
+            children: [
+              CupertinoButton(
+                onPressed: makeVoiceCall,
+                padding: const EdgeInsets.all(0),
+                child: Icon(Icons.call, color: Theme.of(context).accentColor),
+                // Avatar(imageUrl: widget.peer.imageUrl, radius: 23, color: kBlackColor3),
+              ),
+              CupertinoButton(
+                onPressed: makeVideoCall,
+                padding: const EdgeInsets.all(0),
+                child: Icon(Icons.video_call,
+                    color: Theme.of(context).accentColor),
+                // Avatar(imageUrl: widget.peer.imageUrl, radius: 23, color: kBlackColor3),
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  void makeVoiceCall() {
+    OverlayUtils.overlay(
+      context: context,
+      alignment: Alignment.topCenter,
+      child: CallingScreen(),
+      duration: Duration(seconds: 5),
+    );
+  }
+  
+  void makeVideoCall() {
+    OverlayUtils.overlay(
+      context: context,
+      alignment: Alignment.topCenter,
+      child: CallingScreen(),
+      duration: Duration(seconds: 5),
     );
   }
 }

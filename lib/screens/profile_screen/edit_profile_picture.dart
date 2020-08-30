@@ -4,10 +4,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/profile_screen/widgets/photo_uploader.dart';
 import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
@@ -70,9 +71,14 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    return SafeArea(
+    // FlutterStatusbarcolor.setStatusBarColor(kBlackColor2);
+    // FlutterStatusbarcolor.setNavigationBarWhiteForeground(true);
+    return SafeArea(      
       child: Scaffold(
+        backgroundColor: kBlackColor,
         appBar: AppBar(
+          backgroundColor: kBlackColor2,
+          elevation: 0,
           centerTitle: true,
           title: Text(
             'Profile Picture',
@@ -173,7 +179,7 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
     }
 
     void updateProfilePicture(String url) {
-      final user = Provider.of<User>(context, listen: false).getUser;
+      final user = Provider.of<Chat>(context, listen: false).getUser;
       final info = UserUpdateInfo();
       info.photoUrl = url;
       user.updateProfile(info);
@@ -182,7 +188,7 @@ class _EditProfilePictureState extends State<EditProfilePicture> {
         'imageUrl': url,
       });
 
-      Provider.of<User>(context, listen: false).setImageUrl(url);
+      Provider.of<Chat>(context, listen: false).setImageUrl(url);
       Navigator.of(context).pop();
     }
   }

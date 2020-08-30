@@ -8,8 +8,8 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/init_chat_data.dart';
-import 'package:whatsapp_clone/models/person.dart';
-import 'package:whatsapp_clone/providers/user.dart';
+import 'package:whatsapp_clone/models/user.dart';
+import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_item_screen.dart';
 import 'package:whatsapp_clone/screens/contacts_screen/widget/contact_item.dart';
 import 'package:whatsapp_clone/services/db.dart';
@@ -20,7 +20,7 @@ class ContactsScreen extends StatelessWidget {
   final DB db = DB();
   String getGroupId(BuildContext context, String contact) {
     String groupId;
-    final userId = Provider.of<User>(context, listen: false).getUserId;
+    final userId = Provider.of<Chat>(context, listen: false).getUserId;
     if (userId.hashCode <= contact.hashCode)
       groupId = '$userId-$contact';
     else
@@ -30,21 +30,18 @@ class ContactsScreen extends StatelessWidget {
   }
 
   void onTap(BuildContext context, DocumentSnapshot item) {
-    Person person = Person.fromSnapshot(item);
-    final userId = Provider.of<User>(context, listen: false).getUserId;
+    User person = User.fromJson(item.data);
+    final userId = Provider.of<Chat>(context, listen: false).getUserId;
     // Checks if user has already interacted with peer
     // if has interacted pass chats object otherwise pass an empty one
     final initData =
-        Provider.of<User>(context, listen: false).chats.firstWhere((element) {
-      return element.person.uid == person.uid;
-    }, orElse: () {
-      // set reply color pair
-      int n = Random().nextInt(replyColors.length);
-      final replyColorPair = replyColors[n];
+        Provider.of<Chat>(context, listen: false).chats.firstWhere((element) {
+      return element.person.id == person.id;
+    }, orElse: () {      
       return new InitChatData(
         groupId: getGroupId(context, item.documentID),
         userId: userId,
-        peerId: person.uid,
+        peerId: person.id,
         messages: [],
         person: person,
       );
@@ -57,9 +54,9 @@ class ContactsScreen extends StatelessWidget {
 
   Widget _buildContacts(
       BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-    final userId = Provider.of<User>(context, listen: false).getUserId;
+    final userId = Provider.of<Chat>(context, listen: false).getUserId;
     return ListView.separated(
-      padding: const EdgeInsets.only(top: 20),
+      // padding: const EdgeInsets.only(top: 20),
       itemCount: snapshot.data.documents.length,
       itemBuilder: (ctx, i) {
         final item = snapshot.data.documents[i];
@@ -70,7 +67,8 @@ class ContactsScreen extends StatelessWidget {
       separatorBuilder: (ctx, _) => Divider(
         indent: 85,        
         height: 0,
-        color: kBorderColor1,
+        thickness: 1,
+        color: kBlackColor3,
       ),
     );
   }
@@ -81,7 +79,7 @@ class ContactsScreen extends StatelessWidget {
     return Column(
       children: [
         Container(
-          height: mq.size.height * 0.12,
+          // height: mq.size.height * 0.1,
           child: TabScreenTitle(
             title: 'Contacts',
             actionWidget: CupertinoButton(
@@ -91,7 +89,7 @@ class ContactsScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(5),
                 child: Icon(Icons.more_vert, color: Colors.white, size: 25),
                 decoration: BoxDecoration(
-                  color: Hexcolor('#202020'),
+                  color: kBlackColor3,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
