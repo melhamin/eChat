@@ -10,7 +10,10 @@ eChat is a cross-platfrom instant chat application built with Flutter.
 - Make voice and video calls (not completed yet)
 
 # Demo
-![Flutter_chat_app_instant_chat](https://user-images.githubusercontent.com/48331678/91775664-44615b00-ebf4-11ea-945d-436b210f4294.gif)
+<p float="left">
+  <img src="https://user-images.githubusercontent.com/48331678/91775664-44615b00-ebf4-11ea-945d-436b210f4294.gif" width="50%" height="50%" alt="flutter chat app instant chat app"/>   
+  <img src="https://user-images.githubusercontent.com/48331678/91775854-d23d4600-ebf4-11ea-8eb8-084fec6042c0.gif" width="50%" height="50%" alt="flutter chat app instant chat app"/>   
+</p>
 
 
 ##### Check out Flutter’s [documentation](http://flutter.io/) for help getting start with your Flutter project.
