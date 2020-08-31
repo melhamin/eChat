@@ -8,7 +8,7 @@ eChat is a cross-platfrom instant chat application built with Flutter.
 - Seen status
 - Online status
 - Reply messages
-- Make voice and video calls (not completed yet)
+- Make voice and video calls (to be added soon)
 
 # Demo
 <p float="left">   
