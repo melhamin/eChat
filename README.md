@@ -23,7 +23,7 @@ eChat is a cross-platfrom instant chat application built with Flutter.
 </p>
 
 #### Installation
-**Note:** Make sure your Flutter environment is setup [need help](https://flutter.dev/docs/get-started/install)
+**Note:** Make sure your Flutter environment is setup. [help](https://flutter.dev/docs/get-started/install)
 
 In the command line:
 
