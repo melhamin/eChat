@@ -1,22 +1,21 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/user.dart';
 
 import '../../../consts.dart';
 
-class ChatReplyBubble extends StatelessWidget {
-  const ChatReplyBubble({
+class ReplyMessageBubble extends StatelessWidget {
+  const ReplyMessageBubble({
     @required this.message,
-    @required this.peer,      
+    @required this.peer,
     Key key,
   }) : super(key: key);
 
   final Message message;
-  final User peer;  
+  final User peer;
 
-  String _getReplyDetails() {    
+  String _getReplyDetails() {
     if (message.fromId == peer.id) {
       if (message.reply.repliedToId == peer.id)
         return '${peer.username.split(' ')[0]} replied to themselve';
@@ -30,8 +29,6 @@ class ChatReplyBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // check if message is replied by peer or user and
-    // render details accordingly
     final isPeerMsg = message.fromId == peer.id;
     final size = MediaQuery.of(context).size;
     return GestureDetector(
@@ -43,7 +40,8 @@ class ChatReplyBubble extends StatelessWidget {
               : CrossAxisAlignment.end,
           children: [
             Padding(
-              padding: EdgeInsets.only(right: message.reply.type == MessageType.Text ? 15 : 0),
+              padding: EdgeInsets.only(
+                  right: message.reply.type == MessageType.Text ? 15 : 0),
               child: FittedBox(
                 child: Row(
                   children: [
@@ -65,7 +63,7 @@ class ChatReplyBubble extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: message.reply.type ==MessageType.Text ? 2 : 5),
+            SizedBox(height: message.reply.type == MessageType.Text ? 2 : 5),
             message.reply.type == MessageType.Text
                 ? _buildReplyText(size, isPeerMsg)
                 : _buildMediaReply(size),
@@ -76,37 +74,29 @@ class ChatReplyBubble extends StatelessWidget {
   }
 
   Widget _buildReplyText(Size size, bool isPeerMsg) {
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: size.width * 0.8,
-        minWidth: 60,
-      ),
-      // alignment: Alignment.topCenter,
-      padding: const EdgeInsets.only(top: 10, right: 15, left: 15, bottom: 30),
-      // margin: EdgeInsets.only(bottom: 25),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: kBlackColor2
-      ),
-      child: Text(
-        message.reply.content,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: kBaseWhiteColor.withOpacity(0.5),
-        ),
-      ),
-    );
+    return _ReplyText(message: message);
   }
 
   Widget _buildMediaReply(Size size) {
+    return _MediaReply(message: message);
+  }
+}
+
+class _MediaReply extends StatelessWidget {
+  const _MediaReply({
+    Key key,
+    @required this.message,
+  }) : super(key: key);
+
+  final Message message;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Container(
       constraints: BoxConstraints(
         maxWidth: size.width * 0.3,
       ),
-      // alignment: Alignment.topCenter,
       width: double.infinity,
       height: size.height * 0.25,
       decoration: BoxDecoration(
@@ -124,4 +114,35 @@ class ChatReplyBubble extends StatelessWidget {
   }
 }
 
+class _ReplyText extends StatelessWidget {
+  const _ReplyText({
+    Key key,
+    @required this.message,
+  }) : super(key: key);
 
+  final Message message;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: size.width * 0.8,
+        minWidth: 60,
+      ),
+      padding: const EdgeInsets.only(top: 10, right: 15, left: 15, bottom: 30),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20), color: kBlackColor2),
+      child: Text(
+        message.reply.content,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: kBaseWhiteColor.withOpacity(0.5),
+        ),
+      ),
+    );
+  }
+}

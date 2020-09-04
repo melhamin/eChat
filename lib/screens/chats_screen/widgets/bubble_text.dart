@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../consts.dart';
 
-class ChatText extends StatelessWidget {
-  const ChatText({
+class BubbleText extends StatelessWidget {
+  const BubbleText({
     Key key,
     @required this.text,
   }) : super(key: key);

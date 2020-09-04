@@ -2,11 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/init_chat_data.dart';
+import 'package:whatsapp_clone/models/chat_data.dart';
 import 'package:whatsapp_clone/models/user.dart';
 
 class StoryItem extends StatefulWidget {
-  final InitChatData chatData;
+  final ChatData chatData;
   StoryItem(this.chatData);
   @override
   _StoryItemState createState() => _StoryItemState();
@@ -63,6 +63,6 @@ class _StoryItemState extends State<StoryItem> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildItem(widget.chatData.person);
+    return _buildItem(widget.chatData.peer);
   }
 }

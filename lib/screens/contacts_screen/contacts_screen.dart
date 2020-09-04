@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/init_chat_data.dart';
+import 'package:whatsapp_clone/models/chat_data.dart';
 import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/chats_screen/chat_item_screen.dart';
@@ -36,14 +36,14 @@ class ContactsScreen extends StatelessWidget {
     // if has interacted pass chats object otherwise pass an empty one
     final initData =
         Provider.of<Chat>(context, listen: false).chats.firstWhere((element) {
-      return element.person.id == person.id;
+      return element.peer.id == person.id;
     }, orElse: () {      
-      return new InitChatData(
+      return new ChatData(
         groupId: getGroupId(context, item.documentID),
         userId: userId,
         peerId: person.id,
         messages: [],
-        person: person,
+        peer: person,
       );
     });
 

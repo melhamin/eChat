@@ -41,28 +41,42 @@ class _SelectedMediaPreviewState extends State<SelectedMediaPreview> {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    return    
-        Scaffold(
-
-                  body: Container(
-      constraints: BoxConstraints(
+    return Scaffold(
+      body: Container(
+        constraints: BoxConstraints(
           maxHeight: mq.size.height,
-      ),
-      color: kBlackColor2,
-      child: LayoutBuilder(
+        ),
+        color: kBlackColor2,
+        child: LayoutBuilder(
           builder: (ctx, constraints) {
-            return Column(
+            return Stack(
+              children: [
+                Container(
+                  alignment: Alignment.center,
+                  height: mq.size.height,
+                  constraints: BoxConstraints(
+                    // maxHeight: constraints.maxHeight,
+                  ),
+                  width: double.infinity,
+                  child: widget.pickedMediaType == MediaType.Photo
+                      ? Image.file(
+                          widget.file,
+                          fit: BoxFit.cover,
+                          height: constraints.maxHeight,
+                          width: double.infinity,
+                        )
+                      : CVideoPlayer(video: widget.file, isLocal: true),
+                ),
+                Column(
               children: [
                 Align(
                   alignment: Alignment.centerLeft,
                   child: CupertinoButton(
                     child: Container(
-                      padding: const EdgeInsets.all(1),
+                      padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        // borderRadius: BorderRadius.circular(15)
-                        border: Border.all(
-                            color: Theme.of(context).accentColor, width: 2),
+                        color: kBlackColor3.withOpacity(0.7),                       
                       ),
                       child: Icon(Icons.close,
                           color: Theme.of(context).accentColor, size: 20),
@@ -70,19 +84,13 @@ class _SelectedMediaPreviewState extends State<SelectedMediaPreview> {
                     onPressed: widget.onClosed,
                   ),
                 ),
-                Container(
-                  alignment: Alignment.center,
-                  height: constraints.maxHeight * 0.8 - 35,
-                  width: double.infinity,
-                  child: widget.pickedMediaType == MediaType.Photo
-                      ? _buildPhoto()
-                      : CVideoPlayer(video: widget.file, isLocal: true),
-                ),
+                
                 Spacer(),
                 Container(
-                  margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+                  margin:
+                      const EdgeInsets.only(left: 10, right: 10, bottom: 10),
                   decoration: BoxDecoration(
-                    color: kBlackColor3,
+                    color: kBlackColor3.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(25),
                     // border: Border.all(color: kBorderColor3)
                   ),
@@ -124,10 +132,12 @@ class _SelectedMediaPreviewState extends State<SelectedMediaPreview> {
                   ),
                 ),
               ],
+            ),
+              ],
             );
           },
+        ),
       ),
-    ),
-        );
+    );
   }
 }

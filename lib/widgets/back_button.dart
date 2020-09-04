@@ -5,9 +5,10 @@ class CBackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return isIos ?
-    CupertinoButton(
+    CupertinoButton(      
+      padding: const EdgeInsets.all(0),
         child: Icon(CupertinoIcons.back, color: Theme.of(context).accentColor),
         onPressed: () => Navigator.of(context).pop(),
-      ) : BackButton(color: Theme.of(context).accentColor);
+      ) : BackButton(color: Theme.of(context).accentColor, );
   }
 }

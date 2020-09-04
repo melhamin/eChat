@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/init_chat_data.dart';
+import 'package:whatsapp_clone/models/chat_data.dart';
 import 'package:whatsapp_clone/providers/chat.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/chats_list_item.dart';
 import 'package:whatsapp_clone/services/db.dart';
@@ -18,12 +18,13 @@ class AllChatsScreen extends StatefulWidget {
 
 class _AllChatsScreenState extends State<AllChatsScreen> with AutomaticKeepAliveClientMixin {
   DB db = DB();
+  
 
-  Widget _buildChats(List<InitChatData> chats) => BodyList(    
+  Widget _buildChats(List<ChatData> chats) => BodyList(    
         child: ListView.separated(
           padding: const EdgeInsets.only(top: 10),
           itemCount: chats.length,
-          itemBuilder: (ctx, i) => ChatListItem(initChatData: chats[i]),
+          itemBuilder: (ctx, i) => ChatListItem(chatData: chats[i]),
           separatorBuilder: (ctx, i) {
             return Divider(
               indent: 85,

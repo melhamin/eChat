@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/init_chat_data.dart';
+import 'package:whatsapp_clone/models/chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/services/db.dart';
@@ -17,7 +17,7 @@ class Chat with ChangeNotifier {
   User _userDetails;
   String _userId;
   List<String> _contacts = [];
-  List<InitChatData> _chats = [];
+  List<ChatData> _chats = [];
 
   String _imageUrl;
   bool _isLoading = true;
@@ -50,7 +50,7 @@ class Chat with ChangeNotifier {
     return _contacts;
   }
 
-  List<InitChatData> get chats {
+  List<ChatData> get chats {
     return _chats;
   }
 
@@ -79,7 +79,7 @@ class Chat with ChangeNotifier {
     return true;
   }
 
-  Future<InitChatData> getChatData(String peerId) async {
+  Future<ChatData> getChatData(String peerId) async {
     String groupId = getGroupId(peerId);
     final peer = await db.getUser(peerId);    
     final User person = User.fromJson(peer.data);
@@ -98,11 +98,11 @@ class Chat with ChangeNotifier {
       lastDoc = messagesData.documents[messagesData.documents.length - 1];
 
 
-    InitChatData chatData = InitChatData(
+    ChatData chatData = ChatData(
       userId: userDetails.id,
       peerId: person.id,
       groupId: groupId,
-      person: person,
+      peer: person,
       messages: messages,
       lastDoc: lastDoc,
       unreadCount: unreadCount,      
@@ -144,15 +144,15 @@ class Chat with ChangeNotifier {
     }
   }
 
-  void addToInitChats(InitChatData chatData) {
+  void addToInitChats(ChatData chatData) {
     if (_chats.contains(chatData)) return;
     _chats.insert(0, chatData);
     notifyListeners();
   }
 
-  void addMessageToInitChats(InitChatData chatRoom, Message msg) {
+  void addMessageToInitChats(ChatData chatRoom, Message msg) {
     _chats
-        .firstWhere((element) => element.person.id == chatRoom.person.id)
+        .firstWhere((element) => element.peer.id == chatRoom.peer.id)
         .messages
         .insert(0, msg);
     // print('at cahts -------> ${x.messages[0].content}');

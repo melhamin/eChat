@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:intl/intl.dart';
 import 'package:whatsapp_clone/consts.dart';
-import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/screens/calls_screen/widgets/call.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/avatar.dart';
 import 'package:whatsapp_clone/widgets/overlay_utils.dart';
@@ -33,7 +31,7 @@ class CallItem extends StatelessWidget {
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Icon(
-                Icons.camera_alt,
+                Icons.videocam,
                 color: kBaseWhiteColor.withOpacity(0.5),
                 size: 15,
               ),

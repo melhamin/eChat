@@ -4,59 +4,25 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
+import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/avatar.dart';
 import 'package:whatsapp_clone/widgets/overlay_utils.dart';
 
 class CallingScreen extends StatefulWidget {
+  final User reciever;
+
+  const CallingScreen({
+    Key key,
+    @required this.reciever,
+  }) : super(key: key);
   @override
   _CallingScreenState createState() => _CallingScreenState();
 }
 
 class _CallingScreenState extends State<CallingScreen> {
   bool endCallPressed = false;
-  bool fullScreen = false;
-
-  Widget _buildAvatar(Size size, BuildContext context) {
-    return Wrap(        
-      crossAxisAlignment:
-          fullScreen ? WrapCrossAlignment.center : WrapCrossAlignment.start,
-      direction: fullScreen ? Axis.vertical : Axis.horizontal,
-      children: [
-        Avatar(imageUrl: myPic, radius: fullScreen ? size.width * 0.15 : 25),
-        if (fullScreen) SizedBox(height: 10),
-        if (!fullScreen) SizedBox(width: 10),
-        _buildName(),
-      ],
-    );
-  }
-
-  Widget _buildName() {
-    return Wrap(
-      direction: Axis.vertical,
-      crossAxisAlignment:
-          fullScreen ? WrapCrossAlignment.center : WrapCrossAlignment.start,
-      runAlignment: WrapAlignment.center,
-      children: [
-        Text(
-          'username',
-          style: TextStyle(
-            color: kBaseWhiteColor,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        // SizedBox(height: 10),
-        Text(
-          'Calling...',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
+  bool isFullScreen = false;
+  
 
   Widget _buildEndCallIcon({double radius}) {
     return CupertinoButton(
@@ -78,30 +44,29 @@ class _CallingScreenState extends State<CallingScreen> {
   }
 
   Widget _actionIconSmall(IconData icon, {Color color, Function onPressed}) {
-    return CupertinoButton(      
+    return CupertinoButton(
       padding: const EdgeInsets.all(0),
       onPressed: onPressed ?? () {},
       child: Icon(icon, color: color ?? kBaseWhiteColor),
     );
   }
 
-  Widget _actionIconBig(IconData icon, {Color color, Function onPressed}) {
+  Widget _actionIconLarge(IconData icon, {Color color, Function onPressed}) {
     final size = MediaQuery.of(context).size;
     return CupertinoButton(
-
       padding: const EdgeInsets.all(0),
       onPressed: onPressed ?? () {},
       child: Container(
-        padding: EdgeInsets.all(size.width * 0.07),        
+        padding: EdgeInsets.all(size.width * 0.07),
         alignment: Alignment.center,
-        decoration: BoxDecoration( 
-          color: kBlackColor3,         
+        decoration: BoxDecoration(
+          color: kBlackColor3,
           // border: Border.all(color: kBorderColor4),
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
-        size: MediaQuery.of(context).size.height * 0.05,
+          size: MediaQuery.of(context).size.height * 0.05,
           color: color ?? kBaseWhiteColor.withOpacity(0.6),
         ),
       ),
@@ -126,16 +91,16 @@ class _CallingScreenState extends State<CallingScreen> {
   }
 
   Widget _buildActionIconsLarge() {
-    return Container(      
+    return Container(
       width: MediaQuery.of(context).size.width,
-      child: Row(                
-        mainAxisAlignment: MainAxisAlignment.spaceAround,        
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _actionIconBig( Icons.mic_off),
-          _actionIconBig( Icons.speaker_phone),
-          _actionIconBig(Icons.add),          
-        ],        
-      ),    
+          _actionIconLarge(Icons.mic_off),
+          _actionIconLarge(Icons.speaker_phone),
+          _actionIconLarge(Icons.add),
+        ],
+      ),
     );
   }
 
@@ -145,37 +110,36 @@ class _CallingScreenState extends State<CallingScreen> {
     final size = MediaQuery.of(context).size;
     return AnimatedContainer(
       duration: Duration(milliseconds: 300),
-      margin: fullScreen
+      margin: isFullScreen
           ? const EdgeInsets.all(0)
           : const EdgeInsets.symmetric(horizontal: 15, vertical: 40),
-      padding: fullScreen
+      padding: isFullScreen
           ? const EdgeInsets.all(0)
           : const EdgeInsets.only(left: 15, right: 15, top: 10),
       decoration: BoxDecoration(
-        color: fullScreen ? Colors.black.withOpacity(0.9) : kBlackColor3,
-        borderRadius: fullScreen ? null : BorderRadius.circular(20),
+        color: isFullScreen ? Colors.black.withOpacity(0.9) : kBlackColor3,
+        borderRadius: isFullScreen ? null : BorderRadius.circular(20),
       ),
       constraints: BoxConstraints(
-        maxHeight: fullScreen ? size.height : 140,
+        maxHeight: isFullScreen ? size.height : 140,
         maxWidth: size.width,
       ),
       // width: 100,
       child: Stack(
         children: [
-          if (!fullScreen)
+          if (!isFullScreen)
             Positioned(
               right: 10,
               top: 10,
               child: _buildEndCallIcon(),
             ),
-
-          if (!fullScreen)
+          if (!isFullScreen)
             Positioned(
               top: 75,
               left: 10,
               child: _buildActionIconsSmall(),
             ),
-          if (fullScreen)
+          if (isFullScreen)
             Positioned(
               top: 30,
               left: 15,
@@ -188,23 +152,23 @@ class _CallingScreenState extends State<CallingScreen> {
                 onPressed: toggleFullScreen,
               ),
             ),
-          if (fullScreen)
+          if (isFullScreen)
             Positioned(
-              top: size.height * 0.45,              
+              top: size.height * 0.45,
               child: _buildActionIconsLarge(),
-            ),                    
-          if (fullScreen)
+            ),
+          if (isFullScreen)
             Positioned(
-              top: size.height * 0.7,    
-              left: size.width / 2 - size.height * 0.06,                                      
+              top: size.height * 0.7,
+              left: size.width / 2 - size.height * 0.06,
               child: _buildEndCallIcon(radius: size.width * 0.1),
-            ),                    
+            ),
           AnimatedPositioned(
             duration: Duration(milliseconds: 200),
-            child: _buildAvatar(size, context),
-            left: !fullScreen ? 10 : size.width / 2 - size.width * 0.15,
-            top: !fullScreen ? 10 : size.height * 0.15,
-          ),         
+            child: _Name(isFullScreen: isFullScreen, reciever: widget.reciever),
+            left: !isFullScreen ? 10 : size.width / 2 - size.width * 0.15,
+            top: !isFullScreen ? 10 : size.height * 0.15,
+          ),
         ],
       ),
     );
@@ -212,7 +176,64 @@ class _CallingScreenState extends State<CallingScreen> {
 
   void toggleFullScreen() {
     setState(() {
-      fullScreen = !fullScreen;
+      isFullScreen = !isFullScreen;
     });
+  }
+}
+
+class _Name extends StatelessWidget {
+  const _Name({
+    Key key,
+    @required this.isFullScreen,
+    this.reciever,
+  }) : super(key: key);
+
+  final bool isFullScreen;
+  final User reciever;
+
+  Widget _buildName() {
+    return Wrap(
+      direction: Axis.vertical,
+      crossAxisAlignment:
+          isFullScreen ? WrapCrossAlignment.center : WrapCrossAlignment.start,
+      runAlignment: WrapAlignment.center,
+      children: [
+        Text(
+          reciever.username,
+          style: TextStyle(
+            color: kBaseWhiteColor,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        // SizedBox(height: 10),
+        Text(
+          'Calling...',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Wrap(
+      crossAxisAlignment:
+          isFullScreen ? WrapCrossAlignment.center : WrapCrossAlignment.start,
+      direction: isFullScreen ? Axis.vertical : Axis.horizontal,
+      children: [
+        Avatar(
+            imageUrl: reciever.imageUrl,
+            radius: isFullScreen ? size.width * 0.15 : 25),
+        if (isFullScreen) SizedBox(height: 10),
+        if (!isFullScreen) SizedBox(width: 10),
+        _buildName()
+      ],
+    );
   }
 }

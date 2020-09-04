@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/screens/calls_screen/widgets/call.dart';
@@ -29,6 +27,7 @@ class _MyAppBarState extends State<MyAppBar>
 
   Timer _timer;
   bool collapsed = false;
+  var stream;
 
   @override
   void initState() {
@@ -37,6 +36,12 @@ class _MyAppBarState extends State<MyAppBar>
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
+
+    // steram of peer details
+    stream = Firestore.instance
+        .collection(USERS_COLLECTION)
+        .document(widget.peer.id)
+        .snapshots();
 
     _animation = Tween(begin: 1.0, end: 0.0).animate(_animationController);
 
@@ -68,12 +73,12 @@ class _MyAppBarState extends State<MyAppBar>
     );
   }
 
-  stream() {
-    return Firestore.instance
-        .collection(USERS_COLLECTION)
-        .document(widget.peer.id)
-        .snapshots();
-  }
+  // stream() {
+  //   return Firestore.instance
+  //       .collection(USERS_COLLECTION)
+  //       .document(widget.peer.id)
+  //       .snapshots();
+  // }
 
   bool tapped = false;
   void toggle() {
@@ -86,53 +91,61 @@ class _MyAppBarState extends State<MyAppBar>
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: kBlackColor2,
-      centerTitle: true,
+      // centerTitle: true,
       elevation: 0,
       leading: CBackButton(),
       title: CupertinoButton(
+        padding: const EdgeInsets.all(0),
         onPressed: goToContactDetails,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+        child: Row(
           children: [
-            Text(widget.peer.username, style: kAppBarTitleStyle),
-            if (collapsed)
-              StreamBuilder(
-                  stream: stream(),
-                  builder: (ctx, snapshot) {
-                    if (!snapshot.hasData)
-                      return Container(width: 0, height: 0);
-                    else {
-                      return AnimatedContainer(
-                        duration: Duration(milliseconds: 300),
-                        height: snapshot.data['isOnline'] ? 15 : 0,
-                        child: Text(
-                          'Online',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                        ),
-                      );
-                      // return Container();
-                    }
-                  }),
-            AnimatedContainer(
-              duration: Duration(milliseconds: 200),
-              curve: Curves.easeIn,
-              height: collapsed ? 0 : 18,
-              child: FadeTransition(
-                opacity: _animation,
-                child: Text(
-                  'tap for more info',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.7),
+            Avatar(imageUrl: widget.peer.imageUrl, radius: kToolbarHeight / 2 - 5),
+            SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(widget.peer.username, style: kAppBarTitleStyle),
+                if (collapsed)
+                  StreamBuilder(
+                      stream: stream,
+                      builder: (ctx, snapshot) {
+                        if (!snapshot.hasData)
+                          return Container(width: 0, height: 0);
+                        else {
+                          return AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
+                            height: snapshot.data['isOnline'] ? 13 : 0,
+                            child: Text(
+                              'Online',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
+                          );
+                          // return Container();
+                        }
+                      }),
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 200),
+                  curve: Curves.easeIn,
+                  height: collapsed ? 0 : 13,
+                  child: FadeTransition(
+                    opacity: _animation,
+                    child: Text(
+                      'tap for more info',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white.withOpacity(0.7),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            )
+                )
+              ],
+            ),
           ],
         ),
       ),
@@ -165,16 +178,16 @@ class _MyAppBarState extends State<MyAppBar>
     OverlayUtils.overlay(
       context: context,
       alignment: Alignment.topCenter,
-      child: CallingScreen(),
+      child: CallingScreen(reciever: widget.peer),
       duration: Duration(seconds: 5),
     );
   }
-  
+
   void makeVideoCall() {
     OverlayUtils.overlay(
       context: context,
       alignment: Alignment.topCenter,
-      child: CallingScreen(),
+      child: CallingScreen(reciever: widget.peer),
       duration: Duration(seconds: 5),
     );
   }

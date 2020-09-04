@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/user.dart';
@@ -9,7 +8,7 @@ import 'package:whatsapp_clone/screens/chats_screen/widgets/media_bubble.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/seen_status.dart';
 
 import 'avatar.dart';
-import 'chat_text.dart';
+import 'bubble_text.dart';
 import 'dismissible_bubble.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -17,19 +16,109 @@ class ChatBubble extends StatelessWidget {
   final bool isMe;
   final User peer;
   final bool withoutAvatar;
-  final Function onReplyPressed;
+  final Function onReply;
   ChatBubble({
     @required this.message,
     @required this.isMe,
     @required this.peer,
     @required this.withoutAvatar,
-    this.onReplyPressed,
+    this.onReply,
   }) : super();
 
-     
-  // GlobalKey key = GlobalKey<_ChatBubbleState>();
+  Widget chatItem(BuildContext context) {
+    return Container(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: LayoutBuilder(
+        builder: (ctx, constraints) {
+          if (message.type == MessageType.Text) {
+            return !isMe
+                ? _PeerMessage(
+                    peer: peer,
+                    isMe: isMe,
+                    message: message,
+                    onReplyPressed: onReply,
+                    constraints: constraints,
+                    withoutAvatar: withoutAvatar,
+                  )
+                : _WithoutAvatar(
+                    isMe: isMe,
+                    message: message,
+                    onReplyPressed: onReply,
+                    peer: peer,
+                    constraints: constraints,
+                  );
+          } else {
+            return MediaBubble(
+              message: message,
+              onReplied: onReply,
+              avatarImageUrl: peer.imageUrl,
+            );
+          }
+        },
+      ),
+    );
+  }
 
-  dynamic getRadius() {
+  @override
+  Widget build(BuildContext context) {
+    return chatItem(context);
+  }
+}
+
+class _PeerMessage extends StatelessWidget {
+  const _PeerMessage({
+    Key key,    
+    @required this.peer,
+    @required this.isMe,
+    @required this.message,
+    @required this.onReplyPressed,
+    @required this.constraints, this.withoutAvatar,  
+  }) : super(key: key);
+
+  final User peer;
+  final bool isMe;
+  final Message message;
+  final Function onReplyPressed;
+  final BoxConstraints constraints;
+  final bool withoutAvatar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        withoutAvatar ? SizedBox(width: 30) : Avatar(imageUrl: peer.imageUrl),
+        SizedBox(width: 5),
+        _WithoutAvatar(
+          isMe: isMe,
+          message: message,
+          onReplyPressed: onReplyPressed,
+          peer: peer,
+          constraints: constraints,
+        ),
+      ],
+    );
+  }
+}
+
+class _WithoutAvatar extends StatelessWidget {
+  const _WithoutAvatar({
+    Key key,
+    @required this.isMe,
+    @required this.message,
+    @required this.onReplyPressed,
+    @required this.peer,
+    @required this.constraints,
+  }) : super(key: key);
+
+  final bool isMe;
+  final Message message;
+  final Function onReplyPressed;
+  final User peer;
+  final BoxConstraints constraints;
+
+  BorderRadius _replyMsgRadius() {
     if (message.reply != null) {
       if (isMe)
         return BorderRadius.only(
@@ -47,7 +136,8 @@ class ChatBubble extends StatelessWidget {
     return BorderRadius.circular(20);
   }
 
-  Widget _buildWithoutAvatar(BuildContext context, BoxConstraints constraints) {
+  @override
+  Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return DismssibleBubble(
       isMe: isMe,
@@ -59,9 +149,8 @@ class ChatBubble extends StatelessWidget {
             children: [
               if (message.reply != null)
                 Align(
-                  alignment:
-                      isMe ? Alignment.topRight : Alignment.topLeft,
-                  child: ChatReplyBubble(
+                  alignment: isMe ? Alignment.topRight : Alignment.topLeft,
+                  child: ReplyMessageBubble(
                     message: message,
                     peer: peer,
                   ),
@@ -82,12 +171,9 @@ class ChatBubble extends StatelessWidget {
                     maxWidth: constraints.maxWidth * 0.8,
                   ),
                   decoration: BoxDecoration(
-                    borderRadius: getRadius(),
-                    border: isMe
-                        ? null
-                        : Border.all(color: kBorderColor3),
-                    color:
-                        isMe ? kBlackColor3 : kBlackColor,
+                    borderRadius: _replyMsgRadius(),
+                    border: isMe ? null : Border.all(color: kBorderColor3),
+                    color: isMe ? kBlackColor3 : kBlackColor,
                   ),
                   child: Padding(
                     key: key,
@@ -100,7 +186,7 @@ class ChatBubble extends StatelessWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(top: 10.0, bottom: 12),
-                          child: ChatText(text: message.content),
+                          child: BubbleText(text: message.content),
                         ),
                         Padding(
                           padding: const EdgeInsets.only(bottom: 5.0),
@@ -121,75 +207,4 @@ class ChatBubble extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildWithAvatar(BuildContext context, BoxConstraints constraints) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        withoutAvatar
-            ? SizedBox(width: 30)
-            : Avatar(imageUrl: peer.imageUrl),
-        SizedBox(width: 5),
-        _buildWithoutAvatar(context, constraints),
-      ],
-    );
-  }
-
-  Widget chatItem(BuildContext context) {
-    return Container(      
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: LayoutBuilder(
-        builder: (ctx, constraints) {
-          if (message.type == MessageType.Text) {
-            return !isMe
-                ? _buildWithAvatar(context, constraints)
-                : _buildWithoutAvatar(context, constraints);
-          } else {
-            return MediaBubble(
-              message: message,
-              onReplied: onReplyPressed,
-              avatarImageUrl: peer.imageUrl,
-            );
-          }
-        },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // super.build(context);
-    return chatItem(context);
-  }
-
-  // void onLongPress(BuildContext context) async {
-  //   final screenWidth = MediaQuery.of(context).size.width;
-  //   RenderBox box = key.currentContext.findRenderObject();
-  //   Offset position = box.localToGlobal(Offset.zero);
-  //   double top = position.dy;
-  //   double left = position.dx;
-  //   double right = screenWidth - left;
-
-  //   int selectedOption = await showMenu(
-  //     context: context,
-  //     items: [
-  //       PopupMenuItem(
-  //         child: Text('Forward'),
-  //         value: 1,
-  //       ),
-  //       PopupMenuItem(
-  //         child: Text('Reply'),
-  //         value: 2,
-  //       ),
-  //     ],
-  //     position: RelativeRect.fromLTRB(left, top, right, 0),
-  //   );
-  //   if (selectedOption != null) {
-  //     if (selectedOption == 2) widget.onReplyPressed(widget.message);
-  //   }
-  // }
-
-  // @override
-  // bool get wantKeepAlive => true;
 }

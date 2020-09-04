@@ -43,7 +43,7 @@ class _PhotoUploaderState extends State<PhotoUploader> {
   }
 
   void getImageUrl() async {
-    String url = await _storage.getUrl('profilePictures', widget.uid);
+    String url = await _storage.getUrl('profilePictures', '${widget.uid}.png');
     widget.getUrl(url);
   }
 

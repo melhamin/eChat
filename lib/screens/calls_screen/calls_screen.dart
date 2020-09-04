@@ -5,11 +5,9 @@ import 'package:whatsapp_clone/screens/calls_screen/widgets/call_item.dart';
 import 'package:whatsapp_clone/widgets/body_list.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
-class CallsScreen extends StatelessWidget {  
+class CallsScreen extends StatelessWidget {
   @override
-  Widget build(BuildContext context) {
-    // FlutterStatusbarcolor.setStatusBarColor(kBlackColor);
-    // FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
+  Widget build(BuildContext context) {    
     return Column(
       children: [
         TabScreenTitle(
@@ -27,12 +25,11 @@ class CallsScreen extends StatelessWidget {
             ),
           ),
           onTap: () {},
-        ),      
+        ),
         BodyList(
           child: ListView.separated(
             itemCount: 6,
             itemBuilder: (_, i) => CallItem(),
-
             separatorBuilder: (_, i) => Divider(
               indent: 72,
               endIndent: 15,
@@ -40,7 +37,7 @@ class CallsScreen extends StatelessWidget {
               color: kBorderColor3,
             ),
           ),
-        )       
+        )
       ],
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
-import 'package:whatsapp_clone/screens/auth_screen/widgets/input_section.dart';
+import 'package:whatsapp_clone/screens/auth_screen/widgets/input_field.dart';
 import 'package:whatsapp_clone/widgets/tab_title.dart';
 
 import '../../consts.dart';
@@ -20,8 +19,7 @@ class AuthScreen extends StatelessWidget {
           },
           child: Column(
             children: [
-              TabScreenTitle(title: 'Welcome',),
-              // SizedBox(height: 20),
+              TabScreenTitle(title: 'Welcome',),              
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -32,7 +30,7 @@ class AuthScreen extends StatelessWidget {
                       topLeft: Radius.circular(25),
                     ),
                   ),
-                  child: InputSection(),
+                  child: InputField(),
                 ),
               ),
             ],

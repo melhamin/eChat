@@ -12,7 +12,7 @@ import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'package:provider/provider.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:whatsapp_clone/models/init_chat_data.dart';
+import 'package:whatsapp_clone/models/chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/user.dart';
 import 'package:whatsapp_clone/models/reply_message.dart';
@@ -21,7 +21,7 @@ import 'package:whatsapp_clone/screens/chats_screen/widgets/reply_message_previe
 import 'package:whatsapp_clone/screens/chats_screen/widgets/selected_media_preview.dart';
 import 'package:whatsapp_clone/services/db.dart';
 import 'package:whatsapp_clone/utils/utils.dart';
-import 'package:whatsapp_clone/widgets/app_bar.dart';
+import 'package:whatsapp_clone/screens/chats_screen/widgets/app_bar.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/media_uploading_bubble.dart';
 import 'package:whatsapp_clone/screens/chats_screen/widgets/chat_bubble.dart';
 
@@ -31,7 +31,7 @@ enum LoaderStatus {
 }
 
 class ChatItemScreen extends StatefulWidget {
-  final InitChatData chatData;
+  final ChatData chatData;
   ChatItemScreen(this.chatData);
 
   @override
@@ -84,7 +84,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
     _textFieldFocusNode = FocusNode();
     _keyboard = KeyboardVisibilityNotification();
 
-    bodyFocusNode = FocusNode();    
+    bodyFocusNode = FocusNode();
 
     // used for animating body when keyboard appeares
     _keyboard.addNewListener(onChange: (visible) {
@@ -159,11 +159,11 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
       var userRef = await db.addToPeerContacts(peerId, userId);
 
       User person = User.fromJson(userRef.data);
-      InitChatData initChatData = InitChatData(
+      ChatData initChatData = ChatData(
         userId: userId,
         peerId: peerId,
         groupId: groupChatId,
-        person: person,
+        peer: person,
         messages: [newMessage],
       );
       Provider.of<Chat>(context, listen: false).addToInitChats(initChatData);
@@ -211,17 +211,17 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
         return ChatBubble(
           message: message,
           isMe: message.fromId == userId,
-          peer: widget.chatData.person,
+          peer: widget.chatData.peer,
           withoutAvatar: withoutAvatar,
-          onReplyPressed: onReplyPressed,
+          onReply: onReplyPressed,
         );
     }
     return ChatBubble(
       message: message,
       isMe: message.fromId == userId,
-      peer: widget.chatData.person,
+      peer: widget.chatData.peer,
       withoutAvatar: withoutAvatar,
-      onReplyPressed: onReplyPressed,
+      onReply: onReplyPressed,
     );
   }
 
@@ -463,24 +463,42 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
         Widget _buildTextField() {
           return Flexible(
-            child: TextField(
-              style: TextStyle(
-                  fontSize: 16, color: Colors.white.withOpacity(0.95)),
-              focusNode: _textFieldFocusNode,
-              controller: _textEditingController,
-              keyboardType: TextInputType.text,
-              textInputAction: TextInputAction.go,
-              cursorColor: Theme.of(context).accentColor,
-              keyboardAppearance: Brightness.dark,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: 'Type a message',
-                hintStyle: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white.withOpacity(0.7),
+            child: Container(
+              padding: const EdgeInsets.only(left: 8, right: 5),
+              decoration: BoxDecoration(
+                  // color: kBlackColor2,
+                  // border: Border.all(color: kBorderColor3),
+                  color: kBlackColor2,
+                  borderRadius:
+                      //  reply
+                      //     ? BorderRadius.only(
+                      //         topLeft: Radius.circular(10),
+                      //         topRight: Radius.circular(10),
+                      //         bottomLeft: Radius.circular(25),
+                      //         bottomRight: Radius.circular(25),
+                      //       )
+                      // :
+                      BorderRadius.circular(25)),
+              child: TextField(
+                maxLines: null,
+                style: TextStyle(
+                    fontSize: 16, color: Colors.white.withOpacity(0.95)),
+                focusNode: _textFieldFocusNode,
+                controller: _textEditingController,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.go,
+                cursorColor: Theme.of(context).accentColor,
+                keyboardAppearance: Brightness.dark,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Type a message',
+                  hintStyle: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.6),
+                  ),
                 ),
+                onSubmitted: (_) => send(),
               ),
-              onSubmitted: (_) => send(),
             ),
           );
         }
@@ -493,8 +511,8 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
             width: double.infinity,
             decoration: BoxDecoration(
               border: Border(
-                bottom: reply
-                    ? BorderSide(color: kBorderColor1)
+                top: reply
+                    ? BorderSide(color: kBorderColor3)
                     : BorderSide(color: Colors.transparent),
               ),
             ),
@@ -507,7 +525,7 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                       msgToReply = null;
                     }),
                     repliedMessage: repliedMessage,
-                    peerName: widget.chatData.person.username,
+                    peerName: widget.chatData.peer.username,
                     reply: reply,
                     userId: userId,
                   )
@@ -515,57 +533,64 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
           );
         }
 
-        return Container(
-          margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+        return Container(          
           decoration: BoxDecoration(
-              color: kBlackColor2,
-              // border: Border.all(color: kBorderColor3),
-              borderRadius:
-              //  reply
-              //     ? BorderRadius.only(
-              //         topLeft: Radius.circular(10),
-              //         topRight: Radius.circular(10),
-              //         bottomLeft: Radius.circular(25),
-              //         bottomRight: Radius.circular(25),
-              //       )
-                  // : 
-                  BorderRadius.circular(25)),
+            // color: kBlackColor2,
+            // border: Border.all(color: kBorderColor3),
+            borderRadius:
+                 reply
+                    ? BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10),
+                        bottomLeft: Radius.circular(25),
+                        bottomRight: Radius.circular(25),
+                      )
+                :
+                BorderRadius.circular(25),
+          ),
           // borderRadius: BorderRadius.circular(25)),
           child: Column(
             children: [
               _buildReplyMessage(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(width: 5),
-                  CupertinoButton(
-                    padding: const EdgeInsets.all(0),
-                    child: Icon(
-                      Icons.image,
-                      size: 20,
-                      color: Theme.of(context).accentColor,
+              Container(
+                margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // SizedBox(width: 5),
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: CupertinoButton(
+                        padding: const EdgeInsets.all(0),
+                        child: Icon(
+                          Icons.image,
+                          size: 20,
+                          color: Theme.of(context).accentColor,
+                        ),
+                        onPressed: () => getImage(),
+                      ),
                     ),
-                    onPressed: () => getImage(),
-                  ),
-                  CupertinoButton(
-                    padding: const EdgeInsets.all(0),
-                    child: Icon(
-                      Icons.videocam,
-                      size: 25,
-                      color: Theme.of(context).accentColor,
+                    CupertinoButton(
+                      padding: const EdgeInsets.all(0),
+                      child: Icon(
+                        Icons.videocam,
+                        size: 25,
+                        color: Theme.of(context).accentColor,
+                      ),
+                      onPressed: () => getVideo(),
                     ),
-                    onPressed: () => getVideo(),
-                  ),
-                  _buildTextField(),
-                  // Spacer(),
-                  CupertinoButton(
-                    padding: const EdgeInsets.all(0),
-                    child: Icon(Icons.send,
-                        size: 30, color: Theme.of(context).accentColor),
-                    onPressed: send,
-                  ),
-                  SizedBox(width: 10),
-                ],
+                    _buildTextField(),
+                    // Spacer(),
+                    CupertinoButton(
+                      padding: const EdgeInsets.all(0),
+                      child: Icon(Icons.send,
+                          size: 30, color: Theme.of(context).accentColor),
+                      onPressed: send,
+                    ),
+                    SizedBox(width: 10),
+                  ],
+                ),
               ),
             ],
           ),
@@ -597,17 +622,17 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // FlutterStatusbarcolor.setStatusBarColor(kBlackColor2);    
+    // FlutterStatusbarcolor.setStatusBarColor(kBlackColor2);
     // FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
     return SafeArea(
       bottom: false,
-          child: Scaffold(
-        resizeToAvoidBottomInset: false,        
+      child: Scaffold(
+        // resizeToAvoidBottomInset: false,
         appBar: PreferredSize(
           preferredSize: _mediaSelected
               ? Size.fromHeight(0)
               : Size.fromHeight(kToolbarHeight),
-          child: MyAppBar(widget.chatData.person, widget.chatData.groupId),
+          child: MyAppBar(widget.chatData.peer, widget.chatData.groupId),
         ),
         body: GestureDetector(
           onTap: () {
@@ -627,25 +652,25 @@ class _ChatItemScreenState extends State<ChatItemScreen> {
                           children: [
                             _buildChatArea(),
                             _buildInputSection(),
-                            AnimatedContainer(
-                                duration: Duration(milliseconds: 100),
-                                height: isVisible
-                                    ? MediaQuery.of(context).viewInsets.bottom
-                                    : 0),
+                            // AnimatedContainer(
+                            //     duration: Duration(milliseconds: 100),
+                            //     height: isVisible
+                            //         ? MediaQuery.of(context).viewInsets.bottom
+                            //         : 0),
                           ],
                         );
                       },
                     );
                   },
                 ),
-                if(_mediaSelected)
-                SelectedMediaPreview(
-                  file: _selectedMedia,
-                  onClosed: () => setState(() => _mediaSelected = false),
-                  onSend: onSend,
-                  textEditingController: _textEditingController,
-                  pickedMediaType: pickedMediaType,
-                )
+                if (_mediaSelected)
+                  SelectedMediaPreview(
+                    file: _selectedMedia,
+                    onClosed: () => setState(() => _mediaSelected = false),
+                    onSend: onSend,
+                    textEditingController: _textEditingController,
+                    pickedMediaType: pickedMediaType,
+                  )
               ],
             ),
           ),

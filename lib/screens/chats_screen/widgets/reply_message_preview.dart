@@ -9,10 +9,10 @@ class ReplyMessagePreview extends StatelessWidget {
   const ReplyMessagePreview({
     Key key,
     @required this.repliedMessage,
-    @required this.userId,    
+    @required this.userId,
     @required this.reply,
     @required this.peerName,
-    @required this.onCanceled,    
+    @required this.onCanceled,
   }) : super(key: key);
 
   final Message repliedMessage;
@@ -20,7 +20,7 @@ class ReplyMessagePreview extends StatelessWidget {
   // final Message replyMsg;
   final String peerName;
   final bool reply;
-  final Function onCanceled;  
+  final Function onCanceled;
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +57,10 @@ class ReplyMessagePreview extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(
-                    height: repliedMessage.type == MessageType.Text ? 5 : 0),
+                Flexible(
+                  child: SizedBox(
+                      height: repliedMessage.type == MessageType.Text ? 5 : 0),
+                ),
                 Flexible(
                   child: repliedMessage.type == MessageType.Text
                       ? Text(
@@ -109,13 +111,17 @@ class ReplyMessagePreview extends StatelessWidget {
                         left: 0, top: 0, bottom: 0, right: 10),
                     onPressed: onCanceled,
                     child: Container(
-                      padding: const EdgeInsets.all(2),
+                      padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(50),
-                          border: Border.all(
-                              color: Theme.of(context).accentColor, width: 2)),
+                        color: kBlackColor3,
+                        borderRadius: BorderRadius.circular(50),
+                        // border: Border.all(
+                        //   color: Theme.of(context).accentColor,
+                        //   width: 2,
+                        // ),
+                      ),
                       child: Icon(Icons.close,
-                          color: Theme.of(context).accentColor, size: 17),
+                          color: Colors.white,size: 17),
                     ),
                   ),
                 ],

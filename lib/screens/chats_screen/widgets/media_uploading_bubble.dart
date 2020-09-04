@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:hexcolor/hexcolor.dart';
 import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/services/storage.dart';
