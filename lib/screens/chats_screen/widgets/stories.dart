@@ -125,14 +125,17 @@ class _StoriesState extends State<Stories> {
   Widget build(BuildContext context) {
     final chats = Provider.of<Chat>(context, listen: false).chats;
     final user = Provider.of<Chat>(context).getUser;
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(left: 15),
-      scrollDirection: Axis.horizontal,
-      itemCount: chats.length + 1,
-      itemBuilder: (ctx, i) =>
-          i == 0 ? _buildMyStoryItem(user) : StoryItem(chats[i - 1]),
-      separatorBuilder: (_, __) => SizedBox(width: 30),
+    return Container(
+      height: 100,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(left: 15),
+        scrollDirection: Axis.horizontal,
+        itemCount: chats.length + 1,
+        itemBuilder: (ctx, i) =>
+            i == 0 ? _buildMyStoryItem(user) : StoryItem(chats[i - 1]),
+        separatorBuilder: (_, __) => SizedBox(width: 30),
+      ),
     );
   }
 }

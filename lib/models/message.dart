@@ -37,11 +37,11 @@ class Message {
     this.reply,
   });
 
-  factory Message.fromJson(Map<String, dynamic> data) {          
+  factory Message.fromMap(Map<String, dynamic> data) {          
     return _$MessageFromJson(data);  
   }
 
-  static Map<String, dynamic> toJson(Message message) {
+  static Map<String, dynamic> toMap(Message message) {
     return _$MessageToJson(message);  
   }
 }

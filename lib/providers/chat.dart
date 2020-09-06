@@ -1,9 +1,5 @@
-import 'dart:convert';
-import 'dart:math';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:whatsapp_clone/consts.dart';
 import 'package:whatsapp_clone/models/chat_data.dart';
 import 'package:whatsapp_clone/models/message.dart';
 import 'package:whatsapp_clone/models/user.dart';
@@ -88,7 +84,7 @@ class Chat with ChangeNotifier {
     int unreadCount = 0;
     List<Message> messages = [];
     for (int i = 0; i < messagesData.documents.length; i++) {
-      var tmp = Message.fromJson(Map<String, dynamic>.from(messagesData.documents[i].data));
+      var tmp = Message.fromMap(Map<String, dynamic>.from(messagesData.documents[i].data));
       messages.add(tmp);
       if(tmp.fromId == peerId && !tmp.isSeen) unreadCount++;
     }      

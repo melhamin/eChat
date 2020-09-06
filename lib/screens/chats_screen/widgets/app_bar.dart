@@ -68,17 +68,10 @@ class _MyAppBarState extends State<MyAppBar>
   void goToContactDetails() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ContactDetails(widget.peer, widget.groupId),
+        builder: (context) => ContactDetails(contact: widget.peer, groupId: widget.groupId),
       ),
     );
   }
-
-  // stream() {
-  //   return Firestore.instance
-  //       .collection(USERS_COLLECTION)
-  //       .document(widget.peer.id)
-  //       .snapshots();
-  // }
 
   bool tapped = false;
   void toggle() {

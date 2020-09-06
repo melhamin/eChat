@@ -22,7 +22,6 @@ class CallingScreen extends StatefulWidget {
 class _CallingScreenState extends State<CallingScreen> {
   bool endCallPressed = false;
   bool isFullScreen = false;
-  
 
   Widget _buildEndCallIcon({double radius}) {
     return CupertinoButton(
@@ -199,7 +198,7 @@ class _Name extends StatelessWidget {
       runAlignment: WrapAlignment.center,
       children: [
         Text(
-          reciever.username,
+          reciever?.username ?? 'Username',
           style: TextStyle(
             color: kBaseWhiteColor,
             fontSize: 18,
@@ -228,8 +227,9 @@ class _Name extends StatelessWidget {
       direction: isFullScreen ? Axis.vertical : Axis.horizontal,
       children: [
         Avatar(
-            imageUrl: reciever.imageUrl,
-            radius: isFullScreen ? size.width * 0.15 : 25),
+          imageUrl: reciever?.imageUrl,
+          radius: isFullScreen ? size.width * 0.15 : 25,
+        ),
         if (isFullScreen) SizedBox(height: 10),
         if (!isFullScreen) SizedBox(width: 10),
         _buildName()

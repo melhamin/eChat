@@ -45,7 +45,7 @@ class ChatData {
     await Future.delayed(Duration.zero).then((value) {
       newData.documents.forEach((element) {
       // print('new message added -------------> ${element['content']}');
-      messages.add(Message.fromJson(element.data));      
+      messages.add(Message.fromMap(element.data));      
     });
 
     if (newData.documents.isNotEmpty) {

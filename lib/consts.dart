@@ -16,6 +16,8 @@ final String USERS_COLLECTION = 'USERS';
 final String CHATS_COLLECTION = 'CHATS';
 final String MEDIA_COLLECTION = 'MEDIA';
 
+final String CHATS_MEDIA_STORAGE_REF = 'ChatsMedia';
+
 Color kBorderColor1 = Colors.white.withOpacity(0.1);
 Color kBorderColor2 = Colors.white.withOpacity(0.07);
 Color kBorderColor3 = Colors.white.withOpacity(0.2);

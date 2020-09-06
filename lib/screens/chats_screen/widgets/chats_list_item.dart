@@ -195,7 +195,7 @@ class _PreviewText extends StatelessWidget {
         else {
           if (snapshots.data.documents.isNotEmpty) {
             final snapshot = snapshots.data.documents[0];
-            Message newMsg = Message.fromJson(snapshot.data);
+            Message newMsg = Message.fromMap(snapshot.data);
             onNewMessageRecieved(newMsg);
             return Row(
               children: [
